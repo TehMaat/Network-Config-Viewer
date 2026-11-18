@@ -12,7 +12,7 @@
   Sulla stessa base lo strumento aiuta a preparare e verificare le migrazioni, comprese quelle degli switch pianificate sul rack da chi lavora da remoto.
 - **Come**: un'app web che gira **interamente nel browser**. I file vengono elaborati sul PC e non vengono mai caricati su un server. Più avanti si aggiunge un server opzionale per il lavoro in team e per leggere gli apparati in diretta via SSH/API.
 - **Primo traguardo (MVP)**: FortiGate e Cisco IOS/IOS-XE, prima apparato per apparato, poi messi insieme nella mappa dell'infrastruttura.
-- **Migrazioni**: arrivano dopo la parte di visualizzazione, su cui si appoggiano. Si parte da ASA, Check Point, Sophos e Juniper verso FortiGate, in config diretta o tramite FortiManager, con verifica automatica del risultato. Poi le migrazioni switch, pianificate sul rack con la patch list per i tecnici in sede.
+- **Migrazioni**: arrivano dopo la parte di visualizzazione, su cui si appoggiano. Si parte da ASA, Check Point, Sophos e Juniper verso FortiGate (poi pfSense e OPNsense), in config diretta o tramite FortiManager, con verifica automatica del risultato. Poi le migrazioni switch, pianificate sul rack con la patch list per i tecnici in sede.
 - **Licenza**: open source, MIT.
 - **Chi scrive il codice**: Claude. Tu definisci le priorità, fornisci config di esempio e provi le versioni.
 
@@ -25,11 +25,11 @@
 | Obiettivo principale | Visualizzare l'infrastruttura del cliente: più apparati insieme, con VPN, SD-WAN, BGP/routing e switch. Non solo convertire config |
 | Utenti | All'inizio uso personale in locale, poi il team |
 | Avvio in locale | Nel browser, senza installazione |
-| Marche da supportare nel tempo | FortiGate, FortiManager, Cisco IOS/IOS-XE/NX-OS, Cisco ASA, Aruba/HPE switch (AOS-CX, ArubaOS-Switch, Comware), wireless Aruba e Meraki, Check Point, Juniper, Sophos |
+| Marche da supportare nel tempo | FortiGate, FortiManager, Cisco IOS/IOS-XE/NX-OS, Cisco ASA, Aruba/HPE switch (AOS-CX, ArubaOS-Switch, Comware), wireless Aruba e Meraki, Check Point, Juniper, Sophos, Netgate pfSense, OPNsense, Ubiquiti (UniFi, EdgeRouter, EdgeSwitch), TP-Link (Omada, JetStream) |
 | Primo firewall | FortiGate |
 | Primo switch | Cisco IOS/IOS-XE |
 | Casi d'uso | Tutti: visualizzazione, migrazione switch, migrazione firewall, in sequenza (vedi [Roadmap](#11-roadmap)) |
-| Migrazioni firewall | Tutte le sorgenti verso FortiGate: ASA, Check Point, Sophos, Juniper |
+| Migrazioni firewall | Tutte le sorgenti verso FortiGate: prima ASA, Check Point, Sophos e Juniper, poi pfSense e OPNsense |
 | Destinazioni delle migrazioni | FortiGate, Aruba (CX/AP), Cisco, Meraki |
 | FortiConverter | Insufficiente (qualità scarsa, nessun supporto switch): la conversione la facciamo noi, con verifica integrata |
 | FortiManager | Sia in lettura (template e policy package esistenti) sia in generazione |
@@ -39,6 +39,8 @@
 | Collegamenti tra apparati | Verificati con LLDP/CDP, dedotti da descrizioni e indirizzi, oppure inseriti a mano; le differenze tra le fonti vengono segnalate |
 | VPN | Anche ADVPN: ruoli, controlli e scorciatoie tra filiali |
 | Migrazioni switch | Pianificate sul rack con i patch panel, per gestire i cablaggi da remoto; arrivano dopo la visualizzazione |
+| Prese e patch panel | Oggi i clienti non li documentano: si parte da un rilievo in sede guidato dallo strumento, che poi resta come documentazione |
+| Patch list | In tre forme: PDF da stampare per rack, Excel, pagina da telefono con spunta |
 | Config reali per lo sviluppo | Disponibili: arrivano dopo l'anonimizzatore (fase 0), in una repo privata separata |
 | Licenza | Open source, MIT |
 | Codice | Scritto da Claude: lo stack si sceglie per semplicità d'uso, non per familiarità |
@@ -88,12 +90,12 @@ flowchart LR
 
    | Famiglia di sintassi | Marche |
    |---|---|
-   | Indentazione | Cisco IOS/IOS-XE/NX-OS/ASA, Aruba AOS-CX, ArubaOS-Switch, Aruba Instant/controller |
+   | Indentazione | Cisco IOS/IOS-XE/NX-OS/ASA, Aruba AOS-CX, ArubaOS-Switch, Aruba Instant/controller, TP-Link JetStream, Ubiquiti EdgeSwitch |
    | Blocchi `config / edit / set / next / end` | FortiOS (FortiGate), script e template CLI di FortiManager |
    | Blocchi separati da `#` + indentazione | HPE Comware |
-   | Graffe o comandi `set` | Juniper Junos |
-   | JSON | Check Point (ShowPolicyPackage), Meraki, API FortiManager |
-   | XML | Sophos Firewall |
+   | Graffe o comandi `set` | Juniper Junos, Ubiquiti EdgeRouter (EdgeOS), VyOS |
+   | JSON | Check Point (ShowPolicyPackage), Meraki, UniFi, Omada, API FortiManager |
+   | XML | Sophos Firewall, pfSense, OPNsense |
 
 2. **Driver di marca**: legge l'albero e popola il modello neutro, conoscendo default, nomi delle interfacce e particolarità di ogni versione.
 
@@ -112,8 +114,16 @@ Così il lavoro sulla sintassi si fa una volta per famiglia, e ogni nuova marca 
 | Juniper (SRX, EX) | `show configuration \| display set` | comandi `set` |
 | Check Point | ShowPolicyPackage sul Management Server (tar.gz con JSON), più `show configuration` di Gaia per interfacce e rotte dei gateway | JSON + testo |
 | Sophos Firewall | Backup & firmware → Import export → configurazione completa | .tar con `Entities.xml` |
+| pfSense (Netgate) | Diagnostics → Backup & Restore → scarica la configurazione | `config.xml` |
+| OPNsense | System → Configuration → Backups → scarica la configurazione | `config.xml` |
+| Ubiquiti EdgeRouter, VyOS | `show configuration commands` | comandi `set` |
+| Ubiquiti EdgeSwitch, TP-Link JetStream | `show running-config` | testo |
 | Meraki | Dashboard API (fase server) | JSON |
+| Ubiquiti UniFi | API del controller (fase server); il backup del controller è da valutare | JSON |
+| TP-Link Omada | API del controller Omada (fase server); il backup del controller è da valutare | JSON |
 | Aruba AP | Instant: `show running-config`; controller AOS 8: config del controller; Central: API | testo / JSON |
+
+**Apparati gestiti da controller** (Meraki, UniFi, Omada). La configurazione non sta nei singoli apparati ma nel controller, che si interroga via API: per questo arrivano con il server (fase 6). In cambio il controller conosce già la topologia (a cosa è collegato ogni apparato) e lo stato delle porte, quindi la mappa si costruisce anche senza LLDP. Valuteremo se i file di backup dei controller permettono di anticiparli.
 
 ### Comandi show utili
 
@@ -201,6 +211,8 @@ Elenco dei tunnel di tutto il progetto con i due estremi abbinati, e per ciascun
 - IKE, proposte, gruppi DH, PFS, durate;
 - selettori di fase 2, ADVPN, IP del tunnel.
 
+Oltre a IPsec, anche WireGuard (i due lati si abbinano con le chiavi pubbliche) e OpenVPN, usati da pfSense, OPNsense e UniFi.
+
 Le topologie hub & spoke sono riconosciute. I tunnel verso peer che non fanno parte del progetto (partner, cloud) sono segnalati come "un solo lato".
 
 **ADVPN**, per le reti hub & spoke in cui le filiali aprono tunnel diretti tra loro:
@@ -227,7 +239,7 @@ Per ogni FortiGate:
 
   In fondo c'è la regola implicita.
 
-Sulla mappa, gli overlay SD-WAN collegano filiali e hub.
+Sulla mappa, gli overlay SD-WAN collegano filiali e hub. Le stesse viste valgono per il multi-WAN degli altri vendor, per esempio i gateway group di pfSense e OPNsense.
 
 ### 5.4 Routing e BGP
 
@@ -268,6 +280,7 @@ Tabella in stile GUI FortiGate:
 - **Ricerca** testuale e **per IP**: trova le regole che coinvolgono 10.30.0.15, anche tramite subnet, gruppi e "all".
 - **Avvisi**: regole oscurate, disabilitate, senza log, any-any, con sorgente "all" su servizi di gestione.
 - **Viste collegate**: VIP/NAT, IP pool, interfacce e zone, rotte statiche.
+- **Altri vendor**: la vista segue il modello di ognuno. Per esempio pfSense e OPNsense hanno regole per interfaccia d'ingresso, con le regole floating valutate per prime.
 
 ### 5.8 ACL degli switch
 
@@ -287,7 +300,12 @@ Hostname, modello, versione, IP di gestione, conteggi (interfacce, VLAN, policy,
 
 - Fronte del rack con patch panel, switch e passacavi nelle loro posizioni (U).
 - Ogni presa collegata alla sua porta, con il colore della VLAN che serve. Cliccando una presa si vede cosa c'è dall'altra parte: utenza, porta, VLAN, telefono o PC (dalla tabella MAC).
-- **Da dove arrivano i dati**: le porte dalle config e dagli show; prese e patch panel da un file dell'installatore (CSV o Excel), dalle descrizioni delle porte oppure inseriti a mano. In futuro anche da NetBox.
+- **Da dove arrivano i dati**: le porte dalle config e dagli show. Prese e patch panel oggi non sono documentati, quindi si parte da un **rilievo in sede** guidato dallo strumento:
+  - una pagina da telefono elenca le prese di ogni patch panel; per ciascuna il tecnico indica la porta dello switch, oppure "libera";
+  - lo strumento propone le corrispondenze probabili e mostra cosa c'è su ogni porta (telefono, PC, AP, dalla tabella MAC e da LLDP), così il tecnico conferma invece di scrivere;
+  - con la lettura live (fase 6) basterà staccare e riattaccare un cavo alla volta: lo strumento riconosce da solo la porta che cambia stato;
+  - il rilievo resta nella cartella del cliente come documentazione per le volte successive.
+- Quando esistono, si possono importare anche file dell'installatore (CSV o Excel) o dati da NetBox.
 - È la base per le migrazioni switch pianificate da remoto (vedi 7.3).
 
 ## 6. Analisi
@@ -319,7 +337,7 @@ Hostname, modello, versione, IP di gestione, conteggi (interfacce, VLAN, policy,
 
 ### 7.2 Firewall verso FortiGate
 
-**Sorgenti**: tutte, cioè ASA, Check Point, Sophos e Juniper. Ordine proposto, salvo diverse priorità: ASA (testo, la più diffusa), Check Point, Sophos, Juniper.
+**Sorgenti**: tutte. Ordine: ASA (testo, la più diffusa), Check Point, Sophos, Juniper, poi pfSense e OPNsense.
 
 **Perché non basta FortiConverter.** Fortinet ha un tool ufficiale per questa migrazione, [FortiConverter](https://docs.fortinet.com/document/forticonverter/7.0.3/online-help/220359), ma l'esperienza sul campo è che la qualità del risultato non basta e che non copre gli switch. La conversione quindi la facciamo noi, con queste caratteristiche:
 
@@ -340,6 +358,7 @@ Hostname, modello, versione, IP di gestione, conteggi (interfacce, VLAN, policy,
 - **ASA**: le ACL sono applicate all'interfaccia d'ingresso, mentre il FortiGate vuole sia l'interfaccia di ingresso **sia** quella di uscita. Quella di uscita va ricavata dalla tabella di routing, e una regola può dover essere divisa in più policy. Il NAT (object NAT e twice NAT) va tradotto in VIP, IP pool o central NAT. Le VPN basate su crypto map diventano VPN basate su interfaccia.
 - **Check Point**: layer e inline layer, regole implicite, oggetti dinamici. Inoltre la policy sta sul Management Server, mentre le interfacce stanno sui gateway.
 - **Sophos**: tipi di regola diversi (rete, utente, WAF) e oggetti propri.
+- **pfSense e OPNsense**: come per ASA, le regole sono per interfaccia d'ingresso e quella di uscita va ricavata dal routing. Gli alias diventano oggetti, i port forward diventano VIP, i gateway group diventano SD-WAN. I tunnel WireGuard e OpenVPN vanno ripensati come IPsec.
 - **In generale**: limiti di lunghezza e di caratteri nei nomi, mappatura dei servizi predefiniti, schedule, utenti e gruppi.
 
 Una volta pronti lettore e generatore FortiOS, anche il **refresh FortiGate → FortiGate** (modello nuovo, interfacce rimappate) arriva quasi gratis.
@@ -350,11 +369,12 @@ Arrivano dopo la parte di visualizzazione, su cui si appoggiano (lettori, modell
 
 - Refresh Cisco (per esempio Catalyst 2960/3750/3850 → 9200/9300) e Cisco → Aruba AOS-CX, compresa la traduzione vPC → VSX, port-security e 802.1X.
 - **Pianificazione sul rack**, pensata per chi gestisce i cablaggi da remoto:
-  1. si posiziona il nuovo switch nel rack;
-  2. lo strumento propone il cablaggio migliore: ogni presa sulla porta della stessa colonna, con cavi corti e senza incroci (oppure raggruppati per VLAN, se si preferisce);
-  3. la configurazione segue la presa: ogni porta nuova riceve VLAN, voce, 802.1X e descrizione della porta vecchia che sostituisce;
-  4. escono la config del nuovo switch e la **patch list** per i tecnici in sede, divisa per rack ("presa A05: dalla Gi1/0/30 del vecchio switch alla Gi1/0/9 del nuovo, cavo da 0,5 m");
-  5. dopo il cambio si caricano LLDP, tabella MAC e stato porte del nuovo switch: lo strumento verifica che ogni presa sia finita sulla porta prevista e segnala le differenze.
+  1. se prese e patch panel non sono documentati, si parte dal rilievo in sede (vedi 5.11);
+  2. si posiziona il nuovo switch nel rack;
+  3. lo strumento propone il cablaggio migliore: ogni presa sulla porta della stessa colonna, con cavi corti e senza incroci (oppure raggruppati per VLAN, se si preferisce);
+  4. la configurazione segue la presa: ogni porta nuova riceve VLAN, voce, 802.1X e descrizione della porta vecchia che sostituisce;
+  5. escono la config del nuovo switch e la **patch list** per i tecnici in sede, divisa per rack ("presa A05: dalla Gi1/0/30 del vecchio switch alla Gi1/0/9 del nuovo, cavo da 0,5 m"), in tre forme: PDF da stampare, Excel e pagina da telefono dove il tecnico spunta ogni spostamento;
+  6. dopo il cambio si caricano LLDP, tabella MAC e stato porte del nuovo switch: lo strumento verifica che ogni presa sia finita sulla porta prevista e segnala le differenze.
 - Consolidamento di più switch su uno stack, con la stessa logica.
 
 ![Lo stesso rack dopo la migrazione pianificata: nuovo switch, cavi dritti e patch list per i tecnici](img/mockup-rack-dopo.png)
@@ -445,30 +465,30 @@ Ogni fase si chiude con qualcosa che puoi aprire e provare. L'ordine delle fasi 
 - **Risultato**: risposte del tipo "questo traffico passa?" e report di pulizia.
 
 ### Fase 4: altri firewall e conversione verso FortiGate
-- Lettori ASA, Check Point, Sophos e Juniper, con le stesse viste e presenti nella mappa.
+- Lettori ASA, Check Point, Sophos e Juniper, poi pfSense, OPNsense e Ubiquiti EdgeRouter, con le stesse viste e presenti nella mappa.
 - Conversione verso FortiGate (FortiOS e FortiManager) con verifica integrata; lettura dei template CLI FortiManager.
 - **Risultato**: config FortiGate generata, verificata e accompagnata dal report.
 
 ### Fase 5: altri switch e migrazioni switch
-- Lettori NX-OS (vPC), AOS-CX (VSX), ArubaOS-Switch, Comware, Aruba Instant.
-- Vista rack con patch panel (prese da file CSV/Excel o inserite a mano).
+- Lettori NX-OS (vPC), AOS-CX (VSX), ArubaOS-Switch, Comware, Aruba Instant, TP-Link JetStream, Ubiquiti EdgeSwitch.
+- Vista rack con patch panel e rilievo in sede guidato da telefono (oppure import da CSV/Excel o NetBox).
 - Pianificazione del cablaggio sul rack, mappatura porte con consolidamento, generatori AOS-CX e IOS-XE, traduzione vPC → VSX, frontali realistici.
-- Patch list per rack e verifica dopo il cambio con LLDP, tabella MAC e stato porte.
+- Patch list per rack in PDF, Excel e pagina da telefono con spunta; verifica dopo il cambio con LLDP, tabella MAC e stato porte.
 - **Risultato**: config del nuovo switch, patch list per i tecnici e controllo del lavoro fatto in sede.
 
 ### Fase 6: server per il team e lettura live
 - La stessa app su un server (Docker), con progetti condivisi e utenti.
-- Lettura via SSH/API: FortiGate, FortiManager (policy package), Meraki, Aruba Central, Cisco.
-- Meraki e wireless come sorgenti e destinazioni delle migrazioni.
+- Lettura via SSH/API: FortiGate, FortiManager (policy package), Meraki, UniFi, Omada, Aruba Central, Cisco.
+- Apparati gestiti da controller (Meraki, UniFi, Omada) e wireless nella mappa e nelle viste; Meraki anche come destinazione delle migrazioni.
+- Rilievo delle prese assistito dalla lettura live: si stacca un cavo e lo strumento riconosce la porta.
 - **Risultato**: lo strumento usato dal team, con import diretto dagli apparati.
 
 ## 12. Domande aperte
 
-1. **Prese e patch panel**: come sono documentati oggi presso i tuoi clienti? Excel o CSV dell'installatore, descrizioni delle porte, NetBox, niente? Da qui dipende come alimentare la vista rack.
-2. **Patch list**: in che forma la vuoi dare ai tecnici in sede? PDF da stampare, Excel, pagina da aprire sul telefono?
-3. **Modelli hardware più frequenti** (Catalyst e FortiGate), per dare priorità ai frontali realistici.
-4. **Wireless**: quali piattaforme usi (Aruba Instant, controller AOS 8, Central/AOS 10, Meraki MR)?
-5. **Lingua dell'interfaccia**: va bene l'italiano, con l'inglese in un secondo momento?
+1. **UniFi e Omada**: i controller dei tuoi clienti sono locali (Cloud Key, UDM, OC200, software su un server) o in cloud? Cambia il modo di leggerli.
+2. **Modelli hardware più frequenti** (Catalyst, FortiGate, UniFi, JetStream), per dare priorità ai frontali realistici.
+3. **Wireless**: quali piattaforme usi (Aruba Instant, controller AOS 8, Central/AOS 10, Meraki MR, UniFi, Omada)?
+4. **Lingua dell'interfaccia**: va bene l'italiano, con l'inglese in un secondo momento?
 
 ## Riferimenti
 

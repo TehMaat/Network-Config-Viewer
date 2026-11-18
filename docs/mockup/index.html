@@ -339,7 +339,7 @@ tr.sel td{background:var(--accent-soft)}
 ├── Filiale Milano/
 ├── Filiale Torino/
 ├── Filiale Roma/
-├── rack/R2-piano2.csv   <i>prese e patch panel</i>
+├── rack/R2-piano2_rilievo.csv   <i>rilievo delle prese</i>
 └── progetto.json   <i>siti, collegamenti a mano, posizioni</i></pre>
         <button class="btn" type="button" disabled title="Non attivo nel mockup">Apri un’altra cartella</button>
       </div>
@@ -1176,17 +1176,18 @@ function viewRack(){
   const used = new Set(RACK.map(o => o[key]));
   const rows = RACK.map(o => `<tr class="click" data-outlet="${o.id}"><td class="mono">${o.id}</td><td>${esc(o.user)}</td><td>${esc(o.svc)}</td>
     <td class="mono">Gi1/0/${o.today}</td><td class="mono">Gi1/0/${o.plan}</td><td>${cableLen(o, 'today')} → ${cableLen(o, 'plan')}</td></tr>`).join('');
-  return `<div class="view-head"><h1>Rack R2 · piano 2</h1><span class="sub">Prese da rack/R2-piano2.csv · porte da config, CDP e tabella MAC</span></div>
+  return `<div class="view-head"><h1>Rack R2 · piano 2</h1><span class="sub">Prese dal rilievo in sede del 12/11/2026 · porte da config, CDP e tabella MAC</span></div>
     <div class="map-tools"><div class="mode-toggle" role="group" aria-label="Stato del rack">
       <button type="button" data-rackmode="oggi" aria-pressed="${!plan}">Oggi</button><button type="button" data-rackmode="dopo" aria-pressed="${plan}">Dopo la migrazione</button></div>
-      <span class="fact"><b>${RACK.length}</b> prese collegate</span><span class="fact">Incroci <b>${rackCrossings(key)}</b></span><span class="fact">Porte libere <b>${48 - used.size}</b></span></div>
+      <span class="fact"><b>${RACK.length}</b> prese collegate</span><span class="fact">Incroci <b>${rackCrossings(key)}</b></span><span class="fact">Porte libere <b>${48 - used.size}</b></span><span class="spacer"></span>
+      <button class="btn" type="button" disabled title="Non attivo nel mockup">Patch list in PDF</button><button class="btn" type="button" disabled title="Non attivo nel mockup">Excel</button><button class="btn" type="button" disabled title="Non attivo nel mockup">Pagina per telefono</button></div>
     <p class="lead">${plan
       ? 'Il nuovo switch prende il posto di SW-PIANO2. Ogni presa va sulla porta della stessa colonna, con cavi corti e dritti. La configurazione segue la presa: ogni porta nuova riceve le VLAN della porta vecchia che sostituisce.'
       : 'Oggi le prese sono collegate a porte sparse: i cavi si incrociano e sono più lunghi del necessario. Il colore è la VLAN servita dalla presa.'}</p>
     <div class="rack-wrap"><svg class="rack" viewBox="0 0 900 ${units.length * U + 40}" role="img" aria-label="Rack R2 con patch panel e switch">${body}${cables}${ports}</svg></div>
     <h3 class="sec">Patch list per chi lavora in sede</h3>
     <div class="table-wrap"><table><thead><tr><th>Presa</th><th>Utenza</th><th>Servizio</th><th>Oggi · SW-PIANO2</th><th>Dopo · SW-NUOVO</th><th>Cavo</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p class="hint">Dopo il cambio si caricano LLDP, tabella MAC e stato porte del nuovo switch: lo strumento controlla che ogni presa sia sulla porta prevista e segnala le differenze.</p>`;
+    <p class="hint">Il tecnico può aprire la lista sul telefono e spuntare ogni spostamento. Dopo il cambio si caricano LLDP, tabella MAC e stato porte del nuovo switch: lo strumento controlla che ogni presa sia sulla porta prevista e segnala le differenze.</p>`;
 }
 function detailOutlet(id){
   const o = RACK.find(x => x.id === id); if (!o) return '';
@@ -1197,7 +1198,7 @@ function detailOutlet(id){
     <dl class="kv"><dt>Servizio</dt><dd>${esc(o.svc)}</dd>
     <dt>Oggi</dt><dd>SW-PIANO2 · Gi1/0/${o.today} · cavo da ${cableLen(o, 'today')}</dd>
     <dt>Dopo</dt><dd>SW-NUOVO · Gi1/0/${o.plan} · cavo da ${cableLen(o, 'plan')}</dd>
-    <dt>Fonte</dt><dd>rack/R2-piano2.csv, descrizioni e tabella MAC di SW-PIANO2</dd></dl>
+    <dt>Fonte</dt><dd>rilievo in sede del 12/11/2026, tabella MAC di SW-PIANO2</dd></dl>
     <h3 class="sec">Config generata per la nuova porta</h3>${cfgBlock(L, 1)}`;
 }
 
