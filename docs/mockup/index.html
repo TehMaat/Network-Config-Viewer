@@ -289,6 +289,17 @@ tr.sel td{background:var(--accent-soft)}
 .rack .pp.sel,.rack .swp.sel{stroke:var(--fg);stroke-width:2.2}
 .rack .swp{stroke:var(--border-strong);stroke-width:.8;cursor:pointer}
 .rack .free{fill:var(--surface-2)}
+.rack .slot{fill:none;stroke:var(--border);stroke-dasharray:3 4}
+.rack .blank{fill:var(--border-strong);stroke:var(--border-strong)}
+.rack .shelf,.rack .pdu{fill:var(--surface-2);stroke:var(--border-strong)}
+.rack .ups{fill:var(--surface);stroke:var(--border-strong)}
+.rack .ritem{cursor:pointer}
+.rack .ritem.sel > rect{stroke:var(--accent);stroke-width:2.4}
+.rack-add{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.rack-add label{display:grid;gap:4px;font-size:12.5px;color:var(--muted)}
+.rack-add select{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;max-width:100%}
+.btn.icon{padding:1px 8px;margin-left:4px}
+.mode-toggle.lang button{padding:3px 10px;font-size:12px}
 
 @media (max-width:1100px){
   html,body{height:auto}
@@ -347,6 +358,7 @@ tr.sel td{background:var(--accent-soft)}
     <div class="project">7 apparati in 4 siti · backup del 15/11/2026</div>
     <span class="tag">Mockup · dati di esempio</span>
     <span class="spacer"></span>
+    <div class="mode-toggle lang" role="group" aria-label="Lingua dell’interfaccia" title="Il software sarà in italiano e in inglese; questo mockup è solo in italiano"><button type="button" aria-pressed="true">IT</button><button type="button" aria-pressed="false" disabled>EN</button></div>
     <button class="btn" id="theme-btn" type="button">Cambia tema</button>
   </header>
   <nav class="pane sidebar" id="sidebar" aria-label="Progetto"></nav>
@@ -812,7 +824,7 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
 const stacked = () => window.matchMedia('(max-width: 1100px)').matches;
 
 /* ===================== Stato e navigazione ===================== */
-const state = {view:'mappa', dev:null, tab:null, sel:null, layers:{phys:true, vpn:true, bgp:true, advpn:true}, vlan:null, search:'', rackMode:'oggi', pending:null};
+const state = {view:'mappa', dev:null, tab:null, sel:null, layers:{phys:true, vpn:true, bgp:true, advpn:true}, vlan:null, search:'', rackMode:'oggi', rackId:'r1', pending:null};
 const TABS = {fw:[['policy','Policy'],['sdwan','SD-WAN'],['routing','Routing']], sw:[['porte','Porte'],['vlan','VLAN']]};
 const $main = document.getElementById('main'), $detail = document.getElementById('detail'), $side = document.getElementById('sidebar');
 
@@ -856,7 +868,7 @@ function renderSidebar(){
   const dev = id => item('d-' + id, DEVICES[id].name, DEVICES[id].kind.toUpperCase(), issueSev(id));
   $side.innerHTML = `<div class="nav">
     <div class="nav-group"><div class="nav-label">Progetto</div>${item('mappa', 'Mappa dell’infrastruttura')}${item('vpn', 'VPN')}</div>
-    <div class="nav-group"><div class="nav-label">Sede centrale</div>${['fgt-sede','sw-core','sw-p1','sw-p2'].map(dev).join('')}${item('rack', 'Rack R2 · piano 2', 'RK')}</div>
+    <div class="nav-group"><div class="nav-label">Sede centrale</div>${['fgt-sede','sw-core','sw-p1','sw-p2'].map(dev).join('')}${item('rack', 'Rack della sede', 'RK')}</div>
     <div class="nav-group"><div class="nav-label">Filiale Milano</div>${dev('fgt-mi')}</div>
     <div class="nav-group"><div class="nav-label">Filiale Torino</div>${dev('fgt-to')}</div>
     <div class="nav-group"><div class="nav-label">Filiale Roma</div>${dev('fgt-rm')}</div>
@@ -1133,61 +1145,150 @@ function tabVlan(){
 }
 
 /* rack */
+const RACK_TYPES = {pp24:'Patch panel 24 porte', pp48:'Patch panel 48 porte', sw:'Switch', fw:'Firewall', mgr:'Passacavi', shelf:'Mensola', ups:'UPS', pdu:'PDU', blank:'Pannello cieco'};
+const RACKS = {
+  r1:{name:'Rack R1 · CED', units:18, items:[
+    {id:'r1-pp', u:18, h:1, type:'pp24', label:'PP-R1', sub:'dorsali e server'},
+    {id:'r1-m1', u:17, h:1, type:'mgr'},
+    {id:'r1-core1', u:16, h:1, type:'sw', dev:'sw-core', member:1, label:'SW-CORE 1', sub:'C9300-48P · membro 1'},
+    {id:'r1-core2', u:15, h:1, type:'sw', dev:'sw-core', member:2, label:'SW-CORE 2', sub:'C9300-48P · membro 2'},
+    {id:'r1-m2', u:14, h:1, type:'mgr'},
+    {id:'r1-fgt', u:13, h:1, type:'fw', dev:'fgt-sede', label:'FGT-SEDE', sub:'FortiGate 200F'},
+    {id:'r1-shelf', u:12, h:1, type:'shelf', label:'Mensola', sub:'router ISP-A, ONT ISP-B'},
+    {id:'r1-ups', u:3, h:2, type:'ups', label:'UPS', sub:'1500 VA'},
+    {id:'r1-pdu', u:1, h:1, type:'pdu', label:'PDU', sub:'8 prese'}
+  ]},
+  r2:{name:'Rack R2 · piano 2', units:12, outlets:true, items:[
+    {id:'r2-ppa', u:12, h:1, type:'pp24', pp:'A', label:'PP-A', sub:'prese 2.01–2.24'},
+    {id:'r2-m1', u:11, h:1, type:'mgr'},
+    {id:'r2-sw', u:10, h:1, type:'sw', dev:'sw-p2', member:1, label:'SW-PIANO2', sub:'C2960X-48FPD-L', planLabel:'SW-NUOVO', planSub:'C9200L-48P-4X'},
+    {id:'r2-m2', u:9, h:1, type:'mgr'},
+    {id:'r2-ppb', u:8, h:1, type:'pp24', pp:'B', label:'PP-B', sub:'prese 2.25–2.48'},
+    {id:'r2-pdu', u:1, h:1, type:'pdu', label:'PDU', sub:'8 prese'}
+  ]}
+};
+const CATALOG = [
+  {key:'dev:sw-p1', group:'Apparati del progetto non ancora in un rack', type:'sw', h:1, dev:'sw-p1', member:1, label:'SW-PIANO1', sub:'C9200L-48P-4X'},
+  {key:'pp24', group:'Elementi generici', type:'pp24', h:1, label:'Patch panel 24 porte'},
+  {key:'pp48', group:'Elementi generici', type:'pp48', h:2, label:'Patch panel 48 porte'},
+  {key:'mgr', group:'Elementi generici', type:'mgr', h:1, label:'Passacavi'},
+  {key:'shelf', group:'Elementi generici', type:'shelf', h:1, label:'Mensola'},
+  {key:'ups', group:'Elementi generici', type:'ups', h:2, label:'UPS'},
+  {key:'pdu', group:'Elementi generici', type:'pdu', h:1, label:'PDU'},
+  {key:'blank', group:'Elementi generici', type:'blank', h:1, label:'Pannello cieco'}
+];
+let rackSeq = 0;
+const rackAt = (r, u) => r.items.find(it => u <= it.u && u > it.u - it.h);
+function rackFits(r, top, h, ignore){
+  if (top > r.units || top - h + 1 < 1) return false;
+  for (let u = top; u > top - h; u--) { const it = rackAt(r, u); if (it && it !== ignore) return false; }
+  return true;
+}
+const uRange = it => it.h > 1 ? `U${it.u}–U${it.u - it.h + 1}` : `U${it.u}`;
+function catalogFree(){
+  const placed = new Set(Object.values(RACKS).flatMap(r => r.items.map(i => i.catalog)).filter(Boolean));
+  return CATALOG.filter(c => !(c.dev && placed.has(c.key)));
+}
+function uOptionsHtml(r, h){
+  const opts = [];
+  for (let u = r.units; u >= h; u--) if (rackFits(r, u, h)) opts.push(`<option value="${u}">${h > 1 ? `U${u}–U${u - h + 1}` : 'U' + u}</option>`);
+  return opts.length ? opts.join('') : '<option value="">nessuno spazio libero</option>';
+}
 function viewRack(){
-  const plan = state.rackMode === 'dopo', key = plan ? 'plan' : 'today';
-  const X0 = 180, STEP = 24.5, PW = 19, U = 50, Y0 = 26;
-  const yOf = k => Y0 + k * U, colX = c => X0 + (c - 1) * STEP, swY = yOf(2);
-  const swXY = i => ({x: colX(Math.ceil(i / 2)), y: swY + (i % 2 ? 9 : 25)});
-  const units = [
-    {kind:'pp', l1:'PP-A', l2:'prese 2.01–2.24'}, {kind:'mgr'},
-    {kind:'sw', l1: plan ? 'SW-NUOVO' : 'SW-PIANO2', l2: plan ? 'C9200L-48P-4X' : 'C2960X-48FPD-L'}, {kind:'mgr'},
-    {kind:'pp', l1:'PP-B', l2:'prese 2.25–2.48'}
-  ];
-  let body = `<rect class="frame" x="40" y="${Y0 - 12}" width="820" height="${units.length * U + 22}" rx="6"/>` +
-    `<rect class="rail" x="48" y="${Y0 - 6}" width="26" height="${units.length * U + 10}"/><rect class="rail" x="826" y="${Y0 - 6}" width="26" height="${units.length * U + 10}"/>`;
-  units.forEach((u, k) => {
-    const y = yOf(k);
-    body += `<text class="ulabel" x="61" y="${y + 29}" text-anchor="middle">U${42 - k}</text>`;
-    if (u.kind === 'mgr') { body += `<rect class="mgr" x="84" y="${y + 13}" width="732" height="24" rx="3"/><text class="mgrtxt" x="450" y="${y + 29}" text-anchor="middle">passacavi</text>`; return; }
-    body += `<rect class="dev${u.kind === 'sw' && plan ? ' new' : ''}" x="84" y="${y + 3}" width="732" height="${U - 6}" rx="4"/>` +
-      `<text class="devname" x="92" y="${y + 22}">${u.l1}</text><text class="devsub" x="92" y="${y + 36}">${u.l2}</text>`;
-  });
-  let cables = '', ports = '';
-  for (const o of RACK) {
-    const a = {x: colX(o.n) + PW / 2, y: yOf(o.pp === 'A' ? 0 : 4) + 24}, s = swXY(o[key]), b = {x: s.x + PW / 2, y: s.y + 6}, my = (a.y + b.y) / 2;
-    cables += `<path class="cable" data-outlet="${o.id}" d="M${a.x},${a.y} C${a.x},${my} ${b.x},${my} ${b.x},${b.y}" style="stroke:${o.color}"/>`;
+  const rack = RACKS[state.rackId], plan = !!rack.outlets && state.rackMode === 'dopo', key = plan ? 'plan' : 'today';
+  const U = 42, Y0 = 24, X0 = 180, STEP = 24.5, PW = 19;
+  const yTop = u => Y0 + (rack.units - u) * U, colX = c => X0 + (c - 1) * STEP;
+  const swColor = (devId, member, i) => {
+    const p = SW[devId] && SW[devId].ports.find(x => x.m === member && x.i === i && !x.uplink);
+    if (!p) return '';
+    return p.mode === 'access' ? VLANS[p.vlan].color : p.mode === 'trunk' ? VLANS[p.native].color : p.mode === 'routed' ? 'var(--fg)' : '';
+  };
+  let body = `<rect class="frame" x="40" y="${Y0 - 12}" width="820" height="${rack.units * U + 24}" rx="6"/>` +
+    `<rect class="rail" x="48" y="${Y0 - 6}" width="26" height="${rack.units * U + 12}"/><rect class="rail" x="826" y="${Y0 - 6}" width="26" height="${rack.units * U + 12}"/>`;
+  for (let u = rack.units; u >= 1; u--) {
+    body += `<text class="ulabel" x="61" y="${yTop(u) + U / 2 + 4}" text-anchor="middle">${u}</text>`;
+    if (!rackAt(rack, u)) body += `<rect class="slot" x="84" y="${yTop(u) + 4}" width="732" height="${U - 8}" rx="3"/>`;
   }
-  for (const pp of ['A', 'B']) {
-    const y = yOf(pp === 'A' ? 0 : 4);
-    for (let n = 1; n <= 24; n++) {
-      const o = RACK.find(x => x.pp === pp && x.n === n), id = pp + String(n).padStart(2, '0');
-      ports += `<rect class="pp" ${o ? `data-outlet="${o.id}"` : ''} x="${colX(n)}" y="${y + 16}" width="${PW}" height="16" rx="2"${o ? '' : ' style="opacity:.45"'}><title>Presa ${id} · ${o ? esc(o.user) : 'libera'}</title></rect>` +
-        `<text class="ppnum" x="${colX(n) + PW / 2}" y="${y + 43}" text-anchor="middle">${n}</text>`;
+  let ports = '', cables = '';
+  for (const it of rack.items) {
+    const y = yTop(it.u), isNew = it.type === 'sw' && plan && it.planLabel;
+    const cls = ['mgr', 'blank', 'ups', 'pdu', 'shelf'].includes(it.type) ? it.type : 'dev';
+    body += `<g class="ritem" data-rackitem="${it.id}"><rect class="${cls}${isNew ? ' new' : ''}" x="84" y="${y + 3}" width="732" height="${it.h * U - 6}" rx="4"/>`;
+    if (it.type === 'mgr') body += `<text class="mgrtxt" x="450" y="${y + U / 2 + 4}" text-anchor="middle">passacavi</text>`;
+    else if (it.type !== 'blank') body += `<text class="devname" x="92" y="${y + 18}">${esc(isNew ? it.planLabel : (it.label || RACK_TYPES[it.type]))}</text><text class="devsub" x="92" y="${y + 31}">${esc(isNew ? it.planSub : (it.sub || ''))}</text>`;
+    body += '</g>';
+    if (it.type === 'pp24' || it.type === 'pp48') {
+      for (let row = 0; row < (it.type === 'pp48' ? 2 : 1); row++) for (let n = 1; n <= 24; n++) {
+        const num = row * 24 + n, o = it.pp ? RACK.find(x => x.pp === it.pp && x.n === num) : null, py = y + 10 + row * U;
+        ports += `<rect class="pp" ${o ? `data-outlet="${o.id}"` : `data-rackport="${it.id}"`} x="${colX(n)}" y="${py}" width="${PW}" height="15" rx="2"${it.pp && !o ? ' style="opacity:.45"' : ''}><title>${esc(it.label || 'Patch panel')} · ${num}${o ? ' · ' + esc(o.user) : ''}</title></rect>` +
+          `<text class="ppnum" x="${colX(n) + PW / 2}" y="${py + 24}" text-anchor="middle">${num}</text>`;
+      }
+    }
+    if (it.type === 'sw') {
+      for (let i = 1; i <= 48; i++) {
+        let fill = '', o = null;
+        if (it.id === 'r2-sw') { o = RACK.find(x => x[key] === i) || null; fill = plan ? (o ? o.color : '') : swColor('sw-p2', 1, i); }
+        else fill = swColor(it.dev, it.member, i);
+        ports += `<rect class="swp${fill ? '' : ' free'}" ${o ? `data-outlet="${o.id}"` : `data-rackport="${it.id}"`} x="${colX(Math.ceil(i / 2))}" y="${y + (i % 2 ? 7 : 21)}" width="${PW}" height="12" rx="2"${fill ? ` style="fill:${fill}"` : ''}><title>Gi${it.member || 1}/0/${i}${o ? ' · presa ' + o.id : ''}</title></rect>`;
+      }
+      for (let k = 0; k < 4; k++) ports += `<rect class="swp" data-rackport="${it.id}" x="${772 + k * 11}" y="${y + 14}" width="9" height="12" rx="2" style="fill:var(--phys)"><title>uplink ${k + 1}</title></rect>`;
+    }
+    if (it.type === 'fw') {
+      for (let k = 1; k <= 16; k++) ports += `<rect class="swp free" data-rackport="${it.id}" x="${colX(k)}" y="${y + 14}" width="${PW}" height="13" rx="2"><title>port${k}</title></rect>`;
+      ['wan1', 'wan2'].forEach((w, k) => { ports += `<rect class="swp" data-rackport="${it.id}" x="${colX(18 + k)}" y="${y + 14}" width="${PW}" height="13" rx="2" style="fill:var(--accent)"><title>${w}</title></rect>`; });
+      ['x1', 'x2'].forEach((w, k) => { ports += `<rect class="swp" data-rackport="${it.id}" x="${colX(21 + k)}" y="${y + 14}" width="${PW}" height="13" rx="2" style="fill:var(--phys)"><title>${w} · LAN-AGG verso SW-CORE</title></rect>`; });
     }
   }
-  for (let i = 1; i <= 48; i++) {
-    const s = swXY(i), o = RACK.find(x => x[key] === i);
-    let fill = '';
-    if (plan) fill = o ? o.color : '';
-    else { const p = SW['sw-p2'].ports.find(x => x.i === i && !x.uplink); if (p && p.mode === 'access') fill = VLANS[p.vlan].color; else if (p && p.mode === 'trunk') fill = VLANS[p.native].color; }
-    ports += `<rect class="swp${fill ? '' : ' free'}" ${o ? `data-outlet="${o.id}"` : ''} x="${s.x}" y="${s.y}" width="${PW}" height="12" rx="2"${fill ? ` style="fill:${fill}"` : ''}><title>Gi1/0/${i}${o ? ' · presa ' + o.id : ' · libera'}</title></rect>`;
+  if (rack.outlets) {
+    const sw = rack.items.find(i => i.id === 'r2-sw');
+    for (const o of RACK) {
+      const pp = rack.items.find(i => i.pp === o.pp);
+      if (!pp || !sw) continue;
+      const a = {x: colX(o.n) + PW / 2, y: yTop(pp.u) + 17}, b = {x: colX(Math.ceil(o[key] / 2)) + PW / 2, y: yTop(sw.u) + (o[key] % 2 ? 13 : 27)}, my = (a.y + b.y) / 2;
+      cables += `<path class="cable" data-outlet="${o.id}" d="M${a.x},${a.y} C${a.x},${my} ${b.x},${my} ${b.x},${b.y}" style="stroke:${o.color}"/>`;
+    }
   }
-  for (let u = 1; u <= 2; u++) ports += `<rect class="swp" x="${785 + (u - 1) * 14}" y="${swY + 17}" width="11" height="12" rx="2" style="fill:var(--phys)"><title>Te1/${plan ? '1' : '0'}/${u} · verso SW-CORE Po3</title></rect>`;
-  const used = new Set(RACK.map(o => o[key]));
-  const rows = RACK.map(o => `<tr class="click" data-outlet="${o.id}"><td class="mono">${o.id}</td><td>${esc(o.user)}</td><td>${esc(o.svc)}</td>
-    <td class="mono">Gi1/0/${o.today}</td><td class="mono">Gi1/0/${o.plan}</td><td>${cableLen(o, 'today')} → ${cableLen(o, 'plan')}</td></tr>`).join('');
-  return `<div class="view-head"><h1>Rack R2 · piano 2</h1><span class="sub">Prese dal rilievo in sede del 12/11/2026 · porte da config, CDP e tabella MAC</span></div>
-    <div class="map-tools"><div class="mode-toggle" role="group" aria-label="Stato del rack">
+  const tabs = Object.entries(RACKS).map(([id, r]) => `<button class="tab" type="button" data-rack="${id}" aria-selected="${state.rackId === id}">${esc(r.name)}</button>`).join('');
+  const items = [...rack.items].sort((a, b) => b.u - a.u).map(it => {
+    const up = rackFits(rack, it.u + 1, it.h, it), down = rackFits(rack, it.u - 1, it.h, it);
+    return `<tr class="click" data-rackitem="${it.id}"><td class="mono">${uRange(it)}</td><td><b>${esc(it.label || RACK_TYPES[it.type])}</b>${it.sub ? ` <span class="muted">${esc(it.sub)}</span>` : ''}</td><td>${esc(RACK_TYPES[it.type])}</td>
+      <td class="num"><button class="btn icon" type="button" data-rackmove="${it.id}" data-dir="1" aria-label="Sposta su" ${up ? '' : 'disabled'}>↑</button><button class="btn icon" type="button" data-rackmove="${it.id}" data-dir="-1" aria-label="Sposta giù" ${down ? '' : 'disabled'}>↓</button><button class="btn icon" type="button" data-rackdel="${it.id}" aria-label="Togli dal rack">✕</button></td></tr>`;
+  }).join('');
+  const cat = catalogFree(), groups = [...new Set(cat.map(c => c.group))];
+  const options = groups.map(g => `<optgroup label="${esc(g)}">${cat.filter(c => c.group === g).map(c => `<option value="${c.key}">${esc(c.label)}${c.h > 1 ? ' · ' + c.h + 'U' : ''}</option>`).join('')}</optgroup>`).join('');
+  const used = rack.outlets ? new Set(RACK.map(o => o[key])) : null;
+  const top = rack.outlets ? `<div class="map-tools"><div class="mode-toggle" role="group" aria-label="Stato del rack">
       <button type="button" data-rackmode="oggi" aria-pressed="${!plan}">Oggi</button><button type="button" data-rackmode="dopo" aria-pressed="${plan}">Dopo la migrazione</button></div>
       <span class="fact"><b>${RACK.length}</b> prese collegate</span><span class="fact">Incroci <b>${rackCrossings(key)}</b></span><span class="fact">Porte libere <b>${48 - used.size}</b></span><span class="spacer"></span>
       <button class="btn" type="button" disabled title="Non attivo nel mockup">Patch list in PDF</button><button class="btn" type="button" disabled title="Non attivo nel mockup">Excel</button><button class="btn" type="button" disabled title="Non attivo nel mockup">Pagina per telefono</button></div>
     <p class="lead">${plan
       ? 'Il nuovo switch prende il posto di SW-PIANO2. Ogni presa va sulla porta della stessa colonna, con cavi corti e dritti. La configurazione segue la presa: ogni porta nuova riceve le VLAN della porta vecchia che sostituisce.'
-      : 'Oggi le prese sono collegate a porte sparse: i cavi si incrociano e sono più lunghi del necessario. Il colore è la VLAN servita dalla presa.'}</p>
-    <div class="rack-wrap"><svg class="rack" viewBox="0 0 900 ${units.length * U + 40}" role="img" aria-label="Rack R2 con patch panel e switch">${body}${cables}${ports}</svg></div>
-    <h3 class="sec">Patch list per chi lavora in sede</h3>
-    <div class="table-wrap"><table><thead><tr><th>Presa</th><th>Utenza</th><th>Servizio</th><th>Oggi · SW-PIANO2</th><th>Dopo · SW-NUOVO</th><th>Cavo</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p class="hint">Il tecnico può aprire la lista sul telefono e spuntare ogni spostamento. Dopo il cambio si caricano LLDP, tabella MAC e stato porte del nuovo switch: lo strumento controlla che ogni presa sia sulla porta prevista e segnala le differenze.</p>`;
+      : 'Oggi le prese sono collegate a porte sparse: i cavi si incrociano e sono più lunghi del necessario. Il colore è la VLAN servita dalla presa.'}</p>`
+    : '<p class="lead">Le porte degli switch hanno i colori delle VLAN presi dalla config. Clicca un elemento per il dettaglio, oppure aggiungine uno qui sotto scegliendo le unità.</p>';
+  const patch = rack.outlets ? `<h3 class="sec">Patch list per chi lavora in sede</h3>
+    <div class="table-wrap"><table><thead><tr><th>Presa</th><th>Utenza</th><th>Servizio</th><th>Oggi · SW-PIANO2</th><th>Dopo · SW-NUOVO</th><th>Cavo</th></tr></thead><tbody>${RACK.map(o => `<tr class="click" data-outlet="${o.id}"><td class="mono">${o.id}</td><td>${esc(o.user)}</td><td>${esc(o.svc)}</td>
+    <td class="mono">Gi1/0/${o.today}</td><td class="mono">Gi1/0/${o.plan}</td><td>${cableLen(o, 'today')} → ${cableLen(o, 'plan')}</td></tr>`).join('')}</tbody></table></div>
+    <p class="hint">Il tecnico può aprire la lista sul telefono e spuntare ogni spostamento. Dopo il cambio si caricano LLDP, tabella MAC e stato porte del nuovo switch: lo strumento controlla che ogni presa sia sulla porta prevista e segnala le differenze.</p>` : '';
+  return `<div class="view-head"><h1>Rack della sede</h1><span class="sub">${rack.outlets ? 'Prese dal rilievo in sede del 12/11/2026 · porte da config, CDP e tabella MAC' : 'Composizione del rack · porte dalla config'}</span></div>
+    <div class="tabs" role="tablist">${tabs}</div>
+    ${top}
+    <div class="rack-wrap"><svg class="rack" viewBox="0 0 900 ${rack.units * U + 40}" role="img" aria-label="${esc(rack.name)}">${body}${cables}${ports}</svg></div>
+    <h3 class="sec">Elementi nel rack</h3>
+    <div class="table-wrap"><table><thead><tr><th>Unità</th><th>Elemento</th><th>Tipo</th><th></th></tr></thead><tbody>${items}</tbody></table></div>
+    <form class="rack-add" id="rack-add">
+      <label for="rack-add-item">Aggiungi<select id="rack-add-item">${options}</select></label>
+      <label for="rack-add-u">Nelle unità<select id="rack-add-u">${cat.length ? uOptionsHtml(rack, cat[0].h) : ''}</select></label>
+      <button class="btn primary" type="submit">Aggiungi al rack</button>
+    </form>
+    ${patch}`;
+}
+function detailRackItem(id){
+  const r = Object.values(RACKS).find(x => x.items.some(i => i.id === id)); if (!r) return '';
+  const it = r.items.find(i => i.id === id), kind = it.dev ? DEVICES[it.dev].kind : null;
+  return `<div class="kicker">${esc(r.name)}</div><h2>${esc(it.label || RACK_TYPES[it.type])}</h2>
+    <dl class="kv"><dt>Tipo</dt><dd>${esc(RACK_TYPES[it.type])}</dd><dt>Posizione</dt><dd>${uRange(it)} · ${it.h}U</dd>${it.sub ? `<dt>Note</dt><dd>${esc(it.sub)}</dd>` : ''}</dl>
+    ${it.dev ? `<div class="actions"><button class="btn primary" type="button" data-open="${it.dev}" data-tab="${kind === 'fw' ? 'policy' : 'porte'}">Apri ${esc(DEVICES[it.dev].name)}</button></div>` : ''}
+    <p class="hint">Nel software vero gli elementi si spostano anche trascinandoli nel disegno.</p>`;
 }
 function detailOutlet(id){
   const o = RACK.find(x => x.id === id); if (!o) return '';
@@ -1210,13 +1311,14 @@ function select(sel, scroll = true){
   if (scroll && sel && stacked()) $detail.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'start'});
 }
 function markSelection(){
-  document.querySelectorAll('.node.selected, .edge-g.selected, tr.selected[data-policy], tr.selected[data-link], .port.sel, [data-outlet].sel').forEach(el => el.classList.remove('selected', 'sel'));
+  document.querySelectorAll('.node.selected, .edge-g.selected, tr.selected[data-policy], tr.selected[data-link], .port.sel, [data-outlet].sel, [data-rackitem].sel').forEach(el => el.classList.remove('selected', 'sel'));
   const s = state.sel; if (!s) return;
   if (s.t === 'node') document.querySelectorAll(`.node[data-node="${s.id}"]`).forEach(el => el.classList.add('selected'));
   if (s.t === 'link') document.querySelectorAll(`[data-link="${s.id}"]`).forEach(el => el.classList.add('selected'));
   if (s.t === 'policy') document.querySelectorAll(`tr[data-policy="${s.seq}"]`).forEach(el => el.classList.add('selected'));
   if (s.t === 'port') document.querySelectorAll('.port').forEach(el => { if (el.dataset.port === s.name && state.dev === s.sw) el.classList.add('sel'); });
   if (s.t === 'outlet') document.querySelectorAll(`[data-outlet="${s.id}"]`).forEach(el => el.classList.add('sel'));
+  if (s.t === 'rackitem') document.querySelectorAll(`[data-rackitem="${s.id}"]`).forEach(el => el.classList.add('sel'));
 }
 function renderDetail(s){
   if (!s) return `<div class="kicker">Dettaglio</div><h2>Come leggere la mappa</h2>
@@ -1230,6 +1332,7 @@ function renderDetail(s){
   if (s.t === 'obj') return detailObj(s.dev, s.name);
   if (s.t === 'port') return detailPort(s.sw, s.name);
   if (s.t === 'outlet') return detailOutlet(s.id);
+  if (s.t === 'rackitem') return detailRackItem(s.id);
   return '';
 }
 function detailNode(id){
@@ -1342,8 +1445,22 @@ $main.addEventListener('click', e => {
   if ((el = t.closest('[data-link]'))) { select({t:'link', id:el.dataset.link}); return; }
   if ((el = t.closest('[data-policy]'))) { select({t:'policy', dev:state.dev, seq:+el.dataset.policy}); return; }
   if ((el = t.closest('[data-vlan]'))) { state.vlan = el.dataset.vlan === '' ? null : +el.dataset.vlan; renderMain(); return; }
+  if ((el = t.closest('[data-rackmove]'))) {
+    const r = RACKS[state.rackId], it = r.items.find(i => i.id === el.dataset.rackmove), d = +el.dataset.dir;
+    if (it && rackFits(r, it.u + d, it.h, it)) { it.u += d; renderMain(); }
+    return;
+  }
+  if ((el = t.closest('[data-rackdel]'))) {
+    const r = RACKS[state.rackId], id = el.dataset.rackdel;
+    r.items = r.items.filter(i => i.id !== id);
+    if (state.sel && state.sel.t === 'rackitem' && state.sel.id === id) select(null, false);
+    renderMain(); return;
+  }
+  if ((el = t.closest('[data-rack]'))) { state.rackId = el.dataset.rack; renderMain(); return; }
   if ((el = t.closest('[data-rackmode]'))) { state.rackMode = el.dataset.rackmode; renderMain(); return; }
   if ((el = t.closest('[data-outlet]'))) { select({t:'outlet', id:el.dataset.outlet}); return; }
+  if ((el = t.closest('[data-rackport]'))) { select({t:'rackitem', id:el.dataset.rackport}); return; }
+  if ((el = t.closest('[data-rackitem]'))) { select({t:'rackitem', id:el.dataset.rackitem}); return; }
   if ((el = t.closest('[data-port]'))) { select({t:'port', sw:state.dev, name:el.dataset.port}); return; }
 });
 $main.addEventListener('keydown', e => {
@@ -1352,6 +1469,20 @@ $main.addEventListener('keydown', e => {
 $main.addEventListener('change', e => {
   const l = e.target.dataset && e.target.dataset.layer;
   if (l) { state.layers[l] = e.target.checked; applyLayers(); }
+  if (e.target.id === 'rack-add-item') {
+    const c = CATALOG.find(x => x.key === e.target.value);
+    document.getElementById('rack-add-u').innerHTML = uOptionsHtml(RACKS[state.rackId], c ? c.h : 1);
+  }
+});
+$main.addEventListener('submit', e => {
+  if (e.target.id !== 'rack-add') return;
+  e.preventDefault();
+  const r = RACKS[state.rackId], c = CATALOG.find(x => x.key === document.getElementById('rack-add-item').value), u = +document.getElementById('rack-add-u').value;
+  if (!c || !u || !rackFits(r, u, c.h)) return;
+  const it = {id:'n' + (++rackSeq), u, h:c.h, type:c.type, label:c.label, sub:c.sub || '', dev:c.dev, member:c.member, catalog:c.key};
+  r.items.push(it);
+  renderMain();
+  select({t:'rackitem', id:it.id});
 });
 $main.addEventListener('input', e => {
   if (e.target.id !== 'policy-search') return;

@@ -14,6 +14,7 @@
 - **Primo traguardo (MVP)**: FortiGate e Cisco IOS/IOS-XE, prima apparato per apparato, poi messi insieme nella mappa dell'infrastruttura.
 - **Migrazioni**: arrivano dopo la parte di visualizzazione, su cui si appoggiano. Si parte da ASA, Check Point, Sophos e Juniper verso FortiGate (poi pfSense e OPNsense), in config diretta o tramite FortiManager, con verifica automatica del risultato. Poi le migrazioni switch, pianificate sul rack con la patch list per i tecnici in sede.
 - **Licenza**: open source, MIT.
+- **Lingua**: interfaccia in italiano e in inglese, a scelta di chi la usa.
 - **Chi scrive il codice**: Claude. Tu definisci le priorità, fornisci config di esempio e provi le versioni.
 
 ![La mappa dell'infrastruttura nel mockup: sede e filiali con cavi, tunnel IPsec, sessioni BGP e i problemi trovati confrontando gli apparati](img/mockup-mappa.png)
@@ -25,7 +26,7 @@
 | Obiettivo principale | Visualizzare l'infrastruttura del cliente: più apparati insieme, con VPN, SD-WAN, BGP/routing e switch. Non solo convertire config |
 | Utenti | All'inizio uso personale in locale, poi il team |
 | Avvio in locale | Nel browser, senza installazione |
-| Marche da supportare nel tempo | FortiGate, FortiManager, Cisco IOS/IOS-XE/NX-OS, Cisco ASA, Aruba/HPE switch (AOS-CX, ArubaOS-Switch, Comware), wireless Aruba e Meraki, Check Point, Juniper, Sophos, Netgate pfSense, OPNsense, Ubiquiti (UniFi, EdgeRouter, EdgeSwitch), TP-Link (Omada, JetStream) |
+| Marche da supportare nel tempo | FortiGate, FortiManager, FortiSwitch, FortiAP, Cisco IOS/IOS-XE/NX-OS, Cisco ASA, Aruba/HPE switch (AOS-CX, ArubaOS-Switch, Comware), Aruba Central, Meraki, Check Point, Juniper, Sophos, Netgate pfSense, OPNsense, Ubiquiti (UniFi, EdgeRouter, EdgeSwitch), TP-Link (Omada, JetStream) |
 | Primo firewall | FortiGate |
 | Primo switch | Cisco IOS/IOS-XE |
 | Casi d'uso | Tutti: visualizzazione, migrazione switch, migrazione firewall, in sequenza (vedi [Roadmap](#11-roadmap)) |
@@ -41,6 +42,11 @@
 | Migrazioni switch | Pianificate sul rack con i patch panel, per gestire i cablaggi da remoto; arrivano dopo la visualizzazione |
 | Prese e patch panel | Oggi i clienti non li documentano: si parte da un rilievo in sede guidato dallo strumento, che poi resta come documentazione |
 | Patch list | In tre forme: PDF da stampare per rack, Excel, pagina da telefono con spunta |
+| Rack | Si compongono scegliendo cosa mettere e in quali unità: apparati del progetto (firewall, switch…), patch panel, passacavi, mensole, UPS, PDU, pannelli ciechi |
+| Wireless | Meraki, FortiAP e Aruba Central |
+| Controller UniFi e Omada | Sia locali sia in cloud: servono entrambi i modi di lettura |
+| Frontali degli apparati | Per tutti i modelli, ricavati dalla NetBox devicetype-library; frontale generico per i modelli che mancano |
+| Lingua dell'interfaccia | Italiano e inglese, a scelta di chi la usa |
 | Config reali per lo sviluppo | Disponibili: arrivano dopo l'anonimizzatore (fase 0), in una repo privata separata |
 | Licenza | Open source, MIT |
 | Codice | Scritto da Claude: lo stack si sceglie per semplicità d'uso, non per familiarità |
@@ -91,7 +97,7 @@ flowchart LR
    | Famiglia di sintassi | Marche |
    |---|---|
    | Indentazione | Cisco IOS/IOS-XE/NX-OS/ASA, Aruba AOS-CX, ArubaOS-Switch, Aruba Instant/controller, TP-Link JetStream, Ubiquiti EdgeSwitch |
-   | Blocchi `config / edit / set / next / end` | FortiOS (FortiGate), script e template CLI di FortiManager |
+   | Blocchi `config / edit / set / next / end` | FortiOS (FortiGate), FortiSwitchOS, script e template CLI di FortiManager |
    | Blocchi separati da `#` + indentazione | HPE Comware |
    | Graffe o comandi `set` | Juniper Junos, Ubiquiti EdgeRouter (EdgeOS), VyOS |
    | JSON | Check Point (ShowPolicyPackage), Meraki, UniFi, Omada, API FortiManager |
@@ -106,6 +112,9 @@ Così il lavoro sulla sintassi si fa una volta per famiglia, e ogni nuova marca 
 | Marca | Come esportare la configurazione | Formato |
 |---|---|---|
 | FortiGate | Backup dalla GUI, oppure `show full-configuration` | testo `config/edit/set` |
+| FortiSwitch e FortiAP gestiti dal FortiGate | Niente da esportare: la loro configurazione è dentro quella del FortiGate | testo `config/edit/set` |
+| FortiSwitch autonomo | Backup della configurazione | testo `config/edit/set` |
+| FortiAP e FortiSwitch gestiti dal cloud Fortinet | API (fase server) | JSON |
 | FortiManager | Template CLI (testo); policy package e oggetti via API JSON-RPC | testo / JSON |
 | Cisco IOS/IOS-XE/NX-OS, ASA | `show running-config` | testo indentato |
 | Aruba AOS-CX | `show running-config` | testo indentato |
@@ -123,7 +132,9 @@ Così il lavoro sulla sintassi si fa una volta per famiglia, e ogni nuova marca 
 | TP-Link Omada | API del controller Omada (fase server); il backup del controller è da valutare | JSON |
 | Aruba AP | Instant: `show running-config`; controller AOS 8: config del controller; Central: API | testo / JSON |
 
-**Apparati gestiti da controller** (Meraki, UniFi, Omada). La configurazione non sta nei singoli apparati ma nel controller, che si interroga via API: per questo arrivano con il server (fase 6). In cambio il controller conosce già la topologia (a cosa è collegato ogni apparato) e lo stato delle porte, quindi la mappa si costruisce anche senza LLDP. Valuteremo se i file di backup dei controller permettono di anticiparli.
+**FortiSwitch e FortiAP gestiti dal FortiGate.** Con FortiLink e il wireless controller del FortiGate, la configurazione di switch e access point è scritta in quella del FortiGate: porte, VLAN, PoE e MCLAG dei FortiSwitch; SSID, profili radio e access point dei FortiAP. Si leggono quindi insieme al FortiGate, senza file in più.
+
+**Apparati gestiti da controller o dal cloud** (Meraki, UniFi, Omada, Aruba Central, cloud Fortinet). La configurazione non sta nei singoli apparati ma nel controller, che si interroga via API: per questo arrivano con il server (fase 6). Per UniFi e Omada servono sia i controller locali (Cloud Key, UDM, OC200, software su un server) sia quelli in cloud, perché i clienti li hanno entrambi. In cambio il controller conosce già la topologia (a cosa è collegato ogni apparato) e lo stato delle porte, quindi la mappa si costruisce anche senza LLDP. Valuteremo se i file di backup dei controller permettono di anticiparli.
 
 ### Comandi show utili
 
@@ -153,7 +164,7 @@ Senza show la mappa mostra la configurazione, cioè cosa *dovrebbe* succedere. C
 ```
 Cliente (una cartella sul PC)
 ├── Siti (sede, filiali, datacenter…)
-├── Rack: apparati e patch panel per posizione (U), prese, cavi presa ↔ porta
+├── Rack: elementi per posizione (U): apparati, patch panel, passacavi, UPS…; prese e cavi presa ↔ porta
 ├── Apparati: hostname, marca, OS e versione, modello, ruolo, sito, file sorgenti
 │   ├── Contesti logici: VDOM FortiGate, contesti ASA, virtual system Check Point, logical system Juniper
 │   ├── Interfacce: fisiche, LAG, SVI, loopback, tunnel, sotto-interfacce
@@ -173,7 +184,8 @@ Cliente (una cartella sul PC)
 │   ├── NAT: VIP, IP pool, regole NAT
 │   ├── ACL: voci e punti in cui sono applicate
 │   ├── Servizi di gestione: NTP, DNS, SNMP, syslog, AAA/RADIUS/TACACS, utenti locali
-│   ├── (in seguito) wireless: SSID, sicurezza, VLAN, ruoli
+│   ├── Apparati gestiti: FortiSwitch e FortiAP collegati al FortiGate
+│   ├── Wireless: SSID, sicurezza, VLAN, ruoli, access point e radio
 │   ├── Stato da show (facoltativo): porte, tunnel, sessioni BGP, SLA, vicini LLDP/CDP
 │   └── Diagnostica: righe non comprese, avvisi del parser
 └── Collegamenti tra apparati: tipo (cavo, LAG, subnet, IPsec, overlay SD-WAN, scorciatoia ADVPN,
@@ -261,9 +273,9 @@ Disegno del frontale, con un riquadro per ogni membro dello stack:
 - **Vista logica di LAG e MLAG**: i due switch della coppia vPC/VSX, il peer-link, il keepalive e i port-channel verso il basso.
 - **Disposizione delle porte**:
   - in prima battuta generica, ricavata dai nomi delle interfacce: porte dispari sopra e pari sotto, uplink a parte, un blocco per membro;
-  - poi frontali realistici per modello, usando la [NetBox devicetype-library](https://github.com/netbox-community/devicetype-library): migliaia di modelli con elenco e tipo di porte, con licenza CC0 e quindi riutilizzabile liberamente;
+  - poi frontali realistici per tutti i modelli, ricavati dalla [NetBox devicetype-library](https://github.com/netbox-community/devicetype-library): migliaia di modelli con elenco e tipo di porte, con licenza CC0 e quindi riutilizzabile liberamente; per i modelli che mancano resta il frontale generico;
   - il modello si ricava dalla config stessa (per esempio `switch 1 provision c9300-48p` su Cisco, l'intestazione `#config-version=FGT60F-…` su FortiGate) oppure da `show inventory`.
-- Lo stesso pannello serve per le **interfacce del FortiGate** (port1…, wan, x1/x2 SFP+).
+- Lo stesso pannello serve per le **interfacce del FortiGate** (port1…, wan, x1/x2 SFP+) e per i **FortiSwitch** gestiti dal FortiGate, comprese le coppie MCLAG.
 
 ### 5.6 VLAN
 
@@ -296,9 +308,13 @@ Hostname, modello, versione, IP di gestione, conteggi (interfacce, VLAN, policy,
 
 ### 5.11 Rack e patch panel
 
-![Rack nel mockup prima della migrazione: le prese dei patch panel sono collegate a porte sparse e i cavi si incrociano](img/mockup-rack-oggi.png)
+![Il rack del CED nel mockup: firewall, stack di switch, patch panel, mensola e UPS nelle loro unità, con l'elenco degli elementi e il modulo per aggiungerne altri](img/mockup-rack-r1.png)
 
-- Fronte del rack con patch panel, switch e passacavi nelle loro posizioni (U).
+- **Composizione del rack**: si sceglie cosa mettere e in quali unità. Si possono inserire gli apparati del progetto (firewall, switch, controller…) ed elementi generici: patch panel da 24 o 48 porte, passacavi, mensole, UPS, PDU, pannelli ciechi. Gli elementi si spostano trascinandoli e un sito può avere più rack.
+- Le porte degli apparati mostrano i colori delle VLAN presi dalla config, con i frontali realistici di ogni modello. Cliccando un elemento si apre l'apparato corrispondente.
+
+![Rack di piano nel mockup prima della migrazione: le prese dei patch panel sono collegate a porte sparse e i cavi si incrociano](img/mockup-rack-oggi.png)
+
 - Ogni presa collegata alla sua porta, con il colore della VLAN che serve. Cliccando una presa si vede cosa c'è dall'altra parte: utenza, porta, VLAN, telefono o PC (dalla tabella MAC).
 - **Da dove arrivano i dati**: le porte dalle config e dagli show. Prese e patch panel oggi non sono documentati, quindi si parte da un **rilievo in sede** guidato dallo strumento:
   - una pagina da telefono elenca le prese di ogni patch panel; per ciascuna il tecnico indica la porta dello switch, oppure "libera";
@@ -412,7 +428,7 @@ La licenza di ogni libreria va verificata prima di adottarla: deve essere compat
 
 **Distribuzione.** La repo è pubblica, quindi l'app si può pubblicare gratis su **GitHub Pages** e si apre da un link; i file restano comunque nel browser. Per gli ambienti senza internet si può scaricare un pacchetto offline.
 
-**Lingua.** Codice e nomi tecnici in inglese, interfaccia in italiano predisposta per l'inglese (da confermare).
+**Lingua.** Interfaccia in italiano e in inglese fin dalla prima versione, con la lingua scelta da chi la usa; codice e nomi tecnici in inglese. I termini di rete d'uso comune (VLAN, trunk, policy) restano invariati in entrambe le lingue.
 
 ## 9. Sicurezza e riservatezza
 
@@ -443,6 +459,7 @@ Ogni fase si chiude con qualcosa che puoi aprire e provare. L'ordine delle fasi 
 - Caricamento file (anche zip) e riconoscimento automatico di marca, OS e modello.
 - Parser generici e vista della config originale.
 - Anonimizzatore.
+- Interfaccia in italiano e inglese fin dall'inizio.
 - **Risultato**: trascini un backup FortiGate o Cisco, l'app lo riconosce e mostra la config navigabile. Puoi anonimizzare le config reali e passarmele.
 
 ### Fase 1: lettura dei singoli apparati FortiGate e Cisco IOS/IOS-XE (MVP)
@@ -457,12 +474,14 @@ Ogni fase si chiude con qualcosa che puoi aprire e provare. L'ordine delle fasi 
 - Progetto con più apparati e siti; correlazione (cavi, LAG, subnet, IPsec, overlay SD-WAN, BGP).
 - Mappa a livelli, vista VPN con ADVPN, dettaglio dei collegamenti, controlli di coerenza, stato reale dagli show.
 - Verifica dei cavi con LLDP/CDP e collegamenti inseriti a mano.
+- FortiSwitch e FortiAP gestiti dal FortiGate: pannello porte, MCLAG, SSID e access point.
 - Esportazione in draw.io e immagine.
 - **Risultato**: carichi le config di sede e filiali e vedi la rete del cliente, con i problemi evidenziati.
 
-### Fase 3: analisi
+### Fase 3: analisi e rack
 - Policy lookup (poi anche tra le sedi), pulizia policy, confronto tra versioni.
-- **Risultato**: risposte del tipo "questo traffico passa?" e report di pulizia.
+- Rack: composizione (apparati, patch panel, passacavi, UPS… nelle loro unità), frontali realistici per tutti i modelli, rilievo delle prese in sede da telefono.
+- **Risultato**: risposte del tipo "questo traffico passa?", report di pulizia e rack del cliente documentati.
 
 ### Fase 4: altri firewall e conversione verso FortiGate
 - Lettori ASA, Check Point, Sophos e Juniper, poi pfSense, OPNsense e Ubiquiti EdgeRouter, con le stesse viste e presenti nella mappa.
@@ -470,25 +489,22 @@ Ogni fase si chiude con qualcosa che puoi aprire e provare. L'ordine delle fasi 
 - **Risultato**: config FortiGate generata, verificata e accompagnata dal report.
 
 ### Fase 5: altri switch e migrazioni switch
-- Lettori NX-OS (vPC), AOS-CX (VSX), ArubaOS-Switch, Comware, Aruba Instant, TP-Link JetStream, Ubiquiti EdgeSwitch.
-- Vista rack con patch panel e rilievo in sede guidato da telefono (oppure import da CSV/Excel o NetBox).
-- Pianificazione del cablaggio sul rack, mappatura porte con consolidamento, generatori AOS-CX e IOS-XE, traduzione vPC → VSX, frontali realistici.
+- Lettori NX-OS (vPC), AOS-CX (VSX), ArubaOS-Switch, Comware, Aruba Instant, TP-Link JetStream, Ubiquiti EdgeSwitch, FortiSwitch autonomi.
+- Import delle prese da CSV/Excel o NetBox, quando esistono.
+- Pianificazione del cablaggio sul rack, mappatura porte con consolidamento, generatori AOS-CX e IOS-XE, traduzione vPC → VSX.
 - Patch list per rack in PDF, Excel e pagina da telefono con spunta; verifica dopo il cambio con LLDP, tabella MAC e stato porte.
 - **Risultato**: config del nuovo switch, patch list per i tecnici e controllo del lavoro fatto in sede.
 
 ### Fase 6: server per il team e lettura live
 - La stessa app su un server (Docker), con progetti condivisi e utenti.
-- Lettura via SSH/API: FortiGate, FortiManager (policy package), Meraki, UniFi, Omada, Aruba Central, Cisco.
-- Apparati gestiti da controller (Meraki, UniFi, Omada) e wireless nella mappa e nelle viste; Meraki anche come destinazione delle migrazioni.
+- Lettura via SSH/API: FortiGate, FortiManager (policy package), Meraki, UniFi e Omada (controller locali e in cloud), Aruba Central, cloud Fortinet per FortiAP e FortiSwitch, Cisco.
+- Apparati gestiti da controller o dal cloud (Meraki, UniFi, Omada, Aruba Central) e wireless nella mappa e nelle viste; Meraki anche come destinazione delle migrazioni.
 - Rilievo delle prese assistito dalla lettura live: si stacca un cavo e lo strumento riconosce la porta.
 - **Risultato**: lo strumento usato dal team, con import diretto dagli apparati.
 
 ## 12. Domande aperte
 
-1. **UniFi e Omada**: i controller dei tuoi clienti sono locali (Cloud Key, UDM, OC200, software su un server) o in cloud? Cambia il modo di leggerli.
-2. **Modelli hardware più frequenti** (Catalyst, FortiGate, UniFi, JetStream), per dare priorità ai frontali realistici.
-3. **Wireless**: quali piattaforme usi (Aruba Instant, controller AOS 8, Central/AOS 10, Meraki MR, UniFi, Omada)?
-4. **Lingua dell'interfaccia**: va bene l'italiano, con l'inglese in un secondo momento?
+Nessuna domanda aperta blocca l'inizio dei lavori. Durante lo sviluppo serviranno le config reali, anonimizzate con lo strumento della fase 0.
 
 ## Riferimenti
 
