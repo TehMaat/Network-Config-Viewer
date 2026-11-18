@@ -15,7 +15,7 @@
 - **Migrazioni**: arrivano dopo la parte di visualizzazione, su cui si appoggiano. Si parte da ASA, Check Point, Sophos e Juniper verso FortiGate (poi pfSense e OPNsense), in config diretta o tramite FortiManager, con verifica automatica del risultato. Poi le migrazioni switch, pianificate sul rack con la patch list per i tecnici in sede.
 - **Licenza**: open source, MIT.
 - **Lingua**: interfaccia in italiano e in inglese, a scelta di chi la usa.
-- **Chi scrive il codice**: Claude. Tu definisci le priorità, fornisci config di esempio e provi le versioni.
+- **Chi scrive il codice**: Claude. Tu definisci le priorità, fornisci config di esempio e provi le versioni. Ogni modifica passa da un'issue e parte solo con il tuo okay.
 
 ![La mappa dell'infrastruttura nel mockup: sede e filiali con cavi, tunnel IPsec, sessioni BGP e i problemi trovati confrontando gli apparati](img/mockup-mappa.png)
 
@@ -50,6 +50,7 @@
 | Config reali per lo sviluppo | Disponibili: arrivano dopo l'anonimizzatore (fase 0), in una repo privata separata |
 | Licenza | Open source, MIT |
 | Codice | Scritto da Claude: lo stack si sceglie per semplicità d'uso, non per familiarità |
+| Metodo di lavoro | Ogni proposta viene analizzata e diventa un'issue; si lavora solo dopo l'okay. Registro delle modifiche in `CHANGELOG.md`, documentazione sempre aggiornata, Semantic Versioning. Regole complete in [`CLAUDE.md`](../CLAUDE.md) |
 
 ## 3. Architettura
 
