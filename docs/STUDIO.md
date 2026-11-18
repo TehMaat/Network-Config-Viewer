@@ -4,14 +4,15 @@
 
 ## 1. In breve
 
-- **Cosa**: uno strumento per **vedere l'infrastruttura di un cliente** partendo dai backup di configurazione. Si caricano tutti gli apparati (firewall, switch, wireless) e si ottengono:
-  - una mappa grafica con collegamenti fisici, VPN, SD-WAN e routing/BGP;
-  - le viste di dettaglio di ogni apparato: policy, porte e VLAN, ACL, regole SD-WAN, routing.
+- **Cosa**: uno strumento per **vedere l'infrastruttura di un cliente** partendo dai backup di configurazione. Ogni cliente ha la sua cartella con config, output di show e versioni precedenti. Si caricano tutti gli apparati (firewall, switch, wireless) e si ottengono:
+  - una mappa grafica con collegamenti fisici, VPN, SD-WAN, scorciatoie ADVPN e routing/BGP;
+  - le viste di dettaglio di ogni apparato: policy, porte e VLAN, ACL, regole SD-WAN, routing;
+  - la vista dei rack, con patch panel e cavi.
 
-  Sulla stessa base lo strumento aiuta a preparare e verificare le migrazioni.
+  Sulla stessa base lo strumento aiuta a preparare e verificare le migrazioni, comprese quelle degli switch pianificate sul rack da chi lavora da remoto.
 - **Come**: un'app web che gira **interamente nel browser**. I file vengono elaborati sul PC e non vengono mai caricati su un server. Più avanti si aggiunge un server opzionale per il lavoro in team e per leggere gli apparati in diretta via SSH/API.
 - **Primo traguardo (MVP)**: FortiGate e Cisco IOS/IOS-XE, prima apparato per apparato, poi messi insieme nella mappa dell'infrastruttura.
-- **Migrazioni**: si parte da ASA, Check Point, Sophos e Juniper verso FortiGate, in config diretta o tramite FortiManager, con verifica automatica del risultato. Poi le migrazioni switch.
+- **Migrazioni**: arrivano dopo la parte di visualizzazione, su cui si appoggiano. Si parte da ASA, Check Point, Sophos e Juniper verso FortiGate, in config diretta o tramite FortiManager, con verifica automatica del risultato. Poi le migrazioni switch, pianificate sul rack con la patch list per i tecnici in sede.
 - **Licenza**: open source, MIT.
 - **Chi scrive il codice**: Claude. Tu definisci le priorità, fornisci config di esempio e provi le versioni.
 
@@ -34,6 +35,10 @@
 | FortiManager | Sia in lettura (template e policy package esistenti) sia in generazione |
 | Input | File caricati a mano e output dei comandi show; lettura live SSH/API in una fase successiva |
 | Analisi | Pulizia policy, policy lookup, topologia, confronto tra versioni, controlli di coerenza tra apparati |
+| Organizzazione | Una cartella per cliente, con config, output di show, versioni precedenti, file delle prese e collegamenti inseriti a mano |
+| Collegamenti tra apparati | Verificati con LLDP/CDP, dedotti da descrizioni e indirizzi, oppure inseriti a mano; le differenze tra le fonti vengono segnalate |
+| VPN | Anche ADVPN: ruoli, controlli e scorciatoie tra filiali |
+| Migrazioni switch | Pianificate sul rack con i patch panel, per gestire i cablaggi da remoto; arrivano dopo la visualizzazione |
 | Config reali per lo sviluppo | Disponibili: arrivano dopo l'anonimizzatore (fase 0), in una repo privata separata |
 | Licenza | Open source, MIT |
 | Codice | Scritto da Claude: lo stack si sceglie per semplicità d'uso, non per familiarità |
@@ -71,7 +76,7 @@ flowchart LR
    - due interfacce nella stessa subnet diventano un collegamento L3;
    - i vicini LLDP/CDP diventano cavi, e più cavi verso lo stesso vicino diventano un LAG.
 
-   Ogni collegamento dedotto riporta il motivo e un grado di affidabilità, e si può confermare o correggere a mano.
+   Ogni collegamento riporta la sua fonte: verificato (LLDP/CDP), dedotto (descrizioni, subnet, IP del peer) o inserito a mano. Si può confermare o correggere, e si possono aggiungere collegamenti che nessuna fonte vede, per esempio verso apparati non gestiti. Quando le fonti non sono d'accordo, la differenza viene segnalata: per esempio la descrizione della porta dice un nome e LLDP ne vede un altro.
 3. **Lettori e generatori separati.** Per ogni marca possono esistere un *lettore* (parser) e un *generatore* (che scrive la config). Di lettori ne servono tanti, di generatori pochi: solo per le destinazioni delle migrazioni (FortiGate/FortiManager, Aruba, Cisco, Meraki).
 4. **Tracciabilità riga per riga.** Ogni oggetto del modello ricorda da quali righe del file proviene, così dalla grafica si salta sempre alla config originale. Ogni riga del file è classificata come *compresa*, *ignorata di proposito* (commenti, banner) o *sconosciuta*, e la percentuale di copertura è sempre visibile. In migrazione è ciò che garantisce di sapere cosa **non** è stato portato.
 5. **I default contano.** La running-config non mostra i valori di default: per esempio su un Catalyst una porta senza `switchport mode` non è "access", ma negozia la modalità con DTP. Il parser deve conoscere i default per marca e versione, altrimenti la migrazione perde informazioni senza che nessuno se ne accorga.
@@ -136,8 +141,9 @@ Senza show la mappa mostra la configurazione, cioè cosa *dovrebbe* succedere. C
 ## 4. Modello dati neutro (prima bozza)
 
 ```
-Progetto (cliente)
+Cliente (una cartella sul PC)
 ├── Siti (sede, filiali, datacenter…)
+├── Rack: apparati e patch panel per posizione (U), prese, cavi presa ↔ porta
 ├── Apparati: hostname, marca, OS e versione, modello, ruolo, sito, file sorgenti
 │   ├── Contesti logici: VDOM FortiGate, contesti ASA, virtual system Check Point, logical system Juniper
 │   ├── Interfacce: fisiche, LAG, SVI, loopback, tunnel, sotto-interfacce
@@ -148,7 +154,8 @@ Progetto (cliente)
 │   ├── Routing: rotte statiche, policy route, BGP (AS, router-id, neighbor, gruppi,
 │   │     range dinamici, reti annunciate, redistribuzione, route-map, prefix-list,
 │   │     community), OSPF (aree, interfacce)
-│   ├── VPN: IPsec fase 1 e fase 2 (peer, proposte, DH, PFS, selettori, ADVPN), GRE
+│   ├── VPN: IPsec fase 1 e fase 2 (peer, proposte, DH, PFS, selettori), GRE,
+│   │     ruolo ADVPN (sender/receiver) e scorciatoie attive
 │   ├── SD-WAN: zone, membri (underlay/overlay), health check e SLA, regole
 │   ├── Zone · oggetti indirizzo e gruppi · servizi e gruppi · schedule · utenti
 │   ├── Policy firewall: ordine, interfacce/zone, sorgente, destinazione, servizio,
@@ -159,8 +166,8 @@ Progetto (cliente)
 │   ├── (in seguito) wireless: SSID, sicurezza, VLAN, ruoli
 │   ├── Stato da show (facoltativo): porte, tunnel, sessioni BGP, SLA, vicini LLDP/CDP
 │   └── Diagnostica: righe non comprese, avvisi del parser
-└── Collegamenti tra apparati: tipo (cavo, LAG, subnet, IPsec, overlay SD-WAN, BGP, OSPF),
-      estremi, motivo della deduzione, affidabilità, conferma manuale
+└── Collegamenti tra apparati: tipo (cavo, LAG, subnet, IPsec, overlay SD-WAN, scorciatoia ADVPN,
+      BGP, OSPF), estremi, fonte (LLDP/CDP, descrizione, inserito a mano), affidabilità
 ```
 
 - Ogni elemento porta con sé i riferimenti alle righe sorgente.
@@ -168,17 +175,19 @@ Progetto (cliente)
 
 ## 5. Le viste grafiche
 
-Il [mockup](mockup/index.html) contiene le viste 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7 e 5.9, con un cliente di esempio: una sede con FortiGate hub e tre Catalyst, due filiali con FortiGate in SD-WAN.
+Il [mockup](mockup/index.html) contiene le viste 5.1–5.7, 5.9 e 5.11, con un cliente di esempio: una sede con FortiGate hub e tre Catalyst, tre filiali con FortiGate in SD-WAN e ADVPN.
 
 ### 5.1 Mappa dell'infrastruttura (vista principale)
 
 - Apparati raggruppati per sito, con il ruolo in evidenza. Internet e i provider sono collegati alle interfacce WAN.
-- **Livelli attivabili**: cavi e LAG (da LLDP/CDP), subnet condivise, VPN e overlay SD-WAN, sessioni BGP/OSPF.
+- **Livelli attivabili**: cavi e LAG, subnet condivise, VPN e overlay SD-WAN, scorciatoie ADVPN, sessioni BGP/OSPF.
 - **Clic su un collegamento**: i due estremi affiancati. Per esempio:
   - per un tunnel IPsec, fase 1 e fase 2 confrontate parametro per parametro, con le differenze in rosso e il suggerimento per sistemarle;
   - per una sessione BGP, AS, IP, route-map e prefissi;
   - per un trunk, VLAN permesse e nativa dei due lati.
 - **Clic su un apparato**: riepilogo e accesso alle sue viste di dettaglio.
+- **Collegamenti a mano**: si disegnano trascinando da una porta a un'altra, anche verso apparati che non fanno parte del progetto (un router del provider, un NAS). Restano salvati nella cartella del cliente.
+- **Verifica dei cavi con LLDP/CDP**: con gli output dei vicini caricati, ogni cavo risulta verificato, solo dedotto oppure in contrasto con la descrizione della porta. Vengono segnalate anche le porte senza LLDP attivo, dove la verifica non è possibile.
 - **Problemi in evidenza**: i collegamenti incoerenti (vedi capitolo 6) sono segnati sulla mappa ed elencati sotto.
 - **Stato reale**, se sono stati caricati gli show: tunnel su o giù, BGP stabilito o no, SLA rispettati.
 - Siti proposti in automatico (per esempio dal prefisso dell'hostname) e modificabili. Disposizione automatica, con posizioni modificabili e salvate nel progetto.
@@ -193,6 +202,15 @@ Elenco dei tunnel di tutto il progetto con i due estremi abbinati, e per ciascun
 - selettori di fase 2, ADVPN, IP del tunnel.
 
 Le topologie hub & spoke sono riconosciute. I tunnel verso peer che non fanno parte del progetto (partner, cloud) sono segnalati come "un solo lato".
+
+**ADVPN**, per le reti hub & spoke in cui le filiali aprono tunnel diretti tra loro:
+
+- ruolo di ogni tunnel: sender sull'hub, receiver sulle filiali;
+- controlli: policy che permettono il traffico tra filiali sull'hub e sulle filiali, BGP che non cambia il next hop delle rotte riflesse (serve a far partire le scorciatoie);
+- per ogni coppia di filiali: scorciatoia attiva (dagli show), possibile o non possibile, e perché;
+- sulla mappa, le scorciatoie attive collegano direttamente le filiali.
+
+![ADVPN nel mockup: controlli sulla configurazione, stato delle scorciatoie per ogni coppia di filiali e dettaglio della scorciatoia attiva](img/mockup-advpn.png)
 
 ### 5.3 SD-WAN
 
@@ -263,11 +281,20 @@ Testo originale con evidenziazione della sintassi, blocchi piegabili e numeri di
 
 Hostname, modello, versione, IP di gestione, conteggi (interfacce, VLAN, policy, oggetti), funzioni in uso (stack, vPC, VSX, 802.1X, OSPF, SD-WAN…), show caricati e percentuale di copertura del parser.
 
+### 5.11 Rack e patch panel
+
+![Rack nel mockup prima della migrazione: le prese dei patch panel sono collegate a porte sparse e i cavi si incrociano](img/mockup-rack-oggi.png)
+
+- Fronte del rack con patch panel, switch e passacavi nelle loro posizioni (U).
+- Ogni presa collegata alla sua porta, con il colore della VLAN che serve. Cliccando una presa si vede cosa c'è dall'altra parte: utenza, porta, VLAN, telefono o PC (dalla tabella MAC).
+- **Da dove arrivano i dati**: le porte dalle config e dagli show; prese e patch panel da un file dell'installatore (CSV o Excel), dalle descrizioni delle porte oppure inseriti a mano. In futuro anche da NetBox.
+- È la base per le migrazioni switch pianificate da remoto (vedi 7.3).
+
 ## 6. Analisi
 
 | Funzione | Cosa fa |
 |---|---|
-| **Controlli di coerenza** | Confronta gli estremi di ogni collegamento e trova: tunnel IPsec con proposte, gruppi DH o selettori incompatibili; sessioni BGP con AS sbagliato o senza il neighbor dall'altro lato; rotte attese che mancano; trunk con VLAN nativa o permesse diverse; LACP configurato da un solo lato; MTU diverse; IP duplicati e subnet sovrapposte tra siti (un problema classico con VPN e SD-WAN). |
+| **Controlli di coerenza** | Confronta gli estremi di ogni collegamento e trova: tunnel IPsec con proposte, gruppi DH o selettori incompatibili; sessioni BGP con AS sbagliato o senza il neighbor dall'altro lato; rotte attese che mancano; trunk con VLAN nativa o permesse diverse; LACP configurato da un solo lato; MTU diverse; IP duplicati e subnet sovrapposte tra siti (un problema classico con VPN e SD-WAN); scorciatoie ADVPN che non possono partire; descrizioni delle porte in contrasto con LLDP/CDP. |
 | **Policy lookup** | Dato un flusso (IP sorgente, IP destinazione, protocollo e porta, interfaccia d'ingresso), indica quale regola lo gestisce e perché. Vale sia per le policy firewall sia per le ACL. In seguito proseguirà **tra le sedi**: policy della filiale, regola SD-WAN scelta, tunnel, policy dell'hub. |
 | **Pulizia policy** | Trova regole oscurate da regole precedenti (shadowed) o ridondanti, oggetti inutilizzati, oggetti duplicati (stesso valore, nome diverso), gruppi vuoti, any-any, regole disabilitate o senza log. Serve soprattutto **prima** di una migrazione, per non portarsi dietro regole e oggetti inutili. |
 | **Confronto versioni** | Mostra le differenze tra due backup dello stesso apparato: non solo nel testo, ma anche nel significato (policy, oggetti, porte, VLAN, tunnel, rotte aggiunti, rimossi o modificati). |
@@ -319,8 +346,18 @@ Una volta pronti lettore e generatore FortiOS, anche il **refresh FortiGate → 
 
 ### 7.3 Migrazioni switch
 
+Arrivano dopo la parte di visualizzazione, su cui si appoggiano (lettori, modello neutro, mappa, rack).
+
 - Refresh Cisco (per esempio Catalyst 2960/3750/3850 → 9200/9300) e Cisco → Aruba AOS-CX, compresa la traduzione vPC → VSX, port-security e 802.1X.
-- Mappatura porte vecchio → nuovo anche con consolidamento su stack, patch list, verifica per rilettura.
+- **Pianificazione sul rack**, pensata per chi gestisce i cablaggi da remoto:
+  1. si posiziona il nuovo switch nel rack;
+  2. lo strumento propone il cablaggio migliore: ogni presa sulla porta della stessa colonna, con cavi corti e senza incroci (oppure raggruppati per VLAN, se si preferisce);
+  3. la configurazione segue la presa: ogni porta nuova riceve VLAN, voce, 802.1X e descrizione della porta vecchia che sostituisce;
+  4. escono la config del nuovo switch e la **patch list** per i tecnici in sede, divisa per rack ("presa A05: dalla Gi1/0/30 del vecchio switch alla Gi1/0/9 del nuovo, cavo da 0,5 m");
+  5. dopo il cambio si caricano LLDP, tabella MAC e stato porte del nuovo switch: lo strumento verifica che ogni presa sia finita sulla porta prevista e segnala le differenze.
+- Consolidamento di più switch su uno stack, con la stessa logica.
+
+![Lo stesso rack dopo la migrazione pianificata: nuovo switch, cavi dritti e patch list per i tecnici](img/mockup-rack-dopo.png)
 
 ### 7.4 Meraki e cloud
 
@@ -346,7 +383,7 @@ Il punto forte di Python (librerie SSH come Netmiko) serve solo per la lettura l
 | Config originale | CodeMirror 6 (evidenziazione, piegatura, salto alla riga) |
 | Elaborazione | Web Worker, così l'interfaccia non si blocca sui file grandi |
 | Archivi zip e tar.gz | fflate |
-| Salvataggio progetti | Nel browser (IndexedDB), con esportazione e importazione in un file di progetto |
+| Cartelle dei clienti | Una cartella per cliente sul PC, letta e aggiornata direttamente dal browser (Chrome ed Edge lo permettono); negli altri browser, salvataggio interno al browser con import/export in zip |
 | Export | Excel (ExcelJS), report HTML stampabile in PDF |
 | Test | Vitest (parser e logica), Playwright (interfaccia) |
 | Struttura del codice | Monorepo: `core` (modello, parser, correlazione, generatori, analisi, senza dipendenze dal browser), `web` (interfaccia), in futuro `server` |
@@ -392,12 +429,14 @@ Ogni fase si chiude con qualcosa che puoi aprire e provare. L'ordine delle fasi 
 - FortiGate: interfacce e zone, oggetti, policy (con VDOM), VIP e IP pool, routing (statiche, BGP, OSPF), VPN IPsec, SD-WAN.
 - Cisco: interfacce, VLAN, trunk, port-channel, stack, SVI, ACL, routing.
 - Output dei comandi show di entrambi.
+- Cartella per cliente: si apre una cartella con config, show e versioni precedenti, e lo strumento la legge tutta.
 - Viste per apparato (5.3–5.10) ed export Excel.
 - **Risultato**: ogni FortiGate e ogni Catalyst leggibile in forma grafica.
 
 ### Fase 2: mappa dell'infrastruttura
 - Progetto con più apparati e siti; correlazione (cavi, LAG, subnet, IPsec, overlay SD-WAN, BGP).
-- Mappa a livelli, vista VPN, dettaglio dei collegamenti, controlli di coerenza, stato reale dagli show.
+- Mappa a livelli, vista VPN con ADVPN, dettaglio dei collegamenti, controlli di coerenza, stato reale dagli show.
+- Verifica dei cavi con LLDP/CDP e collegamenti inseriti a mano.
 - Esportazione in draw.io e immagine.
 - **Risultato**: carichi le config di sede e filiali e vedi la rete del cliente, con i problemi evidenziati.
 
@@ -412,8 +451,10 @@ Ogni fase si chiude con qualcosa che puoi aprire e provare. L'ordine delle fasi 
 
 ### Fase 5: altri switch e migrazioni switch
 - Lettori NX-OS (vPC), AOS-CX (VSX), ArubaOS-Switch, Comware, Aruba Instant.
-- Mappatura porte con consolidamento, patch list, generatori AOS-CX e IOS-XE, traduzione vPC → VSX, frontali realistici.
-- **Risultato**: config del nuovo switch e patch list per i tecnici.
+- Vista rack con patch panel (prese da file CSV/Excel o inserite a mano).
+- Pianificazione del cablaggio sul rack, mappatura porte con consolidamento, generatori AOS-CX e IOS-XE, traduzione vPC → VSX, frontali realistici.
+- Patch list per rack e verifica dopo il cambio con LLDP, tabella MAC e stato porte.
+- **Risultato**: config del nuovo switch, patch list per i tecnici e controllo del lavoro fatto in sede.
 
 ### Fase 6: server per il team e lettura live
 - La stessa app su un server (Docker), con progetti condivisi e utenti.
@@ -423,10 +464,11 @@ Ogni fase si chiude con qualcosa che puoi aprire e provare. L'ordine delle fasi 
 
 ## 12. Domande aperte
 
-1. **Mockup**: le viste vanno nella direzione giusta? Cosa manca, cosa cambieresti?
-2. **Modelli hardware più frequenti** (Catalyst e FortiGate), per dare priorità ai frontali realistici.
-3. **Wireless**: quali piattaforme usi (Aruba Instant, controller AOS 8, Central/AOS 10, Meraki MR)?
-4. **Lingua dell'interfaccia**: va bene l'italiano, con l'inglese in un secondo momento?
+1. **Prese e patch panel**: come sono documentati oggi presso i tuoi clienti? Excel o CSV dell'installatore, descrizioni delle porte, NetBox, niente? Da qui dipende come alimentare la vista rack.
+2. **Patch list**: in che forma la vuoi dare ai tecnici in sede? PDF da stampare, Excel, pagina da aprire sul telefono?
+3. **Modelli hardware più frequenti** (Catalyst e FortiGate), per dare priorità ai frontali realistici.
+4. **Wireless**: quali piattaforme usi (Aruba Instant, controller AOS 8, Central/AOS 10, Meraki MR)?
+5. **Lingua dell'interfaccia**: va bene l'italiano, con l'inglese in un secondo momento?
 
 ## Riferimenti
 

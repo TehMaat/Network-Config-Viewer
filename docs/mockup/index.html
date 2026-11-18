@@ -16,7 +16,7 @@
   --bg:#edf1f4; --surface:#ffffff; --surface-2:#f4f7f9; --sunken:#e7ecf0;
   --fg:#15212c; --muted:#5a6a79; --border:#d2dbe3; --border-strong:#b2c0cc;
   --accent:#0b6e7f; --accent-soft:#dff1f3;
-  --phys:#7a8896; --vpn:#0b6e7f; --bgp:#6a45d8;
+  --phys:#7a8896; --vpn:#0b6e7f; --bgp:#6a45d8; --advpn:#c2255c; --shadow:rgba(21,33,44,.16);
   --ok:#2b8a3e; --ok-soft:#e3f3e7; --warn:#b05e00; --warn-soft:#fcefd9; --err:#cc2f43; --err-soft:#fbe5e8;
   --font-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --font-cond:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
@@ -28,7 +28,7 @@
     --bg:#0e151b; --surface:#152029; --surface-2:#1a2631; --sunken:#111a22;
     --fg:#e2e9ef; --muted:#93a3b2; --border:#283745; --border-strong:#3c4f60;
     --accent:#4cc3d4; --accent-soft:#12343b;
-    --phys:#8796a4; --vpn:#4cc3d4; --bgp:#a08bff;
+    --phys:#8796a4; --vpn:#4cc3d4; --bgp:#a08bff; --advpn:#f783ac; --shadow:rgba(0,0,0,.45);
     --ok:#5fcf75; --ok-soft:#14301c; --warn:#ffad55; --warn-soft:#38270f; --err:#ff6d7b; --err-soft:#3b1a20;
     color-scheme:dark;
   }
@@ -37,11 +37,12 @@
   --bg:#0e151b; --surface:#152029; --surface-2:#1a2631; --sunken:#111a22;
   --fg:#e2e9ef; --muted:#93a3b2; --border:#283745; --border-strong:#3c4f60;
   --accent:#4cc3d4; --accent-soft:#12343b;
-  --phys:#8796a4; --vpn:#4cc3d4; --bgp:#a08bff;
+  --phys:#8796a4; --vpn:#4cc3d4; --bgp:#a08bff; --advpn:#f783ac; --shadow:rgba(0,0,0,.45);
   --ok:#5fcf75; --ok-soft:#14301c; --warn:#ffad55; --warn-soft:#38270f; --err:#ff6d7b; --err-soft:#3b1a20;
   color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:14px;line-height:1.45;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px}
@@ -98,8 +99,7 @@ h3.sec{font-size:13px;font-family:var(--font-cond);font-weight:600;letter-spacin
 .map-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .layer{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:4px 11px 4px 9px;cursor:pointer;user-select:none;font-size:13px}
 .layer input{margin:0;accent-color:var(--accent)}
-.swatch{width:22px;height:0;border-top:2px solid var(--phys)}
-.swatch.vpn{border-top:2px dashed var(--vpn)} .swatch.bgp{border-top:3px dotted var(--bgp)}
+.sw-svg{width:26px;height:8px;overflow:visible;flex:none}
 .map-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2)}
 .map{display:block;width:100%;min-width:680px;height:auto}
 .map-hint{display:none;margin:0;font-size:12.5px;color:var(--muted)}
@@ -111,6 +111,7 @@ h3.sec{font-size:13px;font-family:var(--font-cond);font-weight:600;letter-spacin
 .edge.vpn{stroke:var(--vpn);stroke-dasharray:8 6}
 .edge.bgp{stroke:var(--bgp);stroke-dasharray:0.5 6;stroke-linecap:round;stroke-width:3.2}
 .edge.warn{stroke:var(--warn)} .edge.err{stroke:var(--err)}
+.edge.advpn{stroke:var(--advpn);stroke-width:2.6;stroke-dasharray:12 4 2 4}
 .hit{fill:none;stroke:transparent;stroke-width:18;cursor:pointer;pointer-events:stroke}
 .edge-g.selected .edge{stroke-width:4.5}
 .edge-g.selected .edge.lag{stroke-width:7}
@@ -133,7 +134,7 @@ h3.sec{font-size:13px;font-family:var(--font-cond);font-weight:600;letter-spacin
 .cloud-stroke{fill:var(--surface);stroke:var(--border-strong);stroke-width:4}
 .cloud-fill{fill:var(--surface)}
 .cloud-label{fill:var(--muted);font-size:13px;font-weight:500}
-.map.hide-phys .l-phys,.map.hide-vpn .l-vpn,.map.hide-bgp .l-bgp{display:none}
+.map.hide-phys .l-phys,.map.hide-vpn .l-vpn,.map.hide-bgp .l-bgp,.map.hide-advpn .l-advpn{display:none}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted)}
 .legend > span{display:inline-flex;align-items:center;gap:6px}
 
@@ -246,9 +247,48 @@ pre.cfg{font-family:var(--font-mono);font-size:12px;line-height:1.55;background:
 pre.cfg .ln{display:inline-block;width:3.8em;padding-right:12px;text-align:right;color:var(--muted);user-select:none}
 pre.cfg .kw{color:var(--accent)}
 .hint{color:var(--muted);font-size:13px;margin:0}
+.detail .flag{white-space:normal}
 .hint-list{margin:0;padding-left:18px;color:var(--muted);font-size:13px;display:grid;gap:4px}
 .actions{display:flex;flex-wrap:wrap;gap:6px}
 .list-issues{display:grid;gap:6px}
+
+/* clienti, ADVPN, rack */
+.client-wrap{position:relative}
+.client-btn{border:1px solid var(--border);background:var(--surface);border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:600;font-size:13px}
+.client-btn:hover{border-color:var(--border-strong)}
+.popover{position:absolute;top:calc(100% + 6px);left:0;z-index:20;width:min(440px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius);box-shadow:0 10px 30px var(--shadow);padding:12px;display:grid;gap:8px}
+.clients{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.clients li{display:flex;justify-content:space-between;gap:10px;padding:6px 8px;border-radius:6px;font-size:13px}
+.clients li.cur{background:var(--accent-soft)}
+.clients li span{color:var(--muted);font-size:12px;white-space:nowrap}
+.tree{font-family:var(--font-mono);font-size:11.5px;line-height:1.5;margin:0;background:var(--sunken);border:1px solid var(--border);border-radius:6px;padding:8px 10px;overflow-x:auto}
+.tree i{font-style:normal;color:var(--muted)}
+.checks{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.checks li{display:flex;gap:8px;align-items:baseline;font-size:13px}
+.rule .rnote.info{color:var(--muted)}
+tr.sel td{background:var(--accent-soft)}
+.mode-toggle{display:inline-flex;border:1px solid var(--border);border-radius:999px;overflow:hidden}
+.mode-toggle button{border:0;background:var(--surface);padding:5px 14px;cursor:pointer;font-size:13px}
+.mode-toggle button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.rack-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2)}
+.rack{display:block;width:100%;min-width:760px;height:auto}
+.rack text{font-family:var(--font-ui)}
+.rack .frame{fill:var(--sunken);stroke:var(--border-strong)}
+.rack .rail{fill:var(--border)}
+.rack .ulabel{font-size:10px;fill:var(--muted);font-family:var(--font-mono)}
+.rack .dev{fill:var(--surface);stroke:var(--border-strong)}
+.rack .dev.new{stroke:var(--accent);stroke-width:1.8}
+.rack .mgr{fill:var(--border)}
+.rack .mgrtxt{font-size:10px;fill:var(--muted)}
+.rack .devname{font-size:11px;font-weight:600;fill:var(--fg)}
+.rack .devsub{font-size:10px;fill:var(--muted)}
+.rack .pp{fill:var(--surface-2);stroke:var(--border-strong);cursor:pointer}
+.rack .ppnum{font-size:8.5px;fill:var(--muted);font-family:var(--font-mono)}
+.rack .cable{fill:none;stroke-width:2.2;opacity:.8;pointer-events:none}
+.rack .cable.sel{stroke-width:4.5;opacity:1}
+.rack .pp.sel,.rack .swp.sel{stroke:var(--fg);stroke-width:2.2}
+.rack .swp{stroke:var(--border-strong);stroke-width:.8;cursor:pointer}
+.rack .free{fill:var(--surface-2)}
 
 @media (max-width:1100px){
   html,body{height:auto}
@@ -278,7 +318,33 @@ pre.cfg .kw{color:var(--accent)}
       </svg>
       <span>Network Config Viewer</span>
     </div>
-    <div class="project"><b>Cliente Demo</b> · 6 apparati in 3 siti · backup del 15/11/2026</div>
+    <div class="client-wrap">
+      <button class="client-btn" id="client-btn" type="button" aria-expanded="false" aria-controls="client-pop">Cliente Demo ▾</button>
+      <div class="popover" id="client-pop" hidden>
+        <div class="kicker">Cartella clienti sul tuo PC</div>
+        <ul class="clients">
+          <li class="cur"><b>Cliente Demo</b><span>7 apparati · 15/11/2026</span></li>
+          <li>Cliente Alfa<span>12 apparati · 02/11/2026</span></li>
+          <li>Cliente Beta<span>3 apparati · 28/10/2026</span></li>
+        </ul>
+        <div class="kicker">Contenuto di Cliente Demo</div>
+<pre class="tree">Cliente Demo/
+├── Sede centrale/
+│   ├── FGT-SEDE_2026-11-15.conf
+│   ├── FGT-SEDE_2026-09-01.conf   <i>versione precedente</i>
+│   ├── FGT-SEDE_show_2026-11-15.txt   <i>output di show</i>
+│   ├── SW-CORE_2026-11-15.txt
+│   ├── SW-CORE_lldp_2026-11-15.txt
+│   └── …
+├── Filiale Milano/
+├── Filiale Torino/
+├── Filiale Roma/
+├── rack/R2-piano2.csv   <i>prese e patch panel</i>
+└── progetto.json   <i>siti, collegamenti a mano, posizioni</i></pre>
+        <button class="btn" type="button" disabled title="Non attivo nel mockup">Apri un’altra cartella</button>
+      </div>
+    </div>
+    <div class="project">7 apparati in 4 siti · backup del 15/11/2026</div>
     <span class="tag">Mockup · dati di esempio</span>
     <span class="spacer"></span>
     <button class="btn" id="theme-btn" type="button">Cambia tema</button>
@@ -307,6 +373,7 @@ const GATEWAYS = {
 const SITES = {
   sede:{name:'SEDE CENTRALE', rect:[16,92,356,452]},
   mi:{name:'FILIALE MILANO', rect:[608,16,276,164]},
+  to:{name:'FILIALE TORINO', rect:[608,200,276,160], bottom:true},
   rm:{name:'FILIALE ROMA', rect:[608,380,276,164], bottom:true}
 };
 const DEVICES = {
@@ -315,6 +382,7 @@ const DEVICES = {
   'sw-p1':{name:'SW-PIANO1',kind:'sw',site:'sede',x:104,y:470,short:'C9200L-48P-4X',model:'Catalyst 9200L-48P-4X',os:'IOS-XE 17.9.4',role:'Accesso piano 1',file:'SW-PIANO1_2026-11-15.txt',lines:'1.630',cov:99,shows:'interfaces status · CDP'},
   'sw-p2':{name:'SW-PIANO2',kind:'sw',site:'sede',x:286,y:470,short:'C2960X-48FPD-L',model:'Catalyst 2960X-48FPD-L',os:'IOS 15.2(7)E8',role:'Accesso piano 2',file:'SW-PIANO2_2026-11-15.txt',lines:'1.412',cov:98,shows:'interfaces status · CDP'},
   'fgt-mi':{name:'FGT-MI',kind:'fw',site:'mi',x:746,y:100,short:'FortiGate 60F',model:'FortiGate 60F',os:'FortiOS 7.4.4',role:'Filiale · spoke SD-WAN',file:'FGT-MI_2026-11-15.conf',lines:'6.930',cov:98,shows:'routing · BGP · IPsec · SD-WAN'},
+  'fgt-to':{name:'FGT-TO',kind:'fw',site:'to',x:746,y:280,short:'FortiGate 60F',model:'FortiGate 60F',os:'FortiOS 7.4.4',role:'Filiale · spoke SD-WAN',file:'FGT-TO_2026-11-15.conf',lines:'5.212',cov:98,shows:'routing · BGP · IPsec · SD-WAN'},
   'fgt-rm':{name:'FGT-RM',kind:'fw',site:'rm',x:746,y:470,short:'FortiGate 40F',model:'FortiGate 40F',os:'FortiOS 7.2.9',role:'Filiale · spoke SD-WAN',file:'FGT-RM_2026-11-14.conf',lines:'5.874',cov:98,shows:'routing · BGP · IPsec'}
 };
 const INET = {x:480,y:300};
@@ -329,11 +397,15 @@ const LINKS = [
   {id:'w-mi-1',layer:'phys',a:'fgt-mi',b:'inet',off:32,lt:0.5,label:'wan1 · ISP-C'},
   {id:'w-mi-2',layer:'phys',a:'fgt-mi',b:'inet',off:-32,lt:0.5,label:'wan2 · LTE'},
   {id:'w-rm-1',layer:'phys',a:'fgt-rm',b:'inet',off:40,lt:0.5,label:'wan · ISP-D'},
+  {id:'w-to-1',layer:'phys',a:'fgt-to',b:'inet',off:0,lt:0.5,label:'wan1 · ISP-E'},
   {id:'v-mi-a',layer:'vpn',a:'fgt-mi',b:'fgt-sede',off:150,lt:0.5,label:'MI-ISPA ↔ HUB-ISPA'},
   {id:'v-mi-b',layer:'vpn',a:'fgt-mi',b:'fgt-sede',off:100,lt:0.5,label:'MI-ISPB ↔ HUB-ISPB'},
   {id:'v-rm-a',layer:'vpn',a:'fgt-rm',b:'fgt-sede',off:-160,lt:0.5,label:'RM-ISPA ↔ HUB-ISPA',status:'err'},
+  {id:'v-to-a',layer:'vpn',a:'fgt-to',b:'fgt-sede',off:45,lt:0.5,label:'TO-ISPA ↔ HUB-ISPA'},
   {id:'b-mi',layer:'bgp',a:'fgt-mi',b:'fgt-sede',off:50,lt:0.5,label:'iBGP 65000 · 2 sessioni'},
-  {id:'b-rm',layer:'bgp',a:'fgt-rm',b:'fgt-sede',off:-105,lt:0.5,label:'iBGP 65000 · non stabilita',status:'err'}
+  {id:'b-rm',layer:'bgp',a:'fgt-rm',b:'fgt-sede',off:-105,lt:0.5,label:'iBGP 65000 · non stabilita',status:'err'},
+  {id:'b-to',layer:'bgp',a:'fgt-to',b:'fgt-sede',off:-20,lt:0.45,label:'iBGP 65000 · 1 sessione'},
+  {id:'s-mi-to',layer:'advpn',a:'fgt-mi',b:'fgt-to',off:-100,lt:0.5,label:'ADVPN · attiva'}
 ];
 
 const LINK_DETAILS = {
@@ -370,7 +442,7 @@ const LINK_DETAILS = {
     why:'I neighbor 10.255.1.254 e 10.255.2.254 di FGT-MI sono gli IP dei tunnel HUB-ISPA e HUB-ISPB; sull’hub rientrano nei neighbor-range del gruppo BRANCHES.',
     cols:['FGT-MI','FGT-SEDE'],
     rows:[['AS','65000','65000 (iBGP)'],['Peer','10.255.1.254 · 10.255.2.254','neighbor-range 10.255.1.0/24 · 10.255.2.0/24'],['Ruolo','client','route reflector'],
-      ['Annuncia','10.20.0.0/24','10.10.0.0/16'],['Policy in uscita','—','route-map RM-TO-BRANCH'],['Multipath','ibgp-multipath','ibgp-multipath'],['Prefissi ricevuti','1 per sessione','1 per sessione']],
+      ['Annuncia','10.20.0.0/24','10.10.0.0/16 · riflette 10.40.0.0/24'],['Next hop riflessi','—','invariati (servono ad ADVPN)'],['Policy in uscita','—','route-map RM-TO-BRANCH'],['Multipath','ibgp-multipath','ibgp-multipath'],['Prefissi ricevuti','2 per sessione','1 per sessione']],
     refs:['FGT-MI righe 1102–1131','FGT-SEDE righe 1688–1745']},
   'b-rm':{kind:'cmp',type:'Sessione BGP',title:'FGT-RM ↔ FGT-SEDE',state:['err','Active: la sessione non si stabilisce'],
     why:'Il neighbor 10.255.1.254 di FGT-RM è l’IP del tunnel HUB-ISPA; sull’hub rientra nel neighbor-range 10.255.1.0/24.',
@@ -381,19 +453,40 @@ const LINK_DETAILS = {
     refs:['FGT-RM righe 1003–1024','FGT-SEDE righe 1688–1745'],related:['v-rm-a','Apri il tunnel RM-ISPA ↔ HUB-ISPA']},
   'l-fgt-core':{kind:'cmp',type:'Aggregato LACP',title:'FGT-SEDE LAN-AGG ↔ SW-CORE Po1',state:['ok','Collegamento letto da LLDP (show lldp neighbors detail su SW-CORE)'],
     cols:['FGT-SEDE · LAN-AGG','SW-CORE · Po1'],
-    rows:[['Porte','x1 · x2','Te1/1/1 · Te2/1/1'],['Protocollo','LACP active','LACP active'],['VLAN','sotto-interfacce 10, 20, 30, 40, 50, 99','trunk 10, 20, 30, 40, 50, 99'],
+    rows:[['Verificato con','LLDP · descrizione','LLDP · descrizione'],['Porte','x1 · x2','Te1/1/1 · Te2/1/1'],['Protocollo','LACP active','LACP active'],['VLAN','sotto-interfacce 10, 20, 30, 40, 50, 99','trunk 10, 20, 30, 40, 50, 99'],
       ['Senza tag','nessuna','nativa 1 (non usata)'],['Velocità','2 × 10G','2 × 10G']],
     refs:['FGT-SEDE righe 402–470','SW-CORE righe 1310–1342']},
   'l-core-p1':{kind:'cmp',type:'Trunk LACP',title:'SW-CORE Po2 ↔ SW-PIANO1 Po1',state:['ok','Collegamento letto da CDP (show cdp neighbors detail su SW-CORE)'],
     cols:['SW-CORE · Po2','SW-PIANO1 · Po1'],
-    rows:[['Porte','Te1/1/2 · Te2/1/2','Te1/1/1 · Te1/1/2'],['Protocollo','LACP active','LACP active'],['VLAN permesse','10, 20, 40, 50, 99','10, 20, 40, 50, 99'],
+    rows:[['Verificato con','CDP · descrizione','CDP · descrizione'],['Porte','Te1/1/2 · Te2/1/2','Te1/1/1 · Te1/1/2'],['Protocollo','LACP active','LACP active'],['VLAN permesse','10, 20, 40, 50, 99','10, 20, 40, 50, 99'],
       ['VLAN nativa','1','1'],['Velocità','2 × 10G','2 × 10G']],
     refs:['SW-CORE righe 1343–1359','SW-PIANO1 righe 700–728']},
   'l-core-p2':{kind:'cmp',type:'Trunk LACP',title:'SW-CORE Po3 ↔ SW-PIANO2 Po1',state:['warn','Collegamento letto da CDP (show cdp neighbors detail su SW-CORE)'],
     cols:['SW-CORE · Po3','SW-PIANO2 · Po1'],
-    rows:[['Porte','Te1/1/3 · Te2/1/3','Te1/0/1 · Te1/0/2'],['Protocollo','LACP active','LACP active'],['VLAN permesse','10, 20, 99','10, 20, 99'],
+    rows:[['Verificato con','CDP · descrizione','CDP · descrizione'],['Porte','Te1/1/3 · Te2/1/3','Te1/0/1 · Te1/0/2'],['Protocollo','LACP active','LACP active'],['VLAN permesse','10, 20, 40, 50, 99','10, 20, 40, 50, 99'],
       ['VLAN nativa','1','999','Diversa: il traffico senza tag finisce in VLAN diverse'],['Velocità','2 × 10G','2 × 10G']],
     refs:['SW-CORE righe 1360–1391','SW-PIANO2 righe 690–716']},
+  'v-to-a':{kind:'cmp',type:'Tunnel IPsec',title:'TO-ISPA ↔ HUB-ISPA',state:['ok','Su da 3d04h (get vpn ipsec tunnel summary)'],
+    why:'Il remote-gw 203.0.113.10 di TO-ISPA è l’IP di wan1 su FGT-SEDE, dove HUB-ISPA accetta peer dinamici.',
+    cols:['FGT-TO · TO-ISPA','FGT-SEDE · HUB-ISPA'],
+    rows:[['Tipo','statico → 203.0.113.10','dial-up (peer dinamici)'],['Interfaccia','wan1 · 192.0.2.98','wan1 · 203.0.113.10'],['IKE','v2','v2'],
+      ['Proposte fase 1','aes256-sha256','aes256-sha256 · aes256gcm-prfsha384'],['Gruppi DH','20 · 19','20 · 19'],['Autenticazione','chiave condivisa','chiave condivisa'],
+      ['Selettori fase 2','0.0.0.0/0 ↔ 0.0.0.0/0','0.0.0.0/0 ↔ 0.0.0.0/0'],['PFS','sì · DH 20 · 19','sì · DH 20 · 19'],['ADVPN','receiver','sender'],['IP del tunnel','10.255.1.4','10.255.1.254']],
+    refs:['FGT-TO righe 702–738','FGT-SEDE righe 1490–1533']},
+  'b-to':{kind:'cmp',type:'Sessione BGP',title:'FGT-TO ↔ FGT-SEDE',state:['ok','1 sessione Established (get router info bgp summary)'],
+    why:'Il neighbor 10.255.1.254 di FGT-TO è l’IP del tunnel HUB-ISPA; sull’hub rientra nel neighbor-range 10.255.1.0/24 del gruppo BRANCHES.',
+    cols:['FGT-TO','FGT-SEDE'],
+    rows:[['AS','65000','65000 (iBGP)'],['Peer','10.255.1.254','neighbor-range 10.255.1.0/24'],['Ruolo','client','route reflector'],
+      ['Annuncia','10.40.0.0/24','10.10.0.0/16 · riflette 10.20.0.0/24'],['Next hop riflessi','—','invariati (servono ad ADVPN)'],['Prefissi ricevuti','2','1']],
+    refs:['FGT-TO righe 960–981','FGT-SEDE righe 1688–1745']},
+  's-mi-to':{kind:'cmp',type:'Scorciatoia ADVPN',title:'MI-ISPA_0 ↔ TO-ISPA_0',state:['ok','Attiva da 14 min (get vpn ipsec tunnel summary)'],
+    why:'FGT-MI ha mandato traffico verso 10.40.0.0/24 passando dall’hub. FGT-SEDE (auto-discovery-sender) ha detto ai due spoke (auto-discovery-receiver) di aprire un tunnel diretto, che si chiude da solo dopo un periodo di inattività.',
+    cols:['FGT-MI','FGT-TO'],
+    rows:[['Tunnel padre','MI-ISPA','TO-ISPA'],['Tunnel diretto','MI-ISPA_0','TO-ISPA_0'],['Indirizzo pubblico','wan1 · 192.0.2.34','wan1 · 192.0.2.98'],
+      ['ADVPN','receiver','receiver'],['Rotta verso l’altra filiale','10.40.0.0/24 via 10.255.1.4','10.20.0.0/24 via 10.255.1.2'],
+      ['Policy filiale ↔ filiale','#3 Verso-Sede-e-Filiali','#2 Verso-Sede-e-Filiali'],['Regola SD-WAN','#2 Sede e filiali','#1 Sede e filiali']],
+    refs:['FGT-MI righe 812–848','FGT-TO righe 702–738']},
+  'w-to-1':{kind:'info',type:'Uscita Internet',title:'FGT-TO · wan1',rows:[['Indirizzo','192.0.2.98/30'],['Gateway','192.0.2.97'],['Provider','ISP-E fibra (dalla descrizione)'],['SD-WAN','membro della zona underlay'],['Tunnel','TO-ISPA · scorciatoia TO-ISPA_0 verso FGT-MI']]},
   'w-sede-1':{kind:'info',type:'Uscita Internet',title:'FGT-SEDE · wan1',rows:[['Indirizzo','203.0.113.10/29'],['Gateway','203.0.113.9'],['Provider','ISP-A fibra 1G (dalla descrizione)'],['SD-WAN','membro della zona underlay'],['Tunnel','HUB-ISPA (dial-up)'],['VIP pubblicati','VIP_WEB, VIP_SSH su 203.0.113.11']]},
   'w-sede-2':{kind:'info',type:'Uscita Internet',title:'FGT-SEDE · wan2',rows:[['Indirizzo','198.51.100.20/29'],['Gateway','198.51.100.17'],['Provider','ISP-B fibra 500M (dalla descrizione)'],['SD-WAN','membro della zona underlay'],['Tunnel','HUB-ISPB (dial-up) · PARTNER']]},
   'w-mi-1':{kind:'info',type:'Uscita Internet',title:'FGT-MI · wan1',rows:[['Indirizzo','192.0.2.34/30'],['Gateway','192.0.2.33'],['Provider','ISP-C fibra (dalla descrizione)'],['SD-WAN','membro della zona underlay'],['Tunnel','MI-ISPA']]},
@@ -404,21 +497,40 @@ const LINK_DETAILS = {
 const ISSUES = [
   {sev:'err',text:'Tunnel RM-ISPA ↔ HUB-ISPA: nessuna proposta e nessun gruppo DH in comune',link:'v-rm-a',devs:['fgt-rm','fgt-sede']},
   {sev:'err',text:'BGP FGT-RM ↔ FGT-SEDE non stabilita: il tunnel che la trasporta è giù',link:'b-rm',devs:['fgt-rm','fgt-sede']},
-  {sev:'warn',text:'FGT-SEDE non ha la rotta per 10.30.0.0/24 (Filiale Roma)',open:['fgt-sede','routing'],devs:['fgt-sede']},
+  {sev:'warn',text:'FGT-SEDE, FGT-MI e FGT-TO non hanno la rotta per 10.30.0.0/24 (Filiale Roma)',open:['fgt-sede','routing'],devs:['fgt-sede']},
   {sev:'warn',text:'Trunk SW-CORE Po3 ↔ SW-PIANO2 Po1: VLAN nativa diversa (1 e 999)',link:'l-core-p2',devs:['sw-core','sw-p2']},
+  {sev:'warn',text:'SW-CORE Gi2/0/12: la descrizione dice AP-SEDE-12, ma LLDP vede AP-SEDE-17',port:['sw-core','Gi2/0/12'],devs:['sw-core']},
+  {sev:'warn',text:'FGT-RM non ha policy verso le altre filiali: anche con il tunnel su, le scorciatoie ADVPN verso Roma non servirebbero',view:'vpn',devs:['fgt-rm']},
   {sev:'warn',text:'FGT-SEDE: la regola #4 è oscurata dalla #3, che in più non registra log',open:['fgt-sede','policy'],devs:['fgt-sede']}
 ];
 
 const VPNS = [
   {id:'v-mi-a',a:'FGT-MI · wan1 192.0.2.34',b:'FGT-SEDE · wan1 203.0.113.10',type:'statico → dial-up · IKEv2',state:['ok','Su'],check:['ok','10 parametri coerenti']},
   {id:'v-mi-b',a:'FGT-MI · wan2 192.0.2.66',b:'FGT-SEDE · wan2 198.51.100.20',type:'statico → dial-up · IKEv2',state:['ok','Su'],check:['ok','10 parametri coerenti']},
+  {id:'v-to-a',a:'FGT-TO · wan1 192.0.2.98',b:'FGT-SEDE · wan1 203.0.113.10',type:'statico → dial-up · IKEv2',state:['ok','Su'],check:['ok','10 parametri coerenti']},
   {id:'v-rm-a',a:'FGT-RM · wan 198.51.100.130',b:'FGT-SEDE · wan1 203.0.113.10',type:'statico → dial-up · IKEv2',state:['err','Giù'],check:['err','2 incoerenze']},
+  {id:'s-mi-to',a:'FGT-MI · wan1 192.0.2.34',b:'FGT-TO · wan1 192.0.2.98',type:'scorciatoia ADVPN',state:['ok','Attiva'],check:['ok','aperta dall’hub']},
   {id:'x-partner',a:'FGT-SEDE · wan2 198.51.100.20',b:'198.51.100.200 (non nel progetto)',type:'statico · IKEv1',state:['ok','Su'],check:['info','un solo lato']}
 ];
+const ADVPN = {
+  checks:[
+    ['ok','FGT-SEDE: auto-discovery-sender attivo su HUB-ISPA e HUB-ISPB'],
+    ['ok','FGT-MI, FGT-TO e FGT-RM: auto-discovery-receiver attivo sui tunnel verso l’hub'],
+    ['ok','FGT-SEDE: policy overlay → overlay presente (#6 Filiale-Filiale)'],
+    ['ok','BGP: l’hub riflette le rotte senza cambiare il next hop, quindi il traffico tra filiali fa partire la scorciatoia'],
+    ['warn','FGT-RM: nessuna policy verso le altre filiali, solo verso la sede']
+  ],
+  pairs:[
+    ['FGT-MI ↔ FGT-TO','ok','Attiva da 14 min','MI-ISPA_0 ↔ TO-ISPA_0','s-mi-to'],
+    ['FGT-MI ↔ FGT-RM','err','Non possibile','il tunnel RM-ISPA è giù',null],
+    ['FGT-TO ↔ FGT-RM','err','Non possibile','il tunnel RM-ISPA è giù',null]
+  ]
+};
 
 const ZONES = {
   'fgt-sede':{LAN:'zona: VL10-UTENTI, VL20-VOCE, VL40-WIFI, VL99-GESTIONE',OSPITI:'zona: VL50-OSPITI',SERVER:'zona: VL30-SERVER',DMZ:'interfaccia port5',underlay:'zona SD-WAN: wan1, wan2',overlay:'zona SD-WAN: HUB-ISPA, HUB-ISPB'},
   'fgt-mi':{lan:'interfaccia lan (switch interno)',ospiti:'interfaccia VL50-OSPITI',underlay:'zona SD-WAN: wan1, wan2',overlay:'zona SD-WAN: MI-ISPA, MI-ISPB'},
+  'fgt-to':{lan:'interfaccia lan',underlay:'zona SD-WAN: wan1',overlay:'zona SD-WAN: TO-ISPA'},
   'fgt-rm':{lan:'interfaccia lan',underlay:'zona SD-WAN: wan',overlay:'zona SD-WAN: RM-ISPA'}
 };
 const OBJECTS = {
@@ -426,11 +538,14 @@ const OBJECTS = {
     all:{t:'subnet',v:'0.0.0.0/0'}, LAN_NET:{t:'group',m:['VL10_NET','VL40_NET','VL99_NET']},
     VL10_NET:{t:'subnet',v:'10.10.10.0/24'}, VL40_NET:{t:'subnet',v:'10.10.40.0/24'}, VL99_NET:{t:'subnet',v:'10.10.99.0/24'},
     GUEST_NET:{t:'subnet',v:'10.10.50.0/24'}, SRV_NET:{t:'subnet',v:'10.10.30.0/24'},
-    FILIALI_NET:{t:'group',m:['MI_LAN','RM_LAN']}, MI_LAN:{t:'subnet',v:'10.20.0.0/24'}, RM_LAN:{t:'subnet',v:'10.30.0.0/24'},
+    FILIALI_NET:{t:'group',m:['MI_LAN','TO_LAN','RM_LAN']}, MI_LAN:{t:'subnet',v:'10.20.0.0/24'}, TO_LAN:{t:'subnet',v:'10.40.0.0/24'}, RM_LAN:{t:'subnet',v:'10.30.0.0/24'},
     DMZ_NET:{t:'subnet',v:'172.16.50.0/24'}, ADMIN_PC:{t:'host',v:'10.10.99.50/32'},
     VIP_WEB:{t:'vip',v:'203.0.113.11:443 → 172.16.50.10:443'}, VIP_SSH:{t:'vip',v:'203.0.113.11:2222 → 172.16.50.20:22'}
   },
-  'fgt-mi':{all:{t:'subnet',v:'0.0.0.0/0'}, MI_LAN:{t:'subnet',v:'10.20.0.0/24'}, MI_GUEST:{t:'subnet',v:'10.20.50.0/24'}, SEDE_NET:{t:'subnet',v:'10.10.0.0/16'}},
+  'fgt-mi':{all:{t:'subnet',v:'0.0.0.0/0'}, MI_LAN:{t:'subnet',v:'10.20.0.0/24'}, MI_GUEST:{t:'subnet',v:'10.20.50.0/24'}, SEDE_NET:{t:'subnet',v:'10.10.0.0/16'},
+    FILIALI_NET:{t:'group',m:['TO_LAN','RM_LAN']}, TO_LAN:{t:'subnet',v:'10.40.0.0/24'}, RM_LAN:{t:'subnet',v:'10.30.0.0/24'}},
+  'fgt-to':{all:{t:'subnet',v:'0.0.0.0/0'}, TO_LAN:{t:'subnet',v:'10.40.0.0/24'}, SEDE_NET:{t:'subnet',v:'10.10.0.0/16'},
+    FILIALI_NET:{t:'group',m:['MI_LAN','RM_LAN']}, MI_LAN:{t:'subnet',v:'10.20.0.0/24'}, RM_LAN:{t:'subnet',v:'10.30.0.0/24'}},
   'fgt-rm':{all:{t:'subnet',v:'0.0.0.0/0'}, RM_LAN:{t:'subnet',v:'10.30.0.0/24'}, SEDE_NET:{t:'subnet',v:'10.10.0.0/16'}}
 };
 const SERVICES = {HTTP:'TCP 80',HTTPS:'TCP 443',DNS:'TCP/UDP 53',SSH:'TCP 22',RDP:'TCP 3389',SMB:'TCP 445',ALL:'tutti i protocolli'};
@@ -451,8 +566,13 @@ const POLICIES = {
   'fgt-mi':[
     {g:['lan','underlay','uscita Internet'],rows:[{seq:1,id:1,name:'LAN-Internet',src:['MI_LAN'],dst:['all'],svc:['HTTP','HTTPS','DNS'],act:'ACCEPT',nat:true,prof:['AV','WF','IPS'],log:'tutto',ln:1820}]},
     {g:['ospiti','underlay','uscita Internet ospiti'],rows:[{seq:2,id:4,name:'Ospiti',src:['MI_GUEST'],dst:['all'],svc:['HTTP','HTTPS','DNS'],act:'ACCEPT',nat:true,prof:['WF'],log:'tutto',ln:1838}]},
-    {g:['lan','overlay','verso la sede'],rows:[{seq:3,id:2,name:'Verso-Sede',src:['MI_LAN'],dst:['SEDE_NET'],svc:['ALL'],act:'ACCEPT',nat:false,prof:['IPS'],log:'tutto',ln:1856}]},
-    {g:['overlay','lan','dalla sede'],rows:[{seq:4,id:3,name:'Da-Sede',src:['SEDE_NET'],dst:['MI_LAN'],svc:['ALL'],act:'ACCEPT',nat:false,prof:[],log:'tutto',ln:1873}]}
+    {g:['lan','overlay','verso sede e filiali'],rows:[{seq:3,id:2,name:'Verso-Sede-e-Filiali',src:['MI_LAN'],dst:['SEDE_NET','FILIALI_NET'],svc:['ALL'],act:'ACCEPT',nat:false,prof:['IPS'],log:'tutto',ln:1856}]},
+    {g:['overlay','lan','da sede e filiali'],rows:[{seq:4,id:3,name:'Da-Sede-e-Filiali',src:['SEDE_NET','FILIALI_NET'],dst:['MI_LAN'],svc:['ALL'],act:'ACCEPT',nat:false,prof:[],log:'tutto',ln:1873}]}
+  ],
+  'fgt-to':[
+    {g:['lan','underlay','uscita Internet'],rows:[{seq:1,id:1,name:'LAN-Internet',src:['TO_LAN'],dst:['all'],svc:['HTTP','HTTPS','DNS'],act:'ACCEPT',nat:true,prof:['AV','WF','IPS'],log:'tutto',ln:1544}]},
+    {g:['lan','overlay','verso sede e filiali'],rows:[{seq:2,id:2,name:'Verso-Sede-e-Filiali',src:['TO_LAN'],dst:['SEDE_NET','FILIALI_NET'],svc:['ALL'],act:'ACCEPT',nat:false,prof:['IPS'],log:'tutto',ln:1562}]},
+    {g:['overlay','lan','da sede e filiali'],rows:[{seq:3,id:3,name:'Da-Sede-e-Filiali',src:['SEDE_NET','FILIALI_NET'],dst:['TO_LAN'],svc:['ALL'],act:'ACCEPT',nat:false,prof:[],log:'tutto',ln:1580}]}
   ],
   'fgt-rm':[
     {g:['lan','underlay','uscita Internet'],rows:[{seq:1,id:1,name:'LAN-Internet',src:['RM_LAN'],dst:['all'],svc:['HTTP','HTTPS','DNS'],act:'ACCEPT',nat:true,prof:['AV','WF'],log:'tutto',ln:1602}]},
@@ -465,7 +585,7 @@ const SDWAN = {
   'fgt-sede':{
     zones:[
       {zone:'underlay',members:[{n:'wan1',k:'Internet',p:'ISP-A fibra',gw:'203.0.113.9',cost:0,prio:1},{n:'wan2',k:'Internet',p:'ISP-B fibra',gw:'198.51.100.17',cost:0,prio:1}]},
-      {zone:'overlay',members:[{n:'HUB-ISPA',k:'IPsec dial-up',p:'su wan1 · peer: FGT-MI (FGT-RM giù)',gw:'—',cost:0,prio:1},{n:'HUB-ISPB',k:'IPsec dial-up',p:'su wan2 · peer: FGT-MI',gw:'—',cost:0,prio:1}]}
+      {zone:'overlay',members:[{n:'HUB-ISPA',k:'IPsec dial-up',p:'su wan1 · peer: FGT-MI, FGT-TO (FGT-RM giù)',gw:'—',cost:0,prio:1},{n:'HUB-ISPB',k:'IPsec dial-up',p:'su wan2 · peer: FGT-MI',gw:'—',cost:0,prio:1}]}
     ],
     checks:[],checksNote:'Sull’hub non ci sono health check: le misure le fanno le filiali verso la loopback 10.255.255.1.',
     rules:[],implicit:'Tutto il traffico: zona underlay, bilanciamento per IP sorgente. Verso le filiali decide il routing BGP.'
@@ -481,11 +601,20 @@ const SDWAN = {
     ],
     rules:[
       {id:1,name:'Voce-Sede',match:['dst VOCE_SEDE 10.10.20.0/24','UDP 5060 · 10000–20000'],strategy:'Migliore qualità',crit:'latenza misurata da HQ-SLA',members:['MI-ISPA','MI-ISPB'],inuse:'MI-ISPA'},
-      {id:2,name:'Sede',match:['dst SEDE_NET 10.10.0.0/16'],strategy:'Costo minore (SLA)',crit:'SLA di HQ-SLA',members:['MI-ISPA','MI-ISPB'],inuse:'MI-ISPA'},
+      {id:2,name:'Sede e filiali',match:['dst SEDE_NET 10.10.0.0/16','dst FILIALI_NET'],strategy:'Costo minore (SLA)',crit:'SLA di HQ-SLA',members:['MI-ISPA','MI-ISPB'],inuse:'MI-ISPA',info:true,note:'Verso FGT-TO il traffico usa la scorciatoia ADVPN MI-ISPA_0, figlia di MI-ISPA.'},
       {id:3,name:'Microsoft 365',match:['Internet Service Microsoft-Office365'],strategy:'Massima banda (SLA)',crit:'SLA di Internet',members:['wan1','wan2'],inuse:'wan1',dead:['wan2'],note:'wan2 è fuori SLA (perdita 7 %): resta solo wan1.'},
       {id:4,name:'Ospiti',match:['src MI_GUEST 10.20.50.0/24'],strategy:'Manuale',crit:'nessun SLA',members:['wan2'],inuse:'wan2'}
     ],
     implicit:'Tutto il resto: zona underlay, bilanciamento per IP sorgente.'
+  },
+  'fgt-to':{
+    zones:[
+      {zone:'underlay',members:[{n:'wan1',k:'Internet',p:'ISP-E fibra',gw:'192.0.2.97',cost:0,prio:1}]},
+      {zone:'overlay',members:[{n:'TO-ISPA',k:'IPsec',p:'su wan1 → FGT-SEDE wan1',gw:'10.255.1.254',cost:0,prio:1}]}
+    ],
+    checks:[{name:'HQ-SLA',target:'10.255.255.1 · loopback di FGT-SEDE',proto:'ping',sla:'latenza ≤ 150 ms · jitter ≤ 30 ms · perdita ≤ 2 %',m:[['TO-ISPA',true,'22 ms · 3 ms · 0 %']]}],
+    rules:[{id:1,name:'Sede e filiali',match:['dst SEDE_NET 10.10.0.0/16','dst FILIALI_NET'],strategy:'Costo minore (SLA)',crit:'SLA di HQ-SLA',members:['TO-ISPA'],inuse:'TO-ISPA',info:true,note:'Verso FGT-MI il traffico usa la scorciatoia ADVPN TO-ISPA_0, figlia di TO-ISPA.'}],
+    implicit:'Tutto il resto: zona underlay (wan1).'
   },
   'fgt-rm':{
     zones:[
@@ -503,21 +632,30 @@ const ROUTING = {
     bgp:[['AS locale','65000'],['Router ID','10.255.255.1'],['neighbor-group BRANCHES','remote-as 65000 · route-reflector-client · route-map out RM-TO-BRANCH'],
       ['neighbor-range 10.255.1.0/24','→ BRANCHES (peer dinamici su HUB-ISPA)'],['neighbor-range 10.255.2.0/24','→ BRANCHES (peer dinamici su HUB-ISPB)'],
       ['network','10.10.0.0/16'],['ibgp-multipath','enable'],['route-map RM-TO-BRANCH','set community 65000:100']],
-    sessions:[['10.255.1.2','FGT-MI','HUB-ISPA','Established','3d04h','1'],['10.255.2.2','FGT-MI','HUB-ISPB','Established','3d04h','1'],['10.255.1.3','FGT-RM','HUB-ISPA','Active','—','0','err']],
+    sessions:[['10.255.1.2','FGT-MI','HUB-ISPA','Established','3d04h','1'],['10.255.2.2','FGT-MI','HUB-ISPB','Established','3d04h','1'],['10.255.1.4','FGT-TO','HUB-ISPA','Established','3d04h','1'],['10.255.1.3','FGT-RM','HUB-ISPA','Active','—','0','err']],
     statics:[['0.0.0.0/0','zona SD-WAN underlay (wan1, wan2)'],['10.10.0.0/16','blackhole · distanza 254 (aggancio per l’annuncio BGP)']],
     table:[['S*','0.0.0.0/0','203.0.113.9 (wan1) · 198.51.100.17 (wan2)'],['S','10.10.0.0/16','blackhole'],
       ['C','10.10.10.0/24','VL10-UTENTI'],['C','10.10.20.0/24','VL20-VOCE'],['C','10.10.30.0/24','VL30-SERVER'],['C','10.10.40.0/24','VL40-WIFI'],
       ['C','10.10.50.0/24','VL50-OSPITI'],['C','10.10.99.0/24','VL99-GESTIONE'],
       ['B','10.20.0.0/24','10.255.1.2 (HUB-ISPA) · 10.255.2.2 (HUB-ISPB)'],
+      ['B','10.40.0.0/24','10.255.1.4 (HUB-ISPA)'],
       ['!','10.30.0.0/24','assente: la sessione BGP con FGT-RM non è stabilita','warn'],
       ['C','10.255.1.0/24','HUB-ISPA'],['C','10.255.2.0/24','HUB-ISPB'],['C','172.16.50.0/24','port5 (DMZ)'],['C','203.0.113.8/29','wan1'],['C','198.51.100.16/29','wan2']]
   },
   'fgt-mi':{
     bgp:[['AS locale','65000'],['Router ID','10.20.0.1'],['neighbor 10.255.1.254','remote-as 65000 · FGT-SEDE via MI-ISPA'],['neighbor 10.255.2.254','remote-as 65000 · FGT-SEDE via MI-ISPB'],['network','10.20.0.0/24'],['ibgp-multipath','enable']],
-    sessions:[['10.255.1.254','FGT-SEDE','MI-ISPA','Established','3d04h','1'],['10.255.2.254','FGT-SEDE','MI-ISPB','Established','3d04h','1']],
+    sessions:[['10.255.1.254','FGT-SEDE','MI-ISPA','Established','3d04h','2'],['10.255.2.254','FGT-SEDE','MI-ISPB','Established','3d04h','2']],
     statics:[['0.0.0.0/0','zona SD-WAN underlay (wan1, wan2)']],
     table:[['S*','0.0.0.0/0','192.0.2.33 (wan1) · 192.0.2.65 (wan2)'],['B','10.10.0.0/16','10.255.1.254 (MI-ISPA) · 10.255.2.254 (MI-ISPB)'],
+      ['B','10.40.0.0/24','10.255.1.4 · tramite la scorciatoia ADVPN MI-ISPA_0'],['!','10.30.0.0/24','assente: FGT-RM non annuncia la sua LAN (sessione con l’hub non stabilita)','warn'],
       ['C','10.20.0.0/24','lan'],['C','10.20.50.0/24','VL50-OSPITI'],['C','10.255.1.0/24','MI-ISPA'],['C','10.255.2.0/24','MI-ISPB'],['C','192.0.2.32/30','wan1'],['C','192.0.2.64/30','wan2']]
+  },
+  'fgt-to':{
+    bgp:[['AS locale','65000'],['Router ID','10.40.0.1'],['neighbor 10.255.1.254','remote-as 65000 · FGT-SEDE via TO-ISPA'],['network','10.40.0.0/24']],
+    sessions:[['10.255.1.254','FGT-SEDE','TO-ISPA','Established','3d04h','2']],
+    statics:[['0.0.0.0/0','zona SD-WAN underlay (wan1)']],
+    table:[['S*','0.0.0.0/0','192.0.2.97 (wan1)'],['B','10.10.0.0/16','10.255.1.254 (TO-ISPA)'],['B','10.20.0.0/24','10.255.1.2 · tramite la scorciatoia ADVPN TO-ISPA_0'],
+      ['!','10.30.0.0/24','assente: FGT-RM non annuncia la sua LAN (sessione con l’hub non stabilita)','warn'],['C','10.40.0.0/24','lan'],['C','10.255.1.0/24','TO-ISPA'],['C','192.0.2.96/30','wan1']]
   },
   'fgt-rm':{
     bgp:[['AS locale','65000'],['Router ID','10.30.0.1'],['neighbor 10.255.1.254','remote-as 65000 · FGT-SEDE via RM-ISPA'],['network','10.30.0.0/24']],
@@ -547,7 +685,7 @@ const LAGS = {
     for (let i = 1; i <= 48; i++) {
       const p = {name:`Gi${m}/0/${i}`, m, i};
       if (i <= 8) Object.assign(p, {mode:'access', vlan:30, desc:`SRV-${m}${String(i).padStart(2,'0')}`, status:st(.92)});
-      else if (i <= 16) Object.assign(p, {mode:'trunk', native:40, allowed:[40,50], desc:`AP-SEDE-${String((m-1)*8+i-8).padStart(2,'0')}`, poe:true, status:st(.95)});
+      else if (i <= 16) { const ap = `AP-SEDE-${String((m-1)*8+i-8).padStart(2,'0')}`; Object.assign(p, {mode:'trunk', native:40, allowed:[40,50], desc:ap, nbr:ap + ' (LLDP)', poe:true, status:'up'}); }
       else if (i <= 32) Object.assign(p, {mode:'access', vlan:10, voice:20, poe:true, desc:'', status:st(.72)});
       else if (i <= 40) Object.assign(p, {mode:'access', vlan:10, desc:i % 2 ? 'STAMPANTE' : '', status:st(.6)});
       else if (i === 47 && m === 1) Object.assign(p, {mode:'access', vlan:99, desc:'PC-AMMINISTRATORE', status:'up'});
@@ -557,10 +695,11 @@ const LAGS = {
     }
     core.push({name:`Te${m}/1/1`,m,i:1,uplink:true,mode:'trunk',allowed:[10,20,30,40,50,99],native:1,po:'Po1',desc:'FGT-SEDE LAN-AGG',status:'up',nbr:`FGT-SEDE ${m === 1 ? 'x1' : 'x2'} (LLDP)`});
     core.push({name:`Te${m}/1/2`,m,i:2,uplink:true,mode:'trunk',allowed:[10,20,40,50,99],native:1,po:'Po2',desc:'SW-PIANO1',status:'up',nbr:`SW-PIANO1 Te1/1/${m} (CDP)`});
-    core.push({name:`Te${m}/1/3`,m,i:3,uplink:true,mode:'trunk',allowed:[10,20,99],native:1,po:'Po3',desc:'SW-PIANO2',status:'up',nbr:`SW-PIANO2 Te1/0/${m} (CDP)`,warn:'VLAN nativa 1: sul lato SW-PIANO2 è 999'});
+    core.push({name:`Te${m}/1/3`,m,i:3,uplink:true,mode:'trunk',allowed:[10,20,40,50,99],native:1,po:'Po3',desc:'SW-PIANO2',status:'up',nbr:`SW-PIANO2 Te1/0/${m} (CDP)`,warn:'VLAN nativa 1: sul lato SW-PIANO2 è 999'});
     core.push({name:`Te${m}/1/4`,m,i:4,uplink:true,mode:'shutdown',desc:'',status:'admin'});
   }
   Object.assign(core.find(p => p.name === 'Gi2/0/23'), {status:'err', errReason:'err-disabled (bpduguard)'});
+  Object.assign(core.find(p => p.name === 'Gi2/0/12'), {nbr:'AP-SEDE-17 (LLDP)', warn:'La descrizione dice AP-SEDE-12, ma LLDP vede AP-SEDE-17'});
 
   const p1 = SW['sw-p1'].ports;
   for (let i = 1; i <= 48; i++) {
@@ -578,14 +717,48 @@ const LAGS = {
   const p2 = SW['sw-p2'].ports;
   for (let i = 1; i <= 48; i++) {
     const p = {name:`Gi1/0/${i}`, m:1, i};
-    if (i <= 44) Object.assign(p, {mode:'access', vlan:10, voice:20, poe:true, desc:'', status:st(.64)});
+    if (i <= 36) Object.assign(p, {mode:'access', vlan:10, voice:20, poe:true, desc:'', status:st(.7)});
+    else if (i <= 40) Object.assign(p, {mode:'access', vlan:10, desc:'STAMPANTE', status:'up'});
+    else if (i <= 44) Object.assign(p, {mode:'trunk', native:40, allowed:[40,50], poe:true, desc:`AP-P2-${String(i-40).padStart(2,'0')}`, nbr:`AP-P2-${String(i-40).padStart(2,'0')} (CDP)`, status:'up'});
     else Object.assign(p, {mode:'shutdown', desc:'', status:'admin'});
     p2.push(p);
   }
-  p2.push({name:'Te1/0/1',m:1,i:1,uplink:true,mode:'trunk',allowed:[10,20,99],native:999,po:'Po1',desc:'SW-CORE',status:'up',nbr:'SW-CORE Te1/1/3 (CDP)',warn:'VLAN nativa 999: sul lato SW-CORE è 1'});
-  p2.push({name:'Te1/0/2',m:1,i:2,uplink:true,mode:'trunk',allowed:[10,20,99],native:999,po:'Po1',desc:'SW-CORE',status:'up',nbr:'SW-CORE Te2/1/3 (CDP)',warn:'VLAN nativa 999: sul lato SW-CORE è 1'});
+  p2.push({name:'Te1/0/1',m:1,i:1,uplink:true,mode:'trunk',allowed:[10,20,40,50,99],native:999,po:'Po1',desc:'SW-CORE',status:'up',nbr:'SW-CORE Te1/1/3 (CDP)',warn:'VLAN nativa 999: sul lato SW-CORE è 1'});
+  p2.push({name:'Te1/0/2',m:1,i:2,uplink:true,mode:'trunk',allowed:[10,20,40,50,99],native:999,po:'Po1',desc:'SW-CORE',status:'up',nbr:'SW-CORE Te2/1/3 (CDP)',warn:'VLAN nativa 999: sul lato SW-CORE è 1'});
   for (const id of Object.keys(SW)) SW[id].ports.forEach((p, k) => { p.ln = SW[id].lineBase + k * 9; });
 })();
+
+/* ---------- rack R2: patch panel e SW-PIANO2, oggi e dopo la migrazione ---------- */
+const RACK = (() => {
+  const r = rng(424242);
+  const ports = SW['sw-p2'].ports.filter(p => !p.uplink && p.mode !== 'shutdown');
+  const pool = ports.map(p => p.i);
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  const out = []; let k = 0;
+  for (const pp of ['A', 'B']) for (let n = 1; n <= (pp === 'A' ? 24 : 14); n++) {
+    const today = pool[k++], p = ports.find(x => x.i === today);
+    const seat = String(pp === 'A' ? n : 24 + n).padStart(2, '0');
+    const user = today <= 36 ? `Postazione 2.${seat}` : today <= 40 ? `Stampante 2.${today - 36}` : p.desc;
+    const svc = p.mode === 'trunk' ? `trunk ${p.allowed.join(', ')} · nativa ${p.native}` : `VLAN ${p.vlan}${p.voice ? ' + voce ' + p.voice : ''}`;
+    out.push({id:`${pp}${String(n).padStart(2, '0')}`, pp, n, today, plan: pp === 'A' ? 2 * n - 1 : 2 * n, user, svc, port:p,
+      color: VLANS[p.mode === 'trunk' ? p.native : p.vlan].color});
+  }
+  return out;
+})();
+function rackCrossings(key){
+  let c = 0;
+  for (const pp of ['A', 'B']) {
+    const L = RACK.filter(o => o.pp === pp);
+    for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++)
+      if ((L[i].n - L[j].n) * (Math.ceil(L[i][key] / 2) - Math.ceil(L[j][key] / 2)) < 0) c++;
+  }
+  return c;
+}
+function cableLen(o, key){
+  const cm = 45 + 4 * Math.abs(o.n - Math.ceil(o[key] / 2));
+  const m = [0.5, 1, 1.5, 2].find(x => x * 100 >= cm) || 2;
+  return String(m).replace('.', ',') + ' m';
+}
 
 /* ===================== Utilità ===================== */
 function lin(c){ c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
@@ -639,13 +812,14 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
 const stacked = () => window.matchMedia('(max-width: 1100px)').matches;
 
 /* ===================== Stato e navigazione ===================== */
-const state = {view:'mappa', dev:null, tab:null, sel:null, layers:{phys:true, vpn:true, bgp:true}, vlan:null, search:''};
+const state = {view:'mappa', dev:null, tab:null, sel:null, layers:{phys:true, vpn:true, bgp:true, advpn:true}, vlan:null, search:'', rackMode:'oggi', pending:null};
 const TABS = {fw:[['policy','Policy'],['sdwan','SD-WAN'],['routing','Routing']], sw:[['porte','Porte'],['vlan','VLAN']]};
 const $main = document.getElementById('main'), $detail = document.getElementById('detail'), $side = document.getElementById('sidebar');
 
 function parseHash(){
   const h = decodeURIComponent(location.hash.slice(1));
   if (h === 'vpn') return {view:'vpn'};
+  if (h === 'rack') return {view:'rack'};
   if (h.startsWith('d-')) {
     for (const id of Object.keys(DEVICES)) {
       if (h.startsWith(`d-${id}-`)) {
@@ -664,8 +838,9 @@ function route(){
   Object.assign(state, {view:r.view, dev:r.dev || null, tab:r.tab || null});
   if (changedView) { state.vlan = null; state.search = ''; }
   renderSidebar(); renderMain();
+  if (changedView) $main.scrollTop = 0;
+  if (state.pending) { const p = state.pending; state.pending = null; select(p); return; }
   if (changedView) {
-    $main.scrollTop = 0;
     if (state.view === 'dev') select({t:'node', id:state.dev}, false);
     else if (!state.sel || state.sel.t !== 'link') select(null, false);
   }
@@ -681,8 +856,9 @@ function renderSidebar(){
   const dev = id => item('d-' + id, DEVICES[id].name, DEVICES[id].kind.toUpperCase(), issueSev(id));
   $side.innerHTML = `<div class="nav">
     <div class="nav-group"><div class="nav-label">Progetto</div>${item('mappa', 'Mappa dell’infrastruttura')}${item('vpn', 'VPN')}</div>
-    <div class="nav-group"><div class="nav-label">Sede centrale</div>${['fgt-sede','sw-core','sw-p1','sw-p2'].map(dev).join('')}</div>
+    <div class="nav-group"><div class="nav-label">Sede centrale</div>${['fgt-sede','sw-core','sw-p1','sw-p2'].map(dev).join('')}${item('rack', 'Rack R2 · piano 2', 'RK')}</div>
     <div class="nav-group"><div class="nav-label">Filiale Milano</div>${dev('fgt-mi')}</div>
+    <div class="nav-group"><div class="nav-label">Filiale Torino</div>${dev('fgt-to')}</div>
     <div class="nav-group"><div class="nav-label">Filiale Roma</div>${dev('fgt-rm')}</div>
   </div>`;
 }
@@ -696,6 +872,7 @@ $side.addEventListener('click', e => {
 /* ===================== Viste principali ===================== */
 function renderMain(){
   if (state.view === 'vpn') $main.innerHTML = viewVpn();
+  else if (state.view === 'rack') $main.innerHTML = viewRack();
   else if (state.view === 'dev') $main.innerHTML = viewDevice();
   else $main.innerHTML = viewMap();
   if (state.view === 'mappa') applyLayers();
@@ -740,24 +917,24 @@ function viewMap(){
   }).join('');
   const issues = ISSUES.map((it, k) => `<button class="issue" type="button" data-issue="${k}"><span class="sev ${it.sev}">${it.sev === 'err' ? 'Errore' : 'Avviso'}</span><span>${esc(it.text)}</span></button>`).join('');
   const L = state.layers;
-  return `<div class="view-head"><h1>Mappa dell’infrastruttura</h1><span class="sub">Collegamenti dedotti dalle config e dagli show di 6 apparati</span></div>
-    <div class="map-tools">
-      <label class="layer"><input type="checkbox" id="layer-phys" data-layer="phys" ${L.phys ? 'checked' : ''}><span class="swatch"></span>Cavi e LAG</label>
-      <label class="layer"><input type="checkbox" id="layer-vpn" data-layer="vpn" ${L.vpn ? 'checked' : ''}><span class="swatch vpn"></span>VPN e overlay SD-WAN</label>
-      <label class="layer"><input type="checkbox" id="layer-bgp" data-layer="bgp" ${L.bgp ? 'checked' : ''}><span class="swatch bgp"></span>Sessioni BGP</label>
+  const toggles = [['phys','phys','Cavi e LAG'],['vpn','vpn','VPN e overlay SD-WAN'],['bgp','bgp','Sessioni BGP'],['advpn','advpn','Scorciatoie ADVPN']].map(([k, cls, txt]) =>
+    `<label class="layer"><input type="checkbox" id="layer-${k}" data-layer="${k}" ${L[k] ? 'checked' : ''}><svg class="sw-svg" viewBox="0 0 26 8" aria-hidden="true"><path class="edge ${cls}" d="M1 4 H25"/></svg>${txt}</label>`).join('');
+  return `<div class="view-head"><h1>Mappa dell’infrastruttura</h1><span class="sub">Collegamenti dedotti dalle config e dagli show di 7 apparati</span></div>
+    <div class="map-tools">${toggles}
       <span class="spacer"></span>
+      <button class="btn" type="button" disabled title="Non attivo nel mockup">+ Collegamento a mano</button>
       <button class="btn" type="button" disabled title="Non attivo nel mockup">Esporta in draw.io</button>
     </div>
     <div class="map-wrap"><svg class="map" id="map" viewBox="0 0 900 560" role="img" aria-label="Mappa della rete del cliente demo">
       ${sites}${edges}${cloud}${nodes}${labels}</svg></div>
     <p class="map-hint">Trascina la mappa di lato per vederla tutta.</p>
-    <div class="legend"><span><span class="dot err"></span>errore sul collegamento</span><span><span class="dot warn"></span>da verificare</span><span>Clicca un apparato o un collegamento per il dettaglio</span></div>
+    <div class="legend"><span><span class="dot err"></span>errore sul collegamento</span><span><span class="dot warn"></span>da verificare</span><span>Cavi verificati con LLDP/CDP, dedotti dalle descrizioni o inseriti a mano</span><span>Clicca un apparato o un collegamento per il dettaglio</span></div>
     <h3 class="sec">Problemi trovati confrontando gli apparati</h3>
     <div class="issues">${issues}</div>`;
 }
 function applyLayers(){
   const m = document.getElementById('map'); if (!m) return;
-  for (const k of ['phys','vpn','bgp']) m.classList.toggle('hide-' + k, !state.layers[k]);
+  for (const k of ['phys','vpn','bgp','advpn']) m.classList.toggle('hide-' + k, !state.layers[k]);
 }
 
 /* ---------- VPN ---------- */
@@ -765,9 +942,15 @@ function viewVpn(){
   const rows = VPNS.map(v => { const D = LINK_DETAILS[v.id];
     return `<tr class="click" data-link="${v.id}"><td><b>${esc(D.title)}</b></td><td>${esc(v.a)}</td><td>${esc(v.b)}</td><td>${esc(v.type)}</td>
       <td><span class="sev ${v.state[0]}">${esc(v.state[1])}</span></td><td><span class="sev ${v.check[0]}">${esc(v.check[1])}</span></td></tr>`; }).join('');
-  return `<div class="view-head"><h1>VPN</h1><span class="sub">4 tunnel IPsec · 3 con entrambi i lati nel progetto</span></div>
+  const checks = ADVPN.checks.map(([s, t]) => `<li><span class="sev ${s}">${s === 'ok' ? 'OK' : 'Avviso'}</span><span>${esc(t)}</span></li>`).join('');
+  const pairs = ADVPN.pairs.map(([p, s, st, d, link]) => `<tr${link ? ` class="click" data-link="${link}"` : ''}><td><b>${esc(p)}</b></td><td><span class="sev ${s}">${esc(st)}</span></td><td>${esc(d)}</td></tr>`).join('');
+  return `<div class="view-head"><h1>VPN</h1><span class="sub">6 tunnel IPsec, di cui una scorciatoia ADVPN attiva</span></div>
     <p class="lead">I due lati di un tunnel vengono abbinati quando il remote-gw di uno corrisponde all’IP di un’interfaccia dell’altro. Fase 1 e fase 2 vengono poi confrontate parametro per parametro.</p>
-    <div class="table-wrap"><table><thead><tr><th>Tunnel</th><th>Lato A</th><th>Lato B</th><th>Tipo</th><th>Stato (show)</th><th>Controlli</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    <div class="table-wrap"><table><thead><tr><th>Tunnel</th><th>Lato A</th><th>Lato B</th><th>Tipo</th><th>Stato (show)</th><th>Controlli</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <h3 class="sec">ADVPN · scorciatoie dirette tra filiali</h3>
+    <p class="lead">L’hub (auto-discovery-sender) dice a due filiali (auto-discovery-receiver) di aprire un tunnel diretto quando il traffico tra loro passa dall’hub. Le scorciatoie attive arrivano da get vpn ipsec tunnel summary.</p>
+    <ul class="checks">${checks}</ul>
+    <div class="table-wrap"><table><thead><tr><th>Coppia di filiali</th><th>Scorciatoia</th><th>Dettaglio</th></tr></thead><tbody>${pairs}</tbody></table></div>`;
 }
 
 /* ---------- apparato ---------- */
@@ -841,7 +1024,7 @@ function tabSdwan(){
       <div><div class="strat">${esc(r.strategy)}</div><div class="crit">${esc(r.crit)}</div></div>
       <div class="mem">${r.members.map((m, k) => { const dead = (r.dead || []).includes(m), use = r.inuse === m;
         return `<div class="mpill${use ? ' inuse' : ''}${dead ? ' dead' : ''}"><span class="ord">${k + 1}.</span>${esc(m)}${use ? '<span class="use">in uso</span>' : ''}</div>`; }).join('')}</div>
-      ${r.note ? `<div class="rnote">${esc(r.note)}</div>` : ''}</div>`).join('');
+      ${r.note ? `<div class="rnote${r.info ? ' info' : ''}">${esc(r.note)}</div>` : ''}</div>`).join('');
   return `<h3 class="sec">Zone e membri</h3>
     <div class="table-wrap"><table><thead><tr><th>Zona</th><th>Membro</th><th>Tipo</th><th>Percorso</th><th>Gateway</th><th>Costo</th><th>Priorità</th></tr></thead><tbody>${mrows}</tbody></table></div>
     <h3 class="sec">Health check · stato da diagnose sys sdwan health-check</h3>${checks}
@@ -949,6 +1132,75 @@ function tabVlan(){
     <div class="table-wrap"><table><thead><tr><th>VLAN</th><th>Nome</th><th>Gateway</th><th>Access</th><th>Voce</th><th>Trunk</th><th>Porte (in ordine, per membro)</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
+/* rack */
+function viewRack(){
+  const plan = state.rackMode === 'dopo', key = plan ? 'plan' : 'today';
+  const X0 = 180, STEP = 24.5, PW = 19, U = 50, Y0 = 26;
+  const yOf = k => Y0 + k * U, colX = c => X0 + (c - 1) * STEP, swY = yOf(2);
+  const swXY = i => ({x: colX(Math.ceil(i / 2)), y: swY + (i % 2 ? 9 : 25)});
+  const units = [
+    {kind:'pp', l1:'PP-A', l2:'prese 2.01–2.24'}, {kind:'mgr'},
+    {kind:'sw', l1: plan ? 'SW-NUOVO' : 'SW-PIANO2', l2: plan ? 'C9200L-48P-4X' : 'C2960X-48FPD-L'}, {kind:'mgr'},
+    {kind:'pp', l1:'PP-B', l2:'prese 2.25–2.48'}
+  ];
+  let body = `<rect class="frame" x="40" y="${Y0 - 12}" width="820" height="${units.length * U + 22}" rx="6"/>` +
+    `<rect class="rail" x="48" y="${Y0 - 6}" width="26" height="${units.length * U + 10}"/><rect class="rail" x="826" y="${Y0 - 6}" width="26" height="${units.length * U + 10}"/>`;
+  units.forEach((u, k) => {
+    const y = yOf(k);
+    body += `<text class="ulabel" x="61" y="${y + 29}" text-anchor="middle">U${42 - k}</text>`;
+    if (u.kind === 'mgr') { body += `<rect class="mgr" x="84" y="${y + 13}" width="732" height="24" rx="3"/><text class="mgrtxt" x="450" y="${y + 29}" text-anchor="middle">passacavi</text>`; return; }
+    body += `<rect class="dev${u.kind === 'sw' && plan ? ' new' : ''}" x="84" y="${y + 3}" width="732" height="${U - 6}" rx="4"/>` +
+      `<text class="devname" x="92" y="${y + 22}">${u.l1}</text><text class="devsub" x="92" y="${y + 36}">${u.l2}</text>`;
+  });
+  let cables = '', ports = '';
+  for (const o of RACK) {
+    const a = {x: colX(o.n) + PW / 2, y: yOf(o.pp === 'A' ? 0 : 4) + 24}, s = swXY(o[key]), b = {x: s.x + PW / 2, y: s.y + 6}, my = (a.y + b.y) / 2;
+    cables += `<path class="cable" data-outlet="${o.id}" d="M${a.x},${a.y} C${a.x},${my} ${b.x},${my} ${b.x},${b.y}" style="stroke:${o.color}"/>`;
+  }
+  for (const pp of ['A', 'B']) {
+    const y = yOf(pp === 'A' ? 0 : 4);
+    for (let n = 1; n <= 24; n++) {
+      const o = RACK.find(x => x.pp === pp && x.n === n), id = pp + String(n).padStart(2, '0');
+      ports += `<rect class="pp" ${o ? `data-outlet="${o.id}"` : ''} x="${colX(n)}" y="${y + 16}" width="${PW}" height="16" rx="2"${o ? '' : ' style="opacity:.45"'}><title>Presa ${id} · ${o ? esc(o.user) : 'libera'}</title></rect>` +
+        `<text class="ppnum" x="${colX(n) + PW / 2}" y="${y + 43}" text-anchor="middle">${n}</text>`;
+    }
+  }
+  for (let i = 1; i <= 48; i++) {
+    const s = swXY(i), o = RACK.find(x => x[key] === i);
+    let fill = '';
+    if (plan) fill = o ? o.color : '';
+    else { const p = SW['sw-p2'].ports.find(x => x.i === i && !x.uplink); if (p && p.mode === 'access') fill = VLANS[p.vlan].color; else if (p && p.mode === 'trunk') fill = VLANS[p.native].color; }
+    ports += `<rect class="swp${fill ? '' : ' free'}" ${o ? `data-outlet="${o.id}"` : ''} x="${s.x}" y="${s.y}" width="${PW}" height="12" rx="2"${fill ? ` style="fill:${fill}"` : ''}><title>Gi1/0/${i}${o ? ' · presa ' + o.id : ' · libera'}</title></rect>`;
+  }
+  for (let u = 1; u <= 2; u++) ports += `<rect class="swp" x="${785 + (u - 1) * 14}" y="${swY + 17}" width="11" height="12" rx="2" style="fill:var(--phys)"><title>Te1/${plan ? '1' : '0'}/${u} · verso SW-CORE Po3</title></rect>`;
+  const used = new Set(RACK.map(o => o[key]));
+  const rows = RACK.map(o => `<tr class="click" data-outlet="${o.id}"><td class="mono">${o.id}</td><td>${esc(o.user)}</td><td>${esc(o.svc)}</td>
+    <td class="mono">Gi1/0/${o.today}</td><td class="mono">Gi1/0/${o.plan}</td><td>${cableLen(o, 'today')} → ${cableLen(o, 'plan')}</td></tr>`).join('');
+  return `<div class="view-head"><h1>Rack R2 · piano 2</h1><span class="sub">Prese da rack/R2-piano2.csv · porte da config, CDP e tabella MAC</span></div>
+    <div class="map-tools"><div class="mode-toggle" role="group" aria-label="Stato del rack">
+      <button type="button" data-rackmode="oggi" aria-pressed="${!plan}">Oggi</button><button type="button" data-rackmode="dopo" aria-pressed="${plan}">Dopo la migrazione</button></div>
+      <span class="fact"><b>${RACK.length}</b> prese collegate</span><span class="fact">Incroci <b>${rackCrossings(key)}</b></span><span class="fact">Porte libere <b>${48 - used.size}</b></span></div>
+    <p class="lead">${plan
+      ? 'Il nuovo switch prende il posto di SW-PIANO2. Ogni presa va sulla porta della stessa colonna, con cavi corti e dritti. La configurazione segue la presa: ogni porta nuova riceve le VLAN della porta vecchia che sostituisce.'
+      : 'Oggi le prese sono collegate a porte sparse: i cavi si incrociano e sono più lunghi del necessario. Il colore è la VLAN servita dalla presa.'}</p>
+    <div class="rack-wrap"><svg class="rack" viewBox="0 0 900 ${units.length * U + 40}" role="img" aria-label="Rack R2 con patch panel e switch">${body}${cables}${ports}</svg></div>
+    <h3 class="sec">Patch list per chi lavora in sede</h3>
+    <div class="table-wrap"><table><thead><tr><th>Presa</th><th>Utenza</th><th>Servizio</th><th>Oggi · SW-PIANO2</th><th>Dopo · SW-NUOVO</th><th>Cavo</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="hint">Dopo il cambio si caricano LLDP, tabella MAC e stato porte del nuovo switch: lo strumento controlla che ogni presa sia sulla porta prevista e segnala le differenze.</p>`;
+}
+function detailOutlet(id){
+  const o = RACK.find(x => x.id === id); if (!o) return '';
+  const p = o.port, L = [`interface GigabitEthernet1/0/${o.plan}`, ` description ${o.user} (presa ${o.id})`];
+  if (p.mode === 'trunk') { L.push(` switchport trunk native vlan ${p.native}`); L.push(` switchport trunk allowed vlan ${p.allowed.join(',')}`); L.push(' switchport mode trunk'); }
+  else { L.push(` switchport access vlan ${p.vlan}`); L.push(' switchport mode access'); if (p.voice) L.push(` switchport voice vlan ${p.voice}`); L.push(' spanning-tree portfast'); L.push(' spanning-tree bpduguard enable'); }
+  return `<div class="kicker">Presa · rack R2</div><h2>Presa ${o.id} · ${esc(o.user)}</h2>
+    <dl class="kv"><dt>Servizio</dt><dd>${esc(o.svc)}</dd>
+    <dt>Oggi</dt><dd>SW-PIANO2 · Gi1/0/${o.today} · cavo da ${cableLen(o, 'today')}</dd>
+    <dt>Dopo</dt><dd>SW-NUOVO · Gi1/0/${o.plan} · cavo da ${cableLen(o, 'plan')}</dd>
+    <dt>Fonte</dt><dd>rack/R2-piano2.csv, descrizioni e tabella MAC di SW-PIANO2</dd></dl>
+    <h3 class="sec">Config generata per la nuova porta</h3>${cfgBlock(L, 1)}`;
+}
+
 /* ===================== Dettaglio ===================== */
 function select(sel, scroll = true){
   state.sel = sel;
@@ -957,17 +1209,18 @@ function select(sel, scroll = true){
   if (scroll && sel && stacked()) $detail.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'start'});
 }
 function markSelection(){
-  document.querySelectorAll('.node.selected, .edge-g.selected, tr.selected[data-policy], tr.selected[data-link], .port.sel').forEach(el => el.classList.remove('selected', 'sel'));
+  document.querySelectorAll('.node.selected, .edge-g.selected, tr.selected[data-policy], tr.selected[data-link], .port.sel, [data-outlet].sel').forEach(el => el.classList.remove('selected', 'sel'));
   const s = state.sel; if (!s) return;
   if (s.t === 'node') document.querySelectorAll(`.node[data-node="${s.id}"]`).forEach(el => el.classList.add('selected'));
   if (s.t === 'link') document.querySelectorAll(`[data-link="${s.id}"]`).forEach(el => el.classList.add('selected'));
   if (s.t === 'policy') document.querySelectorAll(`tr[data-policy="${s.seq}"]`).forEach(el => el.classList.add('selected'));
   if (s.t === 'port') document.querySelectorAll('.port').forEach(el => { if (el.dataset.port === s.name && state.dev === s.sw) el.classList.add('sel'); });
+  if (s.t === 'outlet') document.querySelectorAll(`[data-outlet="${s.id}"]`).forEach(el => el.classList.add('sel'));
 }
 function renderDetail(s){
   if (!s) return `<div class="kicker">Dettaglio</div><h2>Come leggere la mappa</h2>
     <ul class="hint-list"><li>Ogni riquadro è un apparato letto dal suo backup; i siti raggruppano gli apparati.</li>
-    <li>Linee piene: cavi e LAG trovati con LLDP/CDP. Tratteggio: tunnel IPsec e overlay SD-WAN. Puntini: sessioni BGP.</li>
+    <li>Linee piene: cavi e LAG verificati con LLDP/CDP. Tratteggio: tunnel IPsec e overlay SD-WAN. Puntini: sessioni BGP. Tratto e punto: scorciatoie ADVPN attive tra filiali.</li>
     <li>Rosso e arancione segnalano incoerenze tra i due lati di un collegamento.</li>
     <li>Clicca un collegamento per confrontare i due lati, un apparato per aprirne le viste.</li></ul>`;
   if (s.t === 'node') return detailNode(s.id);
@@ -975,11 +1228,12 @@ function renderDetail(s){
   if (s.t === 'policy') return detailPolicy(s.dev, s.seq);
   if (s.t === 'obj') return detailObj(s.dev, s.name);
   if (s.t === 'port') return detailPort(s.sw, s.name);
+  if (s.t === 'outlet') return detailOutlet(s.id);
   return '';
 }
 function detailNode(id){
   const d = DEVICES[id], iss = ISSUES.map((it, k) => [it, k]).filter(([it]) => it.devs.includes(id));
-  const site = {sede:'Sede centrale', mi:'Filiale Milano', rm:'Filiale Roma'}[d.site];
+  const site = {sede:'Sede centrale', mi:'Filiale Milano', to:'Filiale Torino', rm:'Filiale Roma'}[d.site];
   return `<div class="kicker">Apparato · ${d.kind === 'fw' ? 'firewall' : 'switch'}</div><h2>${esc(d.name)}</h2>
     <dl class="kv"><dt>Modello</dt><dd>${esc(d.model)}</dd><dt>Sistema</dt><dd>${esc(d.os)}</dd><dt>Sito</dt><dd>${site}</dd><dt>Ruolo</dt><dd>${esc(d.role)}</dd>
     <dt>File</dt><dd class="mono">${esc(d.file)}</dd><dt>Righe</dt><dd>${d.lines} · ${d.cov} % comprese dal parser</dd><dt>Show caricati</dt><dd>${esc(d.shows)}</dd></dl>
@@ -1072,7 +1326,9 @@ function detailPort(swId, name){
 /* ===================== Eventi ===================== */
 function openIssue(k){
   const it = ISSUES[k];
-  if (it.link) { if (state.view !== 'mappa') go('mappa'); select({t:'link', id:it.link}); }
+  if (it.link) { if (state.view === 'mappa') select({t:'link', id:it.link}); else { state.pending = {t:'link', id:it.link}; go('mappa'); } }
+  else if (it.port) { state.pending = {t:'port', sw:it.port[0], name:it.port[1]}; go(`d-${it.port[0]}-porte`); }
+  else if (it.view) go(it.view);
   else if (it.open) go(`d-${it.open[0]}-${it.open[1]}`);
 }
 $main.addEventListener('click', e => {
@@ -1085,6 +1341,8 @@ $main.addEventListener('click', e => {
   if ((el = t.closest('[data-link]'))) { select({t:'link', id:el.dataset.link}); return; }
   if ((el = t.closest('[data-policy]'))) { select({t:'policy', dev:state.dev, seq:+el.dataset.policy}); return; }
   if ((el = t.closest('[data-vlan]'))) { state.vlan = el.dataset.vlan === '' ? null : +el.dataset.vlan; renderMain(); return; }
+  if ((el = t.closest('[data-rackmode]'))) { state.rackMode = el.dataset.rackmode; renderMain(); return; }
+  if ((el = t.closest('[data-outlet]'))) { select({t:'outlet', id:el.dataset.outlet}); return; }
   if ((el = t.closest('[data-port]'))) { select({t:'port', sw:state.dev, name:el.dataset.port}); return; }
 });
 $main.addEventListener('keydown', e => {
@@ -1110,6 +1368,11 @@ $detail.addEventListener('click', e => {
   if ((el = t.closest('[data-policy-open]'))) { select({t:'policy', dev:state.dev, seq:+el.dataset.policyOpen}, false); return; }
   if ((el = t.closest('[data-obj]')) && state.sel && state.sel.dev) { select({t:'obj', dev:state.sel.dev, name:el.dataset.obj}, false); return; }
 });
+const $cbtn = document.getElementById('client-btn'), $cpop = document.getElementById('client-pop');
+const closePop = () => { $cpop.hidden = true; $cbtn.setAttribute('aria-expanded', 'false'); };
+$cbtn.addEventListener('click', e => { e.stopPropagation(); const open = $cpop.hidden; $cpop.hidden = !open; $cbtn.setAttribute('aria-expanded', String(open)); });
+document.addEventListener('click', e => { if (!$cpop.hidden && !e.target.closest('.client-wrap')) closePop(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$cpop.hidden) { closePop(); $cbtn.focus(); } });
 document.getElementById('theme-btn').addEventListener('click', () => {
   const root = document.documentElement, cur = root.dataset.theme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   root.dataset.theme = cur === 'dark' ? 'light' : 'dark';
