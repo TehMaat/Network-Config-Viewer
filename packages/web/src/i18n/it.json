@@ -1,0 +1,204 @@
+{
+  "app": {
+    "title": "Network Config Viewer",
+    "version": "versione {{version}}",
+    "versionShort": "v{{version}}",
+    "openNavigation": "Mostra o nascondi l'elenco dei file"
+  },
+  "language": {
+    "label": "Lingua",
+    "it": "Italiano",
+    "en": "English"
+  },
+  "drop": {
+    "title": "Trascina qui le config dei tuoi apparati",
+    "hint": "File di configurazione, output dei comandi show o archivi zip, tar, tar.gz. Puoi trascinare anche una cartella intera.",
+    "privacy": "I file restano sul tuo computer: vengono letti nel browser e non vengono inviati da nessuna parte.",
+    "choose": "Scegli i file",
+    "add": "Aggiungi file",
+    "overlay": "Rilascia per aprire i file"
+  },
+  "files": {
+    "title": "File",
+    "count_one": "{{count}} file",
+    "count_other": "{{count}} file",
+    "processing": "Lettura in corso…",
+    "clear": "Svuota l'elenco",
+    "remove": "Togli dall'elenco",
+    "empty": "Nessun file caricato",
+    "unreadable": "Non leggibile"
+  },
+  "kind": {
+    "config": "Configurazione",
+    "show": "Output di comandi",
+    "unknown": "Contenuto non riconosciuto"
+  },
+  "vendor": {
+    "fortinet": "Fortinet",
+    "cisco": "Cisco"
+  },
+  "os": {
+    "fortios": "FortiOS",
+    "fortiswitchos": "FortiSwitchOS",
+    "ios": "Cisco IOS",
+    "ios-xe": "Cisco IOS-XE",
+    "nx-os": "Cisco NX-OS",
+    "asa": "Cisco ASA",
+    "cisco-sb": "Cisco Small Business",
+    "none": "Non determinato"
+  },
+  "detection": {
+    "title": "Riconoscimento",
+    "kind": "Tipo",
+    "vendor": "Marca",
+    "os": "Sistema operativo",
+    "version": "Versione",
+    "build": "build {{build}}",
+    "model": "Modello",
+    "hostname": "Hostname",
+    "stack": "Stack",
+    "stackMembers_one": "{{count}} apparato",
+    "stackMembers_other": "{{count}} apparati",
+    "vdoms": "VDOM",
+    "commands": "Comandi",
+    "notFound": "Non trovato",
+    "source": "Fonte: {{source}}",
+    "sourceLine": "Fonte: {{source}}, riga {{line}}",
+    "manual": "inserito a mano",
+    "edit": "Correggi",
+    "apply": "Applica",
+    "cancel": "Annulla",
+    "reset": "Ripristina il riconoscimento automatico",
+    "edited": "Corretto a mano",
+    "goToLine": "Vai alla riga {{line}}",
+    "inferred": "riconosciuto dal formato dell'output",
+    "notReadYet": "In questa versione il contenuto di {{os}} viene mostrato, ma non ancora interpretato."
+  },
+  "evidence": {
+    "fortios": {
+      "header": "intestazione #config-version",
+      "syntax": "sintassi FortiOS (config, edit, set)",
+      "hostname": "riga set hostname in config system global",
+      "vdoms": "blocco config vdom",
+      "encrypted": "dopo l'intestazione non c'è una configurazione leggibile"
+    },
+    "cisco": {
+      "version-ios": "riga version 12 o 15: IOS classico (anche IOS-XE 3.x riporta 15)",
+      "version-xe": "riga version 16 o successiva: IOS-XE",
+      "provision": "righe switch … provision",
+      "license-udi": "riga license udi",
+      "hostname": "riga hostname",
+      "syntax": "sintassi Cisco (interface, !, end)",
+      "stack-interfaces": "numerazione delle interfacce (unità/slot/porta)"
+    },
+    "nxos": {
+      "header": "intestazione !Command: show running-config",
+      "version": "riga version nel formato NX-OS"
+    },
+    "asa": {
+      "version": "riga ASA Version",
+      "hardware": "commento : Hardware"
+    },
+    "sb": {
+      "header": "intestazione config-file-header",
+      "version": "versione del firmware nell'intestazione",
+      "family": "famiglia dedotta dalla versione del firmware"
+    },
+    "show": {
+      "prompt": "prompt del comando",
+      "signature": "formato dell'output",
+      "version-output": "output di show version o get system status"
+    },
+    "none": "nessun indizio riconosciuto"
+  },
+  "file": {
+    "path": "Percorso",
+    "size": "Dimensione",
+    "encoding": "Codifica",
+    "bom": "{{encoding}} con BOM",
+    "eol": "Fine riga",
+    "lines_one": "{{count}} riga",
+    "lines_other": "{{count}} righe"
+  },
+  "eol": {
+    "lf": "LF (Linux, macOS)",
+    "crlf": "CRLF (Windows)",
+    "cr": "CR",
+    "mixed": "misti",
+    "none": "nessuno"
+  },
+  "viewer": {
+    "ariaLabel": "Configurazione originale, in sola lettura",
+    "search": "Cerca",
+    "foldAll": "Piega tutto",
+    "unfoldAll": "Espandi tutto",
+    "copy": "Copia tutto",
+    "copied": "Copiato negli appunti",
+    "copyFailed": "Il browser non ha permesso di copiare negli appunti",
+    "download": "Scarica l'originale",
+    "outline": "Struttura",
+    "showOutline": "Mostra la struttura",
+    "hideOutline": "Nascondi la struttura",
+    "outlineFilter": "Filtra la struttura",
+    "clearFilter": "Cancella il filtro",
+    "outlineEmpty": "Nessun blocco da mostrare",
+    "outlineNoMatch": "Nessun blocco corrisponde al filtro",
+    "outlineLimited": "Mostrati i primi {{count}} blocchi: usa il filtro per trovare gli altri",
+    "outlineTruncated": "La struttura è stata limitata ai primi {{count}} blocchi",
+    "plain": "Nessuna struttura riconosciuta: il testo è mostrato così com'è.",
+    "diagnosticsTitle": "Punti del file da controllare"
+  },
+  "diagnostics": {
+    "unterminated-string": "valore tra virgolette mai chiuso",
+    "unterminated-banner": "banner senza il delimitatore di chiusura",
+    "unterminated-block": "blocco su più righe mai chiuso",
+    "unclosed-block": "blocco senza la riga di chiusura",
+    "unexpected-close": "chiusura senza un blocco aperto",
+    "atLine": "Riga {{line}}: {{message}}"
+  },
+  "issues": {
+    "title": "Questo file non si può mostrare",
+    "binary": "Non è un file di testo, quindi non contiene una configurazione leggibile.",
+    "fortigate-encrypted": "È un backup FortiGate cifrato con una password: senza la password non si può leggere. Esporta di nuovo il backup senza cifratura.",
+    "empty": "Il file è vuoto.",
+    "too-large": "Il file è troppo grande: il limite è 256 MB.",
+    "archive-corrupt": "L'archivio è danneggiato o incompleto e non si può aprire.",
+    "archive-encrypted": "Nell'archivio questo file è protetto da password e non si può aprire.",
+    "archive-unsupported": "Nell'archivio questo file usa una compressione non supportata. Ricrea l'archivio con la compressione standard.",
+    "archive-too-deep": "Ci sono troppi archivi uno dentro l'altro: questo non è stato aperto.",
+    "archive-limit": "È stato superato il limite di file o di dimensione per gli archivi: questo file non è stato aperto.",
+    "worker-error": "Errore imprevisto durante la lettura: {{message}}"
+  },
+  "encrypted": {
+    "title": "Backup cifrato",
+    "message": "Questo backup FortiGate è cifrato con una password: si leggono solo l'intestazione e le informazioni sul modello. Esporta di nuovo il backup senza cifratura per vederne il contenuto."
+  },
+  "codemirror": {
+    "Find": "Trova",
+    "Replace": "Sostituisci",
+    "next": "successivo",
+    "previous": "precedente",
+    "all": "tutti",
+    "match case": "maiuscole/minuscole",
+    "regexp": "espressione regolare",
+    "by word": "parola intera",
+    "replace": "sostituisci",
+    "replace all": "sostituisci tutti",
+    "close": "chiudi",
+    "current match": "risultato corrente",
+    "on line": "alla riga",
+    "replaced $ matches": "sostituiti $ risultati",
+    "replaced match on line $": "sostituito il risultato alla riga $",
+    "Go to line": "Vai alla riga",
+    "go": "vai",
+    "Fold line": "Piega il blocco",
+    "Unfold line": "Espandi il blocco",
+    "folded code": "blocco piegato",
+    "unfold": "espandi",
+    "Folded lines": "Righe piegate",
+    "Unfolded lines": "Righe espanse",
+    "to": "a",
+    "Control character": "Carattere di controllo",
+    "Selection deleted": "Selezione eliminata"
+  }
+}

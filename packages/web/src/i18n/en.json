@@ -1,0 +1,204 @@
+{
+  "app": {
+    "title": "Network Config Viewer",
+    "version": "version {{version}}",
+    "versionShort": "v{{version}}",
+    "openNavigation": "Show or hide the file list"
+  },
+  "language": {
+    "label": "Language",
+    "it": "Italiano",
+    "en": "English"
+  },
+  "drop": {
+    "title": "Drop your device configs here",
+    "hint": "Configuration files, show command output or zip, tar, tar.gz archives. You can also drop a whole folder.",
+    "privacy": "Files stay on your computer: they are read in the browser and never sent anywhere.",
+    "choose": "Choose files",
+    "add": "Add files",
+    "overlay": "Drop to open the files"
+  },
+  "files": {
+    "title": "Files",
+    "count_one": "{{count}} file",
+    "count_other": "{{count}} files",
+    "processing": "Reading…",
+    "clear": "Clear the list",
+    "remove": "Remove from the list",
+    "empty": "No files loaded",
+    "unreadable": "Not readable"
+  },
+  "kind": {
+    "config": "Configuration",
+    "show": "Command output",
+    "unknown": "Unrecognised content"
+  },
+  "vendor": {
+    "fortinet": "Fortinet",
+    "cisco": "Cisco"
+  },
+  "os": {
+    "fortios": "FortiOS",
+    "fortiswitchos": "FortiSwitchOS",
+    "ios": "Cisco IOS",
+    "ios-xe": "Cisco IOS-XE",
+    "nx-os": "Cisco NX-OS",
+    "asa": "Cisco ASA",
+    "cisco-sb": "Cisco Small Business",
+    "none": "Not determined"
+  },
+  "detection": {
+    "title": "Recognition",
+    "kind": "Type",
+    "vendor": "Vendor",
+    "os": "Operating system",
+    "version": "Version",
+    "build": "build {{build}}",
+    "model": "Model",
+    "hostname": "Hostname",
+    "stack": "Stack",
+    "stackMembers_one": "{{count}} device",
+    "stackMembers_other": "{{count}} devices",
+    "vdoms": "VDOMs",
+    "commands": "Commands",
+    "notFound": "Not found",
+    "source": "Source: {{source}}",
+    "sourceLine": "Source: {{source}}, line {{line}}",
+    "manual": "entered by hand",
+    "edit": "Correct",
+    "apply": "Apply",
+    "cancel": "Cancel",
+    "reset": "Restore automatic recognition",
+    "edited": "Corrected by hand",
+    "goToLine": "Go to line {{line}}",
+    "inferred": "recognised from the shape of the output",
+    "notReadYet": "In this version {{os}} content is shown but not interpreted yet."
+  },
+  "evidence": {
+    "fortios": {
+      "header": "#config-version header",
+      "syntax": "FortiOS syntax (config, edit, set)",
+      "hostname": "set hostname line in config system global",
+      "vdoms": "config vdom block",
+      "encrypted": "no readable configuration after the header"
+    },
+    "cisco": {
+      "version-ios": "version 12 or 15 line: classic IOS (IOS-XE 3.x also reports 15)",
+      "version-xe": "version 16 or later line: IOS-XE",
+      "provision": "switch … provision lines",
+      "license-udi": "license udi line",
+      "hostname": "hostname line",
+      "syntax": "Cisco syntax (interface, !, end)",
+      "stack-interfaces": "interface numbering (unit/slot/port)"
+    },
+    "nxos": {
+      "header": "!Command: show running-config header",
+      "version": "version line in NX-OS format"
+    },
+    "asa": {
+      "version": "ASA Version line",
+      "hardware": ": Hardware comment"
+    },
+    "sb": {
+      "header": "config-file-header header",
+      "version": "firmware version in the header",
+      "family": "family inferred from the firmware version"
+    },
+    "show": {
+      "prompt": "command prompt",
+      "signature": "shape of the output",
+      "version-output": "output of show version or get system status"
+    },
+    "none": "no recognisable clue"
+  },
+  "file": {
+    "path": "Path",
+    "size": "Size",
+    "encoding": "Encoding",
+    "bom": "{{encoding}} with BOM",
+    "eol": "Line endings",
+    "lines_one": "{{count}} line",
+    "lines_other": "{{count}} lines"
+  },
+  "eol": {
+    "lf": "LF (Linux, macOS)",
+    "crlf": "CRLF (Windows)",
+    "cr": "CR",
+    "mixed": "mixed",
+    "none": "none"
+  },
+  "viewer": {
+    "ariaLabel": "Original configuration, read only",
+    "search": "Search",
+    "foldAll": "Fold all",
+    "unfoldAll": "Unfold all",
+    "copy": "Copy all",
+    "copied": "Copied to the clipboard",
+    "copyFailed": "The browser did not allow copying to the clipboard",
+    "download": "Download the original",
+    "outline": "Outline",
+    "showOutline": "Show the outline",
+    "hideOutline": "Hide the outline",
+    "outlineFilter": "Filter the outline",
+    "clearFilter": "Clear the filter",
+    "outlineEmpty": "No blocks to show",
+    "outlineNoMatch": "No block matches the filter",
+    "outlineLimited": "Showing the first {{count}} blocks: use the filter to find the others",
+    "outlineTruncated": "The outline was limited to the first {{count}} blocks",
+    "plain": "No structure recognised: the text is shown as it is.",
+    "diagnosticsTitle": "Places in the file to check"
+  },
+  "diagnostics": {
+    "unterminated-string": "quoted value never closed",
+    "unterminated-banner": "banner without its closing delimiter",
+    "unterminated-block": "multi-line block never closed",
+    "unclosed-block": "block without its closing line",
+    "unexpected-close": "closing line without an open block",
+    "atLine": "Line {{line}}: {{message}}"
+  },
+  "issues": {
+    "title": "This file cannot be shown",
+    "binary": "It is not a text file, so it does not contain a readable configuration.",
+    "fortigate-encrypted": "It is a FortiGate backup encrypted with a password: it cannot be read without the password. Export the backup again without encryption.",
+    "empty": "The file is empty.",
+    "too-large": "The file is too large: the limit is 256 MB.",
+    "archive-corrupt": "The archive is damaged or incomplete and cannot be opened.",
+    "archive-encrypted": "In the archive this file is protected by a password and cannot be opened.",
+    "archive-unsupported": "In the archive this file uses an unsupported compression method. Create the archive again with standard compression.",
+    "archive-too-deep": "There are too many archives inside each other: this one was not opened.",
+    "archive-limit": "The limit on files or size for archives was exceeded: this file was not opened.",
+    "worker-error": "Unexpected error while reading: {{message}}"
+  },
+  "encrypted": {
+    "title": "Encrypted backup",
+    "message": "This FortiGate backup is encrypted with a password: only the header and the model information can be read. Export the backup again without encryption to see its content."
+  },
+  "codemirror": {
+    "Find": "Find",
+    "Replace": "Replace",
+    "next": "next",
+    "previous": "previous",
+    "all": "all",
+    "match case": "match case",
+    "regexp": "regexp",
+    "by word": "by word",
+    "replace": "replace",
+    "replace all": "replace all",
+    "close": "close",
+    "current match": "current match",
+    "on line": "on line",
+    "replaced $ matches": "replaced $ matches",
+    "replaced match on line $": "replaced match on line $",
+    "Go to line": "Go to line",
+    "go": "go",
+    "Fold line": "Fold line",
+    "Unfold line": "Unfold line",
+    "folded code": "folded code",
+    "unfold": "unfold",
+    "Folded lines": "Folded lines",
+    "Unfolded lines": "Unfolded lines",
+    "to": "to",
+    "Control character": "Control character",
+    "Selection deleted": "Selection deleted"
+  }
+}
