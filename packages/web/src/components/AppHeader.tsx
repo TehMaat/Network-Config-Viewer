@@ -1,7 +1,17 @@
-import { Badge, Burger, Button, Group, SegmentedControl, Text, Tooltip } from '@mantine/core';
+import {
+  ActionIcon,
+  Badge,
+  Burger,
+  Button,
+  Group,
+  SegmentedControl,
+  Text,
+  Tooltip,
+} from '@mantine/core';
 import { IconNetwork, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGES } from '../i18n';
+import { ColorSchemeSwitch } from './ColorSchemeSwitch';
 
 interface Props {
   navOpened: boolean;
@@ -26,7 +36,7 @@ export function AppHeader({ navOpened, onToggleNav, onAddFiles, hasFiles }: Prop
           />
         )}
         <IconNetwork size={26} color="var(--mantine-primary-color-filled)" aria-hidden />
-        <Text fw={700} size="lg" visibleFrom="xs">
+        <Text fw={700} size="lg" visibleFrom="sm">
           {t('app.title')}
         </Text>
         <Tooltip label={t('app.version', { version: __APP_VERSION__ })}>
@@ -37,15 +47,29 @@ export function AppHeader({ navOpened, onToggleNav, onAddFiles, hasFiles }: Prop
       </Group>
       <Group gap="sm" wrap="nowrap">
         {hasFiles && (
-          <Button
-            size="xs"
-            leftSection={<IconPlus size={14} />}
-            onClick={onAddFiles}
-            data-testid="btn-add"
-          >
-            {t('drop.add')}
-          </Button>
+          <>
+            <Button
+              size="xs"
+              leftSection={<IconPlus size={14} />}
+              onClick={onAddFiles}
+              visibleFrom="xs"
+              data-testid="btn-add"
+            >
+              {t('drop.add')}
+            </Button>
+            <Tooltip label={t('drop.add')}>
+              <ActionIcon
+                onClick={onAddFiles}
+                hiddenFrom="xs"
+                aria-label={t('drop.add')}
+                data-testid="btn-add-compact"
+              >
+                <IconPlus size={16} />
+              </ActionIcon>
+            </Tooltip>
+          </>
         )}
+        <ColorSchemeSwitch />
         <SegmentedControl
           size="xs"
           value={language}

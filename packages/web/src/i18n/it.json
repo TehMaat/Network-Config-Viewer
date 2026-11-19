@@ -10,6 +10,12 @@
     "it": "Italiano",
     "en": "English"
   },
+  "theme": {
+    "label": "Tema",
+    "light": "Chiaro",
+    "dark": "Scuro",
+    "auto": "Sistema"
+  },
   "drop": {
     "title": "Trascina qui le config dei tuoi apparati",
     "hint": "File di configurazione, output dei comandi show o archivi zip, tar, tar.gz. Puoi trascinare anche una cartella intera.",

@@ -10,6 +10,12 @@
     "it": "Italiano",
     "en": "English"
   },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "auto": "System"
+  },
   "drop": {
     "title": "Drop your device configs here",
     "hint": "Configuration files, show command output or zip, tar, tar.gz archives. You can also drop a whole folder.",
