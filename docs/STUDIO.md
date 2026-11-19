@@ -1,6 +1,6 @@
 # Studio preliminare: Network Config Viewer
 
-> **Stato:** studio in corso, novembre 2026. Raccoglie le decisioni prese finora e le proposte da validare (vedi [Domande aperte](#12-domande-aperte)). Il [mockup](mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste principali: scarica il file e aprilo nel browser.
+> **Stato:** novembre 2026. La [fase 0](#fase-0-fondamenta-realizzata) è realizzata: l'app si avvia in locale con Docker, riconosce le config FortiGate e Cisco e le mostra navigabili (vedi il [README](../README.md)). Il resto del documento raccoglie le decisioni prese e il piano delle fasi successive. Il [mockup](mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scarica il file e aprilo nel browser.
 
 ## 1. In breve
 
@@ -10,8 +10,8 @@
   - la vista dei rack, con patch panel e cavi.
 
   Sulla stessa base lo strumento aiuta a preparare e verificare le migrazioni, comprese quelle degli switch pianificate sul rack da chi lavora da remoto.
-- **Come**: un'app web che gira **interamente nel browser**. I file vengono elaborati sul PC e non vengono mai caricati su un server. Più avanti si aggiunge un server opzionale per il lavoro in team e per leggere gli apparati in diretta via SSH/API.
-- **Primo traguardo (MVP)**: FortiGate e Cisco IOS/IOS-XE, prima apparato per apparato, poi messi insieme nella mappa dell'infrastruttura.
+- **Come**: un'app web che si avvia **sul PC con Docker** e si usa nel browser. I file vengono elaborati nel browser e non vengono mai caricati su un server, nemmeno sul container. Più avanti la stessa immagine Docker potrà girare su un server per il lavoro in team e per leggere gli apparati in diretta via SSH/API.
+- **Primo traguardo (MVP)**: FortiGate, Cisco IOS/IOS-XE e Cisco Small Business, prima apparato per apparato, poi messi insieme nella mappa dell'infrastruttura.
 - **Migrazioni**: arrivano dopo la parte di visualizzazione, su cui si appoggiano. Si parte da ASA, Check Point, Sophos e Juniper verso FortiGate (poi pfSense e OPNsense), in config diretta o tramite FortiManager, con verifica automatica del risultato. Poi le migrazioni switch, pianificate sul rack con la patch list per i tecnici in sede.
 - **Licenza**: open source, MIT.
 - **Lingua**: interfaccia in italiano e in inglese, a scelta di chi la usa.
@@ -25,10 +25,13 @@
 |---|---|
 | Obiettivo principale | Visualizzare l'infrastruttura del cliente: più apparati insieme, con VPN, SD-WAN, BGP/routing e switch. Non solo convertire config |
 | Utenti | All'inizio uso personale in locale, poi il team |
-| Avvio in locale | Nel browser, senza installazione |
-| Marche da supportare nel tempo | FortiGate, FortiManager, FortiSwitch, FortiAP, Cisco IOS/IOS-XE/NX-OS, Cisco ASA, Aruba/HPE switch (AOS-CX, ArubaOS-Switch, Comware), Aruba Central, Meraki, Check Point, Juniper, Sophos, Netgate pfSense, OPNsense, Ubiquiti (UniFi, EdgeRouter, EdgeSwitch), TP-Link (Omada, JetStream) |
+| Avvio in locale | Solo in locale, con Docker sul PC (`docker compose up -d`); l'app si usa nel browser su `http://localhost:8080`. Nessuna pubblicazione online, né dell'app né dell'immagine Docker |
+| Server | Con Docker o simili, nella fase 6: la stessa immagine usata in locale |
+| Config caricate | Restano 1:1: lo strumento non le modifica mai; ciò che si vede, si copia o si scarica è identico all'originale |
+| Anonimizzatore | Non previsto: le config non lasciano il PC, quindi non c'è niente da proteggere |
+| Marche da supportare nel tempo | FortiGate, FortiManager, FortiSwitch, FortiAP, Cisco IOS/IOS-XE/NX-OS, Cisco ASA, Cisco Small Business (Sx300–Sx550X, CBS, Catalyst 1200/1300), Aruba/HPE switch (AOS-CX, ArubaOS-Switch, Comware), Aruba Central, Meraki, Check Point, Juniper, Sophos, Netgate pfSense, OPNsense, Ubiquiti (UniFi, EdgeRouter, EdgeSwitch), TP-Link (Omada, JetStream) |
 | Primo firewall | FortiGate |
-| Primo switch | Cisco IOS/IOS-XE |
+| Primo switch | Cisco IOS/IOS-XE e, insieme, Cisco Small Business, frequenti tra i clienti |
 | Casi d'uso | Tutti: visualizzazione, migrazione switch, migrazione firewall, in sequenza (vedi [Roadmap](#11-roadmap)) |
 | Migrazioni firewall | Tutte le sorgenti verso FortiGate: prima ASA, Check Point, Sophos e Juniper, poi pfSense e OPNsense |
 | Destinazioni delle migrazioni | FortiGate, Aruba (CX/AP), Cisco, Meraki |
@@ -47,9 +50,12 @@
 | Controller UniFi e Omada | Sia locali sia in cloud: servono entrambi i modi di lettura |
 | Frontali degli apparati | Per tutti i modelli, ricavati dalla NetBox devicetype-library; frontale generico per i modelli che mancano |
 | Lingua dell'interfaccia | Italiano e inglese, a scelta di chi la usa |
-| Config reali per lo sviluppo | Disponibili: arrivano dopo l'anonimizzatore (fase 0), in una repo privata separata |
+| Config reali per lo sviluppo | Nessuna repo con config dei clienti, nemmeno privata. Si sviluppa su config sintetiche; quando un parser sbaglia su una config reale, l'utente passa in chat solo le righe che danno problemi, con i valori sensibili cambiati a mano |
+| Documentazione e screenshot | Solo con dati sintetici, generati dalle config di esempio in `samples/` |
 | Licenza | Open source, MIT |
 | Codice | Scritto da Claude: lo stack si sceglie per semplicità d'uso, non per familiarità |
+| Strumenti | TypeScript, npm workspaces, React + Vite, Mantine, i18next, CodeMirror 6, fflate, Vitest, Playwright (vedi [capitolo 8](#8-scelte-tecniche)) |
+| Test automatici | Su GitHub Actions a ogni pull request: lint, tipi, test, build, immagine Docker e test nel browser sul container. Non si pubblica niente |
 | Metodo di lavoro | Ogni proposta viene analizzata e diventa un'issue; si lavora solo dopo l'okay. Registro delle modifiche in `CHANGELOG.md`, documentazione sempre aggiornata, Semantic Versioning. Regole complete in [`CLAUDE.md`](../CLAUDE.md) |
 
 ## 3. Architettura
@@ -97,7 +103,7 @@ flowchart LR
 
    | Famiglia di sintassi | Marche |
    |---|---|
-   | Indentazione | Cisco IOS/IOS-XE/NX-OS/ASA, Aruba AOS-CX, ArubaOS-Switch, Aruba Instant/controller, TP-Link JetStream, Ubiquiti EdgeSwitch |
+   | Indentazione | Cisco IOS/IOS-XE/NX-OS/ASA, Cisco Small Business (con i blocchi chiusi da `exit`), Aruba AOS-CX, ArubaOS-Switch, Aruba Instant/controller, TP-Link JetStream, Ubiquiti EdgeSwitch |
    | Blocchi `config / edit / set / next / end` | FortiOS (FortiGate), FortiSwitchOS, script e template CLI di FortiManager |
    | Blocchi separati da `#` + indentazione | HPE Comware |
    | Graffe o comandi `set` | Juniper Junos, Ubiquiti EdgeRouter (EdgeOS), VyOS |
@@ -107,6 +113,8 @@ flowchart LR
 2. **Driver di marca**: legge l'albero e popola il modello neutro, conoscendo default, nomi delle interfacce e particolarità di ogni versione.
 
 Così il lavoro sulla sintassi si fa una volta per famiglia, e ogni nuova marca costa solo il suo driver.
+
+Nella fase 0 ci sono i parser generici delle due famiglie dell'MVP: indentazione e blocchi `config / edit / set / next / end`. Gestiscono anche i casi che rompono le regole: valori FortiOS tra virgolette su più righe (certificati, chiavi, messaggi), VDOM con i blocchi a colonna 0, banner Cisco con delimitatore (`^C` o il carattere ETX), catene di certificati chiuse da `quit`, intestazione e blocchi `exit` dei Cisco Small Business. Un file da 20 MB si legge in meno di un secondo, fuori dal thread dell'interfaccia.
 
 ### Come ottenere l'input per ogni marca
 
@@ -118,6 +126,7 @@ Così il lavoro sulla sintassi si fa una volta per famiglia, e ogni nuova marca 
 | FortiAP e FortiSwitch gestiti dal cloud Fortinet | API (fase server) | JSON |
 | FortiManager | Template CLI (testo); policy package e oggetti via API JSON-RPC | testo / JSON |
 | Cisco IOS/IOS-XE/NX-OS, ASA | `show running-config` | testo indentato |
+| Cisco Small Business (Sx300–Sx550X, CBS, Catalyst 1200/1300) | `show running-config` o backup della configurazione dalla GUI | testo con intestazione `config-file-header` |
 | Aruba AOS-CX | `show running-config` | testo indentato |
 | ArubaOS-Switch (ex ProCurve) | `show running-config` | testo |
 | HPE Comware | `display current-configuration` | testo |
@@ -303,6 +312,10 @@ Elenco delle ACL con le voci, gli object-group espansi e i **punti in cui sono a
 
 Testo originale con evidenziazione della sintassi, blocchi piegabili e numeri di riga. I nomi degli oggetti sono cliccabili (portano alla definizione) e le righe non comprese dal parser sono evidenziate. Ogni dettaglio (porta, policy, tunnel) indica le righe da cui proviene.
 
+Nella fase 0 ci sono già evidenziazione, blocchi piegabili, numeri di riga, ricerca e una struttura navigabile (blocchi `config`, VDOM, interfacce, banner…). Il testo resta identico al file: si copia o si scarica byte per byte, anche con i fine riga di Windows. Nomi cliccabili e righe non comprese arrivano con i driver di marca della fase 1.
+
+![La vista della config nella fase 0: elenco dei file, riconoscimento con la riga da cui viene ogni dato, struttura navigabile e testo originale](img/app-fortigate.png)
+
 ### 5.10 Riepilogo dell'apparato
 
 Hostname, modello, versione, IP di gestione, conteggi (interfacce, VLAN, policy, oggetti), funzioni in uso (stack, vPC, VSX, 802.1X, OSPF, SD-WAN…), show caricati e percentuale di copertura del parser.
@@ -404,68 +417,79 @@ Meraki non ha una config testuale: lettura e scrittura passano dalla Dashboard A
 
 **Linguaggio: TypeScript per tutto.** Motivi:
 
-- i parser girano direttamente nel browser: niente upload e niente installazione;
+- i parser girano direttamente nel browser: i file non vengono caricati su nessun server;
 - un solo linguaggio e un solo modello dati, condiviso tra parser e interfaccia;
 - lo stesso codice girerà anche sul server per il team, senza riscriverlo;
-- l'alternativa (backend Python + interfaccia web) richiederebbe due linguaggi e, già nella fase locale, un programma da installare o Docker.
+- l'alternativa (backend Python + interfaccia web) richiederebbe due linguaggi e un server che riceve i file.
 
 Il punto forte di Python (librerie SSH come Netmiko) serve solo per la lettura live, che arriva con il server. Lì la scelta resta aperta, perché il raccoglitore live è un componente separato che produce gli stessi file di testo dei backup.
 
-| Area | Proposta |
+| Area | Scelta |
 |---|---|
-| Interfaccia | React + Vite, con una libreria di componenti da scegliere nella fase 0 (per esempio Mantine) |
+| Interfaccia | React + Vite, con Mantine come libreria di componenti (tema chiaro e scuro, segue il sistema) |
+| Traduzioni | i18next, un file JSON per lingua; un test verifica che italiano e inglese abbiano le stesse chiavi, e il lint segnala i testi scritti direttamente nel codice |
+| Gestore pacchetti | npm workspaces: nessuno strumento in più da installare |
 | Tabelle grandi (migliaia di policy) | TanStack Table con virtualizzazione |
 | Pannelli porte | SVG disegnato da codice |
 | Mappa e schemi LAG/vPC | React Flow con layout automatico, esportazione in draw.io |
 | Config originale | CodeMirror 6 (evidenziazione, piegatura, salto alla riga) |
 | Elaborazione | Web Worker, così l'interfaccia non si blocca sui file grandi |
-| Archivi zip e tar.gz | fflate |
+| Archivi zip, tar, tar.gz e gz | fflate per zip e gzip, lettore tar scritto nel progetto; archivi annidati, con limiti di profondità e dimensione |
 | Cartelle dei clienti | Una cartella per cliente sul PC, letta e aggiornata direttamente dal browser (Chrome ed Edge lo permettono); negli altri browser, salvataggio interno al browser con import/export in zip |
 | Export | Excel (ExcelJS), report HTML stampabile in PDF |
 | Test | Vitest (parser e logica), Playwright (interfaccia) |
 | Struttura del codice | Monorepo: `core` (modello, parser, correlazione, generatori, analisi, senza dipendenze dal browser), `web` (interfaccia), in futuro `server` |
+| Avvio | Docker: build in due passaggi (Node.js per la build, poi solo nginx senza privilegi con i file statici) e `compose.yaml` con la porta aperta solo su `127.0.0.1` |
 
 La licenza di ogni libreria va verificata prima di adottarla: deve essere compatibile con la licenza MIT del progetto.
 
-**Distribuzione.** La repo è pubblica, quindi l'app si può pubblicare gratis su **GitHub Pages** e si apre da un link; i file restano comunque nel browser. Per gli ambienti senza internet si può scaricare un pacchetto offline.
+**Distribuzione.** L'app si usa **solo in locale**: nessuna pubblicazione online.
+- Si avvia sul PC con Docker (`docker compose up -d`) e si apre nel browser su `http://localhost:8080`.
+- L'immagine si costruisce sul PC dal codice e non viene pubblicata su nessun registro.
+- Il container contiene solo nginx con i file dell'app, nessun codice lato server, e risponde solo al PC stesso.
+- Internet serve solo la prima volta, per costruire l'immagine; dopo, l'app funziona anche senza rete.
+- La stessa immagine servirà al server della fase 6.
+
+Docker Desktop è gratuito per uso personale e per le aziende con meno di 250 dipendenti e meno di 10 milioni di fatturato; in alternativa funzionano Podman Desktop e Rancher Desktop, gratuiti.
 
 **Lingua.** Interfaccia in italiano e in inglese fin dalla prima versione, con la lingua scelta da chi la usa; codice e nomi tecnici in inglese. I termini di rete d'uso comune (VLAN, trunk, policy) restano invariati in entrambe le lingue.
 
 ## 9. Sicurezza e riservatezza
 
-- **Le config dei clienti non lasciano il PC**: tutto viene elaborato nel browser, senza telemetria e senza chiamate esterne.
-- **La repo è pubblica, quindi niente config reali nella repo.** I file di test devono essere sintetici o anonimizzati.
-- **Config reali per lo sviluppo**: dopo la fase 0 le anonimizzi con lo strumento stesso, nel tuo browser. Poi le metti in una repo privata separata (per esempio `Network-Config-Samples`), che viene collegata alle sessioni di sviluppo quando serve.
-- **Anonimizzatore integrato** (fase 0). Sostituisce password e hash, PSK, community SNMP e certificati. Sostituisce anche indirizzi IP, hostname, utenti e descrizioni in modo coerente: stessa sostituzione ovunque e subnet preservate, così VPN e BGP tra apparati restano abbinabili. Serve a creare file di test sicuri e a condividere config con colleghi o con il supporto dei vendor.
-- **Segreti mascherati** nell'interfaccia, visibili con un clic.
+- **Le config dei clienti non lasciano il PC**: tutto viene elaborato nel browser, senza telemetria e senza chiamate esterne. Il web server manda al browser una regola di sicurezza (Content Security Policy) che blocca qualsiasi collegamento ad altri siti, anche in caso di errore nel codice; i test automatici lo verificano.
+- **Config 1:1**: lo strumento non modifica mai i file caricati. Ciò che si vede, si copia o si scarica è identico all'originale, compresi spazi, fine riga e segreti. Per questo non c'è un anonimizzatore: le config restano sul PC e non serve.
+- **La repo è pubblica, quindi niente config reali nella repo.** Config di esempio, test, documentazione e screenshot usano solo dati sintetici.
+- **Config reali per lo sviluppo**: nessuna repo con config dei clienti, nemmeno privata. Si sviluppa su config sintetiche; quando un parser sbaglia su una config reale, servono solo le righe che danno problemi, passate in chat con i valori sensibili cambiati a mano.
+- **Segreti mascherati** nell'interfaccia, visibili con un clic (fase successiva): cambia solo la visualizzazione, utile quando si condivide lo schermo, e non tocca la config.
 - **File di progetto** salvati in locale, con cifratura opzionale tramite password.
 - **Licenza MIT**: chiunque può usare, modificare e ridistribuire il codice, anche commercialmente, mantenendo l'avviso di copyright (vedi [LICENSE](../LICENSE)).
 
 ## 10. Qualità e test
 
-- **Raccolta di config di esempio** per ogni marca e versione (sintetiche o anonimizzate), ciascuna con il modello atteso salvato accanto: ogni modifica ai parser viene verificata su tutta la raccolta.
+- **Raccolta di config di esempio** per ogni marca e versione, solo sintetiche, in [`samples/`](../samples/README.md), con il risultato atteso salvato accanto (`expected.json`): ogni modifica ai parser viene verificata su tutta la raccolta.
 - **Progetti di esempio multi-apparato** (sede e filiali con VPN, SD-WAN e BGP) per verificare la correlazione e i controlli di coerenza.
 - **Copertura** misurata per ogni file: percentuale di righe comprese.
 - **Andata e ritorno** per i generatori: modello → config → rilettura → stesso modello.
 - **Test differenziali** per le migrazioni: stessi flussi di prova, stesso esito su sorgente e destinazione.
 - **Test automatici dell'interfaccia** con screenshot.
-- **CI su GitHub Actions**: ogni modifica viene testata e, se tutto va bene, pubblicata.
+- **CI su GitHub Actions**: a ogni pull request lint, controllo dei tipi, formattazione, test unitari, build, costruzione dell'immagine Docker e test nel browser sull'app servita dal container. Non si pubblica niente.
 
 ## 11. Roadmap
 
 Ogni fase si chiude con qualcosa che puoi aprire e provare. L'ordine delle fasi 4–6 si può rivedere strada facendo.
 
-### Fase 0: fondamenta
-- Struttura del progetto, CI, pubblicazione su GitHub Pages.
-- Caricamento file (anche zip) e riconoscimento automatico di marca, OS e modello.
-- Parser generici e vista della config originale.
-- Anonimizzatore.
+### Fase 0: fondamenta (realizzata)
+Issue [#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4).
+- Struttura del progetto, test automatici su GitHub Actions, avvio in locale con Docker.
+- Caricamento di più file, anche dentro archivi zip, tar, tar.gz e gz annidati, e riconoscimento automatico di marca, OS, versione, modello, hostname, stack e VDOM, con la riga da cui viene ogni dato e la correzione a mano. Riconosciuti FortiOS, FortiSwitchOS, Cisco IOS, IOS-XE e Small Business, gli output dei comandi show e i backup FortiGate cifrati; NX-OS e ASA riconosciuti ma non ancora letti.
+- Parser generici e vista della config originale, identica al file.
 - Interfaccia in italiano e inglese fin dall'inizio.
-- **Risultato**: trascini un backup FortiGate o Cisco, l'app lo riconosce e mostra la config navigabile. Puoi anonimizzare le config reali e passarmele.
+- Config di esempio sintetiche: FortiOS 7.0–8.0 (anche con VDOM multiple), Catalyst 2960, 3850, 9200 e 9300 (anche in stack), Cisco Small Business SG350, CBS350 e Catalyst 1300.
+- **Risultato**: avvii l'app con Docker, trascini un backup FortiGate o Cisco e l'app lo riconosce e mostra la config navigabile, identica all'originale.
 
-### Fase 1: lettura dei singoli apparati FortiGate e Cisco IOS/IOS-XE (MVP)
+### Fase 1: lettura dei singoli apparati FortiGate, Cisco IOS/IOS-XE e Cisco Small Business (MVP)
 - FortiGate: interfacce e zone, oggetti, policy (con VDOM), VIP e IP pool, routing (statiche, BGP, OSPF), VPN IPsec, SD-WAN.
-- Cisco: interfacce, VLAN, trunk, port-channel, stack, SVI, ACL, routing.
+- Cisco IOS/IOS-XE e Cisco Small Business: interfacce, VLAN, trunk, port-channel, stack, SVI, ACL, routing.
 - Output dei comandi show di entrambi.
 - Cartella per cliente: si apre una cartella con config, show e versioni precedenti, e lo strumento la legge tutta.
 - Viste per apparato (5.3–5.10) ed export Excel.
@@ -497,7 +521,7 @@ Ogni fase si chiude con qualcosa che puoi aprire e provare. L'ordine delle fasi 
 - **Risultato**: config del nuovo switch, patch list per i tecnici e controllo del lavoro fatto in sede.
 
 ### Fase 6: server per il team e lettura live
-- La stessa app su un server (Docker), con progetti condivisi e utenti.
+- La stessa immagine Docker usata in locale, su un server, con progetti condivisi e utenti.
 - Lettura via SSH/API: FortiGate, FortiManager (policy package), Meraki, UniFi e Omada (controller locali e in cloud), Aruba Central, cloud Fortinet per FortiAP e FortiSwitch, Cisco.
 - Apparati gestiti da controller o dal cloud (Meraki, UniFi, Omada, Aruba Central) e wireless nella mappa e nelle viste; Meraki anche come destinazione delle migrazioni.
 - Rilievo delle prese assistito dalla lettura live: si stacca un cavo e lo strumento riconosce la porta.
@@ -505,7 +529,9 @@ Ogni fase si chiude con qualcosa che puoi aprire e provare. L'ordine delle fasi 
 
 ## 12. Domande aperte
 
-Nessuna domanda aperta blocca l'inizio dei lavori. Durante lo sviluppo serviranno le config reali, anonimizzate con lo strumento della fase 0.
+Nessuna domanda aperta. Durante la fase 1, quando un parser sbaglia su una config reale, serviranno le righe che danno problemi, passate in chat con i valori sensibili cambiati a mano.
+
+Da valutare nella fase 1, con un'issue separata: con Docker la cartella dei clienti si potrebbe collegare al container, così si leggerebbe da qualsiasi browser, compreso Firefox; servirebbe però un componente lato server.
 
 ## Riferimenti
 
