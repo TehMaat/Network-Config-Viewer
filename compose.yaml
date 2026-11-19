@@ -1,0 +1,19 @@
+# Network Config Viewer on this computer.
+#   Start:   docker compose up -d        then open http://localhost:8080
+#   Update:  git pull, then docker compose up -d --build
+#   Stop:    docker compose down
+services:
+  app:
+    build: .
+    image: network-config-viewer:local
+    ports:
+      # Reachable only from this computer. Another port: NCV_PORT=9090 docker compose up -d
+      - '127.0.0.1:${NCV_PORT:-8080}:8080'
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
