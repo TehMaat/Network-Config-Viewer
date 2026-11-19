@@ -191,6 +191,9 @@ td.num{text-align:right;white-space:nowrap}
 .port.dim{opacity:.16}
 .port.sel{outline:2px solid var(--accent);outline-offset:1px}
 .port.warnp{box-shadow:0 0 0 2px var(--warn)}
+.port.nomac{border:1.5px dashed var(--warn)}
+.maclist{display:grid;gap:2px;margin-top:2px}
+.maclist summary{cursor:pointer}
 .port .led{position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;box-shadow:0 0 0 1px var(--surface)}
 .led.up{background:var(--ok)} .led.down{background:var(--muted)} .led.err{background:var(--err)}
 .port .x1{position:absolute;top:0;left:0;width:0;height:0;border-top:8px solid var(--fg);border-right:8px solid transparent}
@@ -390,9 +393,9 @@ const SITES = {
 };
 const DEVICES = {
   'fgt-sede':{name:'FGT-SEDE',kind:'fw',site:'sede',x:194,y:168,short:'FortiGate 200F',model:'FortiGate 200F',os:'FortiOS 7.4.4',role:'Hub SD-WAN · route reflector BGP',file:'FGT-SEDE_2026-11-15.conf',lines:'14.212',cov:97,shows:'routing · BGP · IPsec · SD-WAN'},
-  'sw-core':{name:'SW-CORE',kind:'sw',site:'sede',x:194,y:306,short:'C9300-48P ×2',model:'Catalyst 9300-48P ×2',os:'IOS-XE 17.9.4',role:'Core · stack di 2 membri',file:'SW-CORE_2026-11-15.txt',lines:'2.846',cov:99,shows:'interfaces status · CDP · LLDP'},
+  'sw-core':{name:'SW-CORE',kind:'sw',site:'sede',x:194,y:306,short:'C9300-48P ×2',model:'Catalyst 9300-48P ×2',os:'IOS-XE 17.9.4',role:'Core · stack di 2 membri',file:'SW-CORE_2026-11-15.txt',lines:'2.846',cov:99,shows:'interfaces status · CDP · LLDP · mac address-table'},
   'sw-p1':{name:'SW-PIANO1',kind:'sw',site:'sede',x:104,y:470,short:'C9200L-48P-4X',model:'Catalyst 9200L-48P-4X',os:'IOS-XE 17.9.4',role:'Accesso piano 1',file:'SW-PIANO1_2026-11-15.txt',lines:'1.630',cov:99,shows:'interfaces status · CDP'},
-  'sw-p2':{name:'SW-PIANO2',kind:'sw',site:'sede',x:286,y:470,short:'C2960X-48FPD-L',model:'Catalyst 2960X-48FPD-L',os:'IOS 15.2(7)E8',role:'Accesso piano 2',file:'SW-PIANO2_2026-11-15.txt',lines:'1.412',cov:98,shows:'interfaces status · CDP'},
+  'sw-p2':{name:'SW-PIANO2',kind:'sw',site:'sede',x:286,y:470,short:'C2960X-48FPD-L',model:'Catalyst 2960X-48FPD-L',os:'IOS 15.2(7)E8',role:'Accesso piano 2',file:'SW-PIANO2_2026-11-15.txt',lines:'1.412',cov:98,shows:'interfaces status · CDP · mac address-table'},
   'fgt-mi':{name:'FGT-MI',kind:'fw',site:'mi',x:746,y:100,short:'FortiGate 60F',model:'FortiGate 60F',os:'FortiOS 7.4.4',role:'Filiale · spoke SD-WAN',file:'FGT-MI_2026-11-15.conf',lines:'6.930',cov:98,shows:'routing · BGP · IPsec · SD-WAN'},
   'fgt-to':{name:'FGT-TO',kind:'fw',site:'to',x:746,y:280,short:'FortiGate 60F',model:'FortiGate 60F',os:'FortiOS 7.4.4',role:'Filiale · spoke SD-WAN',file:'FGT-TO_2026-11-15.conf',lines:'5.212',cov:98,shows:'routing · BGP · IPsec · SD-WAN'},
   'fgt-rm':{name:'FGT-RM',kind:'fw',site:'rm',x:746,y:470,short:'FortiGate 40F',model:'FortiGate 40F',os:'FortiOS 7.2.9',role:'Filiale · spoke SD-WAN',file:'FGT-RM_2026-11-14.conf',lines:'5.874',cov:98,shows:'routing · BGP · IPsec'}
@@ -680,9 +683,9 @@ const ROUTING = {
 /* ---------- porte degli switch, generate in modo deterministico ---------- */
 function rng(seed){ let s = seed >>> 0; return () => (s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296; }
 const SW = {
-  'sw-core':{members:[1,2],memberModel:'C9300-48P',lineBase:410,ports:[]},
-  'sw-p1':{members:[1],memberModel:'C9200L-48P-4X',lineBase:260,ports:[]},
-  'sw-p2':{members:[1],memberModel:'WS-C2960X-48FPD-L',lineBase:240,ports:[]}
+  'sw-core':{members:[1,2],memberModel:'C9300-48P',lineBase:410,ports:[],macTable:true,poMacs:{}},
+  'sw-p1':{members:[1],memberModel:'C9200L-48P-4X',lineBase:260,ports:[],macTable:false,poMacs:{}},
+  'sw-p2':{members:[1],memberModel:'WS-C2960X-48FPD-L',lineBase:240,ports:[],macTable:true,poMacs:{}}
 };
 const LAGS = {
   'sw-core':{Po1:'FGT-SEDE · LAN-AGG',Po2:'SW-PIANO1 · Po1',Po3:'SW-PIANO2 · Po1'},
@@ -700,7 +703,7 @@ const LAGS = {
       else if (i <= 16) { const ap = `AP-SEDE-${String((m-1)*8+i-8).padStart(2,'0')}`; Object.assign(p, {mode:'trunk', native:40, allowed:[40,50], desc:ap, nbr:ap + ' (LLDP)', poe:true, status:'up'}); }
       else if (i <= 32) Object.assign(p, {mode:'access', vlan:10, voice:20, poe:true, desc:'', status:st(.72)});
       else if (i <= 40) Object.assign(p, {mode:'access', vlan:10, desc:i % 2 ? 'STAMPANTE' : '', status:st(.6)});
-      else if (i === 47 && m === 1) Object.assign(p, {mode:'access', vlan:99, desc:'PC-AMMINISTRATORE', status:'up'});
+      else if (i === 47 && m === 1) Object.assign(p, {mode:'access', vlan:99, desc:'PC-AMMINISTRATORE', status:'up', sticky:true});
       else if (i === 48 && m === 1) Object.assign(p, {mode:'routed', ip:'192.168.200.1/30', desc:'LAB-ROUTER', status:'up'});
       else Object.assign(p, {mode:'shutdown', desc:'', status:'admin'});
       core.push(p);
@@ -738,7 +741,37 @@ const LAGS = {
   p2.push({name:'Te1/0/1',m:1,i:1,uplink:true,mode:'trunk',allowed:[10,20,40,50,99],native:999,po:'Po1',desc:'SW-CORE',status:'up',nbr:'SW-CORE Te1/1/3 (CDP)',warn:'VLAN nativa 999: sul lato SW-CORE è 1'});
   p2.push({name:'Te1/0/2',m:1,i:2,uplink:true,mode:'trunk',allowed:[10,20,40,50,99],native:999,po:'Po1',desc:'SW-CORE',status:'up',nbr:'SW-CORE Te2/1/3 (CDP)',warn:'VLAN nativa 999: sul lato SW-CORE è 1'});
   for (const id of Object.keys(SW)) SW[id].ports.forEach((p, k) => { p.ln = SW[id].lineBase + k * 9; });
+
+  /* tabella MAC sintetica (show mac address-table): solo indirizzi di documentazione
+     00:00:5E:00:53:00–FF dell'RFC 7042, mai MAC reali */
+  let macN = 0;
+  const mac = () => { if (macN > 255) throw new Error('MAC di documentazione esauriti'); return '0000.5e00.53' + (macN++).toString(16).padStart(2, '0'); };
+  const silent = {'sw-core':['Gi1/0/39'], 'sw-p2':['Gi1/0/38']};
+  for (const id of Object.keys(SW)) {
+    const S = SW[id];
+    if (!S.macTable) continue;
+    for (const p of S.ports) {
+      p.macs = [];
+      if (p.mode === 'shutdown' || p.mode === 'routed') continue;
+      if (p.po) { S.poMacs[p.po] = S.poMacs[p.po] || (p.po === 'Po1' && id === 'sw-core' ? 6 : 30 + Math.floor(r() * 60)); continue; }
+      if (p.status !== 'up' || (silent[id] || []).includes(p.name)) continue;
+      if (p.mode === 'access') {
+        if (p.voice) p.macs.push({mac:mac(), vlan:p.voice, type:p.dot1x ? 'dinamico · 802.1X' : 'dinamico', who:'telefono (VLAN voce)'});
+        p.macs.push({mac:mac(), vlan:p.vlan, type:p.sticky ? 'sticky' : 'dinamico', who:p.vlan === 30 ? 'server' : p.desc === 'STAMPANTE' ? 'stampante' : 'PC'});
+      } else if (p.mode === 'trunk') {
+        p.macs.push({mac:mac(), vlan:p.native, type:'dinamico', who:'access point'});
+        const n = 1 + Math.floor(r() * 3);
+        for (let k = 0; k < n; k++) p.macs.push({mac:mac(), vlan:50, type:'dinamico', who:'client wifi'});
+      }
+    }
+  }
 })();
+const noMac = (S, p) => S.macTable && p.mode !== 'shutdown' && p.mode !== 'routed' && !p.po && p.macs.length === 0;
+for (const id of ['sw-core', 'sw-p2']) {
+  const n = SW[id].ports.filter(p => noMac(SW[id], p)).length;
+  ISSUES.push({sev:'warn', text:`${DEVICES[id].name}: ${n} porte configurate e non spente senza MAC appreso, forse inutilizzate`, open:[id, 'porte'], devs:[id]});
+}
+ISSUES.push({sev:'warn', text:'SW-PIANO1: manca show mac address-table, quindi le porte non mostrano i dispositivi collegati', open:['sw-p1', 'porte'], devs:['sw-p1']});
 
 /* ---------- rack R2: patch panel e SW-PIANO2, oggi e dopo la migrazione ---------- */
 const RACK = (() => {
@@ -1077,6 +1110,7 @@ function portCell(swId, p){
   else cls.push('shut');
   if (state.vlan !== null && !carries(p, state.vlan)) cls.push('dim');
   if (p.warn) cls.push('warnp');
+  if (noMac(SW[swId], p)) cls.push('nomac');
   if (state.sel && state.sel.t === 'port' && state.sel.sw === swId && state.sel.name === p.name) cls.push('sel');
   const led = p.status === 'up' ? 'up' : p.status === 'down' ? 'down' : p.status === 'err' ? 'err' : '';
   const voice = p.voice ? `<span class="vbar" style="background:${VLANS[p.voice].color}"></span>` : '';
@@ -1102,7 +1136,7 @@ function tabPorts(){
   }).join('');
   const lagMap = {};
   S.ports.filter(p => p.po).forEach(p => { (lagMap[p.po] = lagMap[p.po] || []).push(p); });
-  const lags = Object.entries(lagMap).map(([po, ps]) => `<div><b class="mono">${po}</b><span>→ ${esc(LAGS[id][po])}</span><span class="muted">LACP active · ${ps.map(p => p.name).join(', ')} · trunk ${ps[0].allowed.join(', ')}${ps[0].native !== 1 ? ` · nativa ${ps[0].native}` : ''}</span>${ps[0].warn ? '<span class="sev warn">nativa diversa</span>' : ''}</div>`).join('');
+  const lags = Object.entries(lagMap).map(([po, ps]) => `<div><b class="mono">${po}</b><span>→ ${esc(LAGS[id][po])}</span><span class="muted">LACP active · ${ps.map(p => p.name).join(', ')} · trunk ${ps[0].allowed.join(', ')}${ps[0].native !== 1 ? ` · nativa ${ps[0].native}` : ''}${S.macTable ? ` · ${S.poMacs[po]} MAC appresi` : ''}</span>${ps[0].warn ? '<span class="sev warn">nativa diversa</span>' : ''}</div>`).join('');
   const lg = (bg, extra = '') => `<span class="lg" style="${bg}">${extra}</span>`;
   return `<div class="vlan-filter" role="group" aria-label="Filtra per VLAN">${vf}</div>
     <div class="legend">
@@ -1113,7 +1147,9 @@ function tabPorts(){
       <span>${lg('background:' + VLANS[10].color, '<span class="vbar" style="position:absolute;left:2px;right:2px;bottom:2px;height:3px;border-radius:2px;background:' + VLANS[20].color + '"></span>')}VLAN voce</span>
       <span>${lg('background:' + VLANS[10].color, '<span style="position:absolute;top:0;left:0;border-top:8px solid var(--fg);border-right:8px solid transparent"></span>')}802.1X / MAB</span>
       <span><span class="dot ok"></span>attiva · <span class="dot" style="background:var(--muted)"></span>non collegata · <span class="dot err"></span>err-disabled</span>
+      ${S.macTable ? `<span>${lg('border:1.5px dashed var(--warn)')}configurata, nessun MAC appreso</span>` : ''}
     </div>
+    ${S.macTable ? '' : '<p class="hint"><span class="flag">Tabella MAC non caricata</span> Carica <span class="mono">show mac address-table</span> per vedere i dispositivi collegati a ogni porta.</p>'}
     <div class="panel-wrap">${members}</div>
     <h3 class="sec">Port-channel</h3><div class="lags">${lags}</div>`;
 }
@@ -1412,18 +1448,30 @@ function detailPort(swId, name){
   if (p.mode === 'routed') { const [ip, b] = p.ip.split('/'); L.push(' no switchport'); L.push(` ip address ${ip} ${maskOf(+b)}`); }
   if (p.po) L.push(` channel-group ${p.po.slice(2)} mode active`);
   if (p.dot1x) { L.push(' access-session port-control auto'); L.push(' mab'); L.push(' dot1x pae authenticator'); }
+  if (p.sticky) { L.push(' switchport port-security'); L.push(' switchport port-security mac-address sticky'); L.push(` switchport port-security mac-address sticky ${p.macs[0].mac}`); }
   if (p.mode === 'access') { L.push(' spanning-tree portfast'); L.push(' spanning-tree bpduguard enable'); }
   if (p.mode === 'shutdown') L.push(' shutdown');
-  const macs = p.mode === 'access' && p.status === 'up' ? (p.voice ? '2 MAC: telefono in VLAN ' + p.voice + ', PC in VLAN ' + p.vlan : '1 MAC in VLAN ' + p.vlan) : '';
+  const src = ' <span class="muted">(show mac address-table)</span>';
+  const row = m => `<div><span class="mono">${m.mac}</span> · VLAN ${m.vlan}<br><span class="muted">${esc(m.who)} · ${esc(m.type)}</span></div>`;
+  let macs = '';
+  if (p.mode === 'shutdown') macs = '';
+  else if (!S.macTable) macs = '<span class="muted">tabella MAC non caricata</span>';
+  else if (p.mode === 'routed') macs = '<span class="muted">porta L3: non compare nella tabella MAC</span>';
+  else if (p.po) macs = `${S.poMacs[p.po]} MAC appresi sul ${p.po}, non sulle singole porte` + src;
+  else if (!p.macs.length) macs = 'nessun MAC appreso' + src;
+  else if (p.macs.length <= 2) macs = `<div class="maclist">${p.macs.map(row).join('')}</div>` + src;
+  else macs = `<details class="maclist"><summary>${p.macs.length} MAC appresi</summary>${p.macs.map(row).join('')}</details>` + src;
+  const nomacFlag = noMac(S, p) ? `<span class="flag">${p.status === 'up' ? 'Porta attiva ma nessun MAC appreso: il dispositivo potrebbe essere silenzioso, la tabella MAC è una fotografia' : 'Configurata ma nessun dispositivo visto: forse inutilizzata'}</span>` : '';
   return `<div class="kicker">Porta · ${esc(DEVICES[swId].name)}</div><h2 class="mono">${esc(longIf(p.name))}</h2>
-    ${p.warn ? `<span class="flag">${esc(p.warn)}</span>` : ''}
+    ${p.warn ? `<span class="flag">${esc(p.warn)}</span>` : ''}${nomacFlag}
     <dl class="kv"><dt>Descrizione</dt><dd>${p.desc ? esc(p.desc) : '<span class="muted">nessuna</span>'}</dd><dt>Modalità</dt><dd>${esc(mode)}</dd>
     ${p.po ? `<dt>Port-channel</dt><dd>${p.po} · LACP active → ${esc(LAGS[swId][p.po])}</dd>` : ''}
     ${p.dot1x ? '<dt>Autenticazione</dt><dd>802.1X con fallback MAB</dd>' : ''}
+    ${p.sticky ? '<dt>Port-security</dt><dd>MAC sticky, scritto anche nella config</dd>' : ''}
     ${p.poe ? '<dt>PoE</dt><dd>attivo</dd>' : ''}
     ${p.mode === 'access' ? '<dt>Spanning tree</dt><dd>portfast · bpduguard</dd>' : ''}
     <dt>Stato</dt><dd>${esc(status)} <span class="muted">(show interfaces status)</span></dd>
-    ${p.nbr ? `<dt>Vicino</dt><dd>${esc(p.nbr)}</dd>` : ''}${macs ? `<dt>Collegati</dt><dd>${esc(macs)} <span class="muted">(mac address-table)</span></dd>` : ''}</dl>
+    ${p.nbr ? `<dt>Vicino</dt><dd>${esc(p.nbr)}</dd>` : ''}${macs ? `<dt>Collegati</dt><dd>${macs}</dd>` : ''}</dl>
     <h3 class="sec">Config originale · righe ${p.ln}–${p.ln + L.length - 1}</h3>${cfgBlock(L, p.ln)}`;
 }
 

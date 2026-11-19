@@ -26,6 +26,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
 - Studio: avvio solo in locale con Docker; Cisco Small Business tra le marche e nella fase 1; nuove decisioni su config 1:1, dati sintetici, config reali per lo sviluppo, strumenti e test automatici ([#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4)).
 - README: cosa fa l'app, come avviarla con Docker, riservatezza e sviluppo ([#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4)).
 - Regole di riservatezza in `CLAUDE.md`: nessuna repo con config dei clienti, documentazione e screenshot solo con dati sintetici, config mai modificate ([#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4)).
+- Studio: ogni porta configurata degli switch riporta i MAC dei dispositivi collegati, letti da `show mac address-table`; lo strumento segnala le porte senza MAC e lo show mancante. Aggiornati decisioni, comandi show, modello dati, pannello porte, controlli di coerenza e roadmap ([#6](https://github.com/TehMaat/Network-Config-Viewer/issues/6)).
+- Mockup: dettaglio della porta con gli indirizzi MAC (sintetici, intervallo di documentazione dell'RFC 7042), segno per le porte configurate senza MAC e nuovi avvisi; screenshot del mockup rifatti ([#6](https://github.com/TehMaat/Network-Config-Viewer/issues/6)).
 
 ### Rimosso
 

@@ -41,6 +41,7 @@
 | Analisi | Pulizia policy, policy lookup, topologia, confronto tra versioni, controlli di coerenza tra apparati |
 | Organizzazione | Una cartella per cliente, con config, output di show, versioni precedenti, file delle prese e collegamenti inseriti a mano |
 | Collegamenti tra apparati | Verificati con LLDP/CDP, dedotti da descrizioni e indirizzi, oppure inseriti a mano; le differenze tra le fonti vengono segnalate |
+| Indirizzi MAC sulle porte | Ogni porta configurata degli switch riporta i MAC dei dispositivi collegati, con la VLAN, letti dalla tabella MAC dello switch (`show mac address-table`), non dalla config. Lo strumento li mostra e segnala le porte senza MAC e lo show mancante (vedi [5.5](#55-pannello-porte-dello-switch)) |
 | VPN | Anche ADVPN: ruoli, controlli e scorciatoie tra filiali |
 | Migrazioni switch | Pianificate sul rack con i patch panel, per gestire i cablaggi da remoto; arrivano dopo la visualizzazione |
 | Prese e patch panel | Oggi i clienti non li documentano: si parte da un rilievo in sede guidato dallo strumento, che poi resta come documentazione |
@@ -157,8 +158,20 @@ Senza show la mappa mostra la configurazione, cioè cosa *dovrebbe* succedere. C
 | `show vlan brief` | Nomi delle VLAN. **Indispensabile con VTP in modalità server/client**, perché in quel caso le VLAN non sono nella running-config |
 | `show etherchannel summary` | Stato dei port-channel |
 | `show cdp neighbors detail`, `show lldp neighbors detail` | Collegamenti con altri apparati, quindi la topologia |
-| `show mac address-table`, `show ip arp` | Cosa è collegato a ogni porta (utile in migrazione) |
+| `show mac address-table` | **Necessario**: i MAC dei dispositivi collegati a ogni porta, con VLAN e tipo (dinamico, statico, sticky). Vale anche per Cisco Small Business, con un formato diverso (vedi sotto) |
+| `show ip arp` | L'IP che corrisponde a ogni MAC, letto sul router o sullo switch L3 |
 | `show power inline` | Consumo PoE per porta |
+
+Per FortiSwitch gestiti dal FortiGate la tabella MAC si legge dal FortiGate con `diagnose switch-controller switch-info mac-table` (fase 2).
+
+**La tabella MAC sulle porte.** Ogni porta configurata riporta i MAC dei dispositivi collegati. Senza `show mac address-table` le porte indicano "tabella MAC non caricata". Alcuni casi da gestire:
+
+- **Formati diversi**: Cisco IOS/IOS-XE scrive `aaaa.bbbb.cccc`, Cisco Small Business `aa:bb:cc:dd:ee:ff` e con colonne diverse. Servono due lettori; nel modello neutro si usa un unico formato.
+- **Port-channel**: Cisco riporta i MAC sul `Po`, non sulle porte fisiche membre. Si attribuiscono al port-channel.
+- **Trunk e uplink**: si apprendono decine o centinaia di MAC. Si mostra il numero e l'elenco si apre a richiesta. Sulle porte access di solito c'è un MAC, oppure due con telefono e PC in VLAN voce.
+- **Statici e sticky**: i MAC fissati con port-security stanno anche nella config e si distinguono da quelli appresi.
+- **Porte L3**: non compaiono nella tabella MAC; per loro serve `show ip arp`.
+- **È una fotografia**: i MAC scadono dopo un po' (aging, 300 s di default), quindi un dispositivo spento o silenzioso può non comparire.
 
 | Comando FortiGate | Cosa aggiunge |
 |---|---|
@@ -196,7 +209,8 @@ Cliente (una cartella sul PC)
 │   ├── Servizi di gestione: NTP, DNS, SNMP, syslog, AAA/RADIUS/TACACS, utenti locali
 │   ├── Apparati gestiti: FortiSwitch e FortiAP collegati al FortiGate
 │   ├── Wireless: SSID, sicurezza, VLAN, ruoli, access point e radio
-│   ├── Stato da show (facoltativo): porte, tunnel, sessioni BGP, SLA, vicini LLDP/CDP
+│   ├── Stato da show (facoltativo): porte, tunnel, sessioni BGP, SLA, vicini LLDP/CDP,
+│   │     tabella MAC per porta (MAC, VLAN, tipo dinamico/statico/sticky)
 │   └── Diagnostica: righe non comprese, avvisi del parser
 └── Collegamenti tra apparati: tipo (cavo, LAG, subnet, IPsec, overlay SD-WAN, scorciatoia ADVPN,
       BGP, OSPF), estremi, fonte (LLDP/CDP, descrizione, inserito a mano), affidabilità
@@ -271,7 +285,7 @@ Sulla mappa, gli overlay SD-WAN collegano filiali e hub. Le stesse viste valgono
 
 ### 5.5 Pannello porte dello switch
 
-![Pannello porte di uno stack Catalyst nel mockup: colori per VLAN, trunk a strisce, port-channel e dettaglio della porta con la config originale](img/mockup-porte.png)
+![Pannello porte di uno stack Catalyst nel mockup: colori per VLAN, trunk a strisce, porte configurate senza MAC appreso, port-channel e dettaglio della porta con i MAC collegati e la config originale](img/mockup-porte.png)
 
 Disegno del frontale, con un riquadro per ogni membro dello stack:
 
@@ -279,7 +293,11 @@ Disegno del frontale, con un riquadro per ogni membro dello stack:
 - **Trunk a strisce**, una striscia per ogni VLAN permessa. Ci sono segni anche per porta L3, porta spenta, membro di port-channel, vPC/VSX, PoE, 802.1X/MAB e VLAN voce.
 - **Stato reale** (attiva, non collegata, err-disabled), se è stato caricato `show interfaces status`.
 - **Filtro VLAN**: scelta una VLAN, si evidenziano tutte le porte che la trasportano (access, trunk, nativa).
-- **Clic su una porta**: tutta la configurazione, il vicino CDP/LLDP, cosa è collegato (dalla tabella MAC) e le righe originali.
+- **Clic su una porta**: tutta la configurazione, il vicino CDP/LLDP, i dispositivi collegati e le righe originali.
+- **Indirizzi MAC** di ogni porta configurata, dalla tabella MAC dello switch (vedi [Comandi show utili](#comandi-show-utili)):
+  - ogni MAC con la sua VLAN e il tipo (dinamico, statico, sticky); sui trunk il numero, con l'elenco a richiesta; sui membri di un port-channel il rimando al `Po`;
+  - un segno sul frontale per le porte configurate e non spente senza nessun MAC appreso: forse sono inutilizzate, e nelle migrazioni sono da verificare prima di riportarle sul nuovo switch. Le porte in `shutdown` si vedono già come spente e non hanno il segno;
+  - "tabella MAC non caricata" se manca lo show.
 - **Vista logica di LAG e MLAG**: i due switch della coppia vPC/VSX, il peer-link, il keepalive e i port-channel verso il basso.
 - **Disposizione delle porte**:
   - in prima battuta generica, ricavata dai nomi delle interfacce: porte dispari sopra e pari sotto, uplink a parte, un blocco per membro;
@@ -342,7 +360,7 @@ Hostname, modello, versione, IP di gestione, conteggi (interfacce, VLAN, policy,
 
 | Funzione | Cosa fa |
 |---|---|
-| **Controlli di coerenza** | Confronta gli estremi di ogni collegamento e trova: tunnel IPsec con proposte, gruppi DH o selettori incompatibili; sessioni BGP con AS sbagliato o senza il neighbor dall'altro lato; rotte attese che mancano; trunk con VLAN nativa o permesse diverse; LACP configurato da un solo lato; MTU diverse; IP duplicati e subnet sovrapposte tra siti (un problema classico con VPN e SD-WAN); scorciatoie ADVPN che non possono partire; descrizioni delle porte in contrasto con LLDP/CDP. |
+| **Controlli di coerenza** | Confronta gli estremi di ogni collegamento e trova: tunnel IPsec con proposte, gruppi DH o selettori incompatibili; sessioni BGP con AS sbagliato o senza il neighbor dall'altro lato; rotte attese che mancano; trunk con VLAN nativa o permesse diverse; LACP configurato da un solo lato; MTU diverse; IP duplicati e subnet sovrapposte tra siti (un problema classico con VPN e SD-WAN); scorciatoie ADVPN che non possono partire; descrizioni delle porte in contrasto con LLDP/CDP. Sugli switch segnala anche lo show della tabella MAC mancante (un avviso per apparato) e le porte configurate e non spente senza MAC appreso: avvisi e non errori, perché la tabella MAC è una fotografia. |
 | **Policy lookup** | Dato un flusso (IP sorgente, IP destinazione, protocollo e porta, interfaccia d'ingresso), indica quale regola lo gestisce e perché. Vale sia per le policy firewall sia per le ACL. In seguito proseguirà **tra le sedi**: policy della filiale, regola SD-WAN scelta, tunnel, policy dell'hub. |
 | **Pulizia policy** | Trova regole oscurate da regole precedenti (shadowed) o ridondanti, oggetti inutilizzati, oggetti duplicati (stesso valore, nome diverso), gruppi vuoti, any-any, regole disabilitate o senza log. Serve soprattutto **prima** di una migrazione, per non portarsi dietro regole e oggetti inutili. |
 | **Confronto versioni** | Mostra le differenze tra due backup dello stesso apparato: non solo nel testo, ma anche nel significato (policy, oggetti, porte, VLAN, tunnel, rotte aggiunti, rimossi o modificati). |
@@ -490,7 +508,7 @@ Issue [#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4).
 ### Fase 1: lettura dei singoli apparati FortiGate, Cisco IOS/IOS-XE e Cisco Small Business (MVP)
 - FortiGate: interfacce e zone, oggetti, policy (con VDOM), VIP e IP pool, routing (statiche, BGP, OSPF), VPN IPsec, SD-WAN.
 - Cisco IOS/IOS-XE e Cisco Small Business: interfacce, VLAN, trunk, port-channel, stack, SVI, ACL, routing.
-- Output dei comandi show di entrambi.
+- Output dei comandi show di entrambi, compresa la tabella MAC (`show mac address-table`) di Cisco IOS/IOS-XE e Cisco Small Business, con i MAC su ogni porta configurata.
 - Cartella per cliente: si apre una cartella con config, show e versioni precedenti, e lo strumento la legge tutta.
 - Viste per apparato (5.3–5.10) ed export Excel.
 - **Risultato**: ogni FortiGate e ogni Catalyst leggibile in forma grafica.
@@ -499,7 +517,7 @@ Issue [#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4).
 - Progetto con più apparati e siti; correlazione (cavi, LAG, subnet, IPsec, overlay SD-WAN, BGP).
 - Mappa a livelli, vista VPN con ADVPN, dettaglio dei collegamenti, controlli di coerenza, stato reale dagli show.
 - Verifica dei cavi con LLDP/CDP e collegamenti inseriti a mano.
-- FortiSwitch e FortiAP gestiti dal FortiGate: pannello porte, MCLAG, SSID e access point.
+- FortiSwitch e FortiAP gestiti dal FortiGate: pannello porte con la tabella MAC, MCLAG, SSID e access point.
 - Esportazione in draw.io e immagine.
 - **Risultato**: carichi le config di sede e filiali e vedi la rete del cliente, con i problemi evidenziati.
 
