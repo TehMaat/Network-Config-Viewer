@@ -1,0 +1,144 @@
+{
+  "fortigate/fgt-br1-60f-fortios-7.0.conf": {
+    "kind": "config",
+    "vendor": "fortinet",
+    "os": "fortios",
+    "version": "7.0.15",
+    "build": "0632",
+    "model": "FortiGate-60F",
+    "hostname": "FGT-BR1"
+  },
+  "fortigate/fgt-hq-100f-fortios-7.2-vdom.conf": {
+    "kind": "config",
+    "vendor": "fortinet",
+    "os": "fortios",
+    "version": "7.2.10",
+    "build": "1706",
+    "model": "FortiGate-100F",
+    "hostname": "FGT-HQ",
+    "vdoms": ["root", "OFFICE", "DMZ"]
+  },
+  "fortigate/fgt-br2-60f-fortios-7.4.conf": {
+    "kind": "config",
+    "vendor": "fortinet",
+    "os": "fortios",
+    "version": "7.4.4",
+    "build": "2662",
+    "model": "FortiGate-60F",
+    "hostname": "FGT-BR2"
+  },
+  "fortigate/fgt-campus-200f-fortios-7.6.conf": {
+    "kind": "config",
+    "vendor": "fortinet",
+    "os": "fortios",
+    "version": "7.6.3",
+    "build": "3510",
+    "model": "FortiGate-200F",
+    "hostname": "FGT-CAMPUS"
+  },
+  "fortigate/fgt-dc-120g-fortios-8.0-vdom.conf": {
+    "kind": "config",
+    "vendor": "fortinet",
+    "os": "fortios",
+    "version": "8.0.0",
+    "build": "0145",
+    "model": "FortiGate-120G",
+    "hostname": "FGT-DC",
+    "vdoms": ["root", "CORE", "EXTRANET"]
+  },
+  "cisco-ios/sw-br1-acc-c2960x-ios-15.2-stack.txt": {
+    "kind": "config",
+    "vendor": "cisco",
+    "os": "ios",
+    "version": "15.2",
+    "model": "WS-C2960X-48FPD-L",
+    "hostname": "SW-BR1-ACC",
+    "stack": 2
+  },
+  "cisco-ios/sw-hq-acc1-c3850-iosxe-16.12-stack.txt": {
+    "kind": "config",
+    "vendor": "cisco",
+    "os": "ios-xe",
+    "version": "16.12",
+    "model": "WS-C3850-48P",
+    "hostname": "SW-HQ-ACC1",
+    "stack": 2
+  },
+  "cisco-ios/sw-hq-acc2-c9200-iosxe-17.9.txt": {
+    "kind": "config",
+    "vendor": "cisco",
+    "os": "ios-xe",
+    "version": "17.9",
+    "model": "C9200-24P",
+    "hostname": "SW-HQ-ACC2"
+  },
+  "cisco-ios/sw-hq-core-c9300-iosxe-17.12-stack.txt": {
+    "kind": "config",
+    "vendor": "cisco",
+    "os": "ios-xe",
+    "version": "17.12",
+    "model": "C9300-48P",
+    "hostname": "SW-HQ-CORE",
+    "stack": 3
+  },
+  "cisco-sb/sw-br2-acc-sg350-28p-2.5.txt": {
+    "kind": "config",
+    "vendor": "cisco",
+    "os": "cisco-sb",
+    "version": "2.5.9.54",
+    "build": "RCBS2.5.9.54_930_2111_054",
+    "model": "Sx250/Sx350/Sx550X",
+    "hostname": "SW-BR2-ACC"
+  },
+  "cisco-sb/sw-br3-acc-cbs350-48p-3.4-stack.txt": {
+    "kind": "config",
+    "vendor": "cisco",
+    "os": "cisco-sb",
+    "version": "3.4.1.3",
+    "build": "RCBS3.4.1.3_950_377_003",
+    "model": "CBS250/CBS350",
+    "hostname": "SW-BR3-ACC",
+    "stack": 2
+  },
+  "cisco-sb/sw-hq-acc3-c1300-48p-4.1-stack.txt": {
+    "kind": "config",
+    "vendor": "cisco",
+    "os": "cisco-sb",
+    "version": "4.1.3.36",
+    "build": "RCBS4.1.3.36_1300_011",
+    "model": "Catalyst 1200/1300",
+    "hostname": "SW-HQ-ACC3",
+    "stack": 2
+  },
+  "show/sw-hq-core_show-version.txt": {
+    "kind": "show",
+    "vendor": "cisco",
+    "os": "ios-xe",
+    "version": "17.12.04",
+    "model": "C9300-48P",
+    "hostname": "SW-HQ-CORE",
+    "stack": 3,
+    "commands": ["show version"]
+  },
+  "show/sw-hq-core_show-cdp-lldp-neighbors.txt": {
+    "kind": "show",
+    "vendor": "cisco",
+    "hostname": "SW-HQ-CORE",
+    "commands": ["show cdp neighbors detail", "show lldp neighbors detail"]
+  },
+  "show/fgt-hq_get-system-status.txt": {
+    "kind": "show",
+    "vendor": "fortinet",
+    "os": "fortios",
+    "version": "7.2.10",
+    "build": "1706",
+    "model": "FortiGate-100F",
+    "hostname": "FGT-HQ",
+    "commands": ["get system status"]
+  },
+  "show/sw-br1-acc_show-vlan-brief-senza-prompt.txt": {
+    "kind": "show",
+    "vendor": "cisco",
+    "commands": ["show vlan brief"]
+  }
+}

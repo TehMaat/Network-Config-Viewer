@@ -32,11 +32,13 @@ Queste regole valgono in ogni sessione su questo progetto. Lo studio di riferime
 ## Versioning
 
 - Le versioni seguono il [Semantic Versioning](https://semver.org/lang/it/): MAGGIORE.MINORE.CORREZIONE. Durante lo sviluppo si resta su 0.y.z: si alza MINORE per le nuove funzioni e CORREZIONE per correzioni e sola documentazione.
-- La versione corrente è la più recente in `CHANGELOG.md`. Quando ci sarà il codice, la stessa versione sta anche nel `package.json`.
+- La versione corrente è la più recente in `CHANGELOG.md`. La stessa versione sta anche nel `package.json` alla radice: un test lo verifica.
 - Il rilascio lo decide l'utente. Al rilascio la sezione "Non rilasciato" diventa la nuova versione con la data, si crea il tag `vX.Y.Z` su `main` e la release su GitHub con le note del registro. Tag e release si fanno solo con l'okay dell'utente.
 
 ## Riservatezza dei dati
 
-- La repo è pubblica: mai configurazioni reali dei clienti, nemmeno nei test o negli esempi. Solo dati sintetici o anonimizzati.
-- Le config reali anonimizzate stanno in una repo privata separata.
+- La repo è pubblica: mai configurazioni reali dei clienti, nemmeno nei test o negli esempi. Solo dati sintetici.
+- Nessuna repo con config dei clienti, nemmeno privata. Quando un parser sbaglia su una config reale, l'utente passa in chat solo le righe che danno problemi, con i valori sensibili cambiati a mano.
+- Documentazione e screenshot solo con dati sintetici, generati dalle config di esempio in `samples/`.
+- Lo strumento non modifica mai le config caricate: ciò che si vede, si copia o si scarica è identico all'originale.
 - Mai password, chiavi o altri segreti nel codice, nei commit o nelle issue.

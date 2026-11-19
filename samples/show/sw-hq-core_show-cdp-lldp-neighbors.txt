@@ -1,0 +1,128 @@
+SW-HQ-CORE#show cdp neighbors detail
+-------------------------
+Device ID: SW-HQ-ACC1.esempio.example
+Entry address(es): 
+  IP address: 10.10.99.11
+Platform: cisco WS-C3850-48P,  Capabilities: Switch IGMP 
+Interface: TenGigabitEthernet1/1/2,  Port ID (outgoing port): TenGigabitEthernet1/1/1
+Holdtime : 152 sec
+
+Version :
+Cisco IOS Software [Gibraltar], Catalyst L3 Switch Software (CAT3K_CAA-UNIVERSALK9-M), Version 16.12.10, RELEASE SOFTWARE (fc4)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2024 by Cisco Systems, Inc.
+
+advertisement version: 2
+VTP Management Domain: ''
+Native VLAN: 1
+Duplex: full
+Management address(es): 
+  IP address: 10.10.99.11
+
+-------------------------
+Device ID: SW-HQ-ACC1.esempio.example
+Entry address(es): 
+  IP address: 10.10.99.11
+Platform: cisco WS-C3850-48P,  Capabilities: Switch IGMP 
+Interface: TenGigabitEthernet2/1/2,  Port ID (outgoing port): TenGigabitEthernet2/1/1
+Holdtime : 152 sec
+
+Version :
+Cisco IOS Software [Gibraltar], Catalyst L3 Switch Software (CAT3K_CAA-UNIVERSALK9-M), Version 16.12.10, RELEASE SOFTWARE (fc4)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2024 by Cisco Systems, Inc.
+
+advertisement version: 2
+VTP Management Domain: ''
+Native VLAN: 1
+Duplex: full
+Management address(es): 
+  IP address: 10.10.99.11
+
+-------------------------
+Device ID: SW-HQ-ACC2.esempio.example
+Entry address(es): 
+  IP address: 10.10.99.12
+Platform: cisco C9200-24P,  Capabilities: Switch IGMP 
+Interface: GigabitEthernet3/0/47,  Port ID (outgoing port): GigabitEthernet1/1/1
+Holdtime : 152 sec
+
+Version :
+Cisco IOS Software [Cupertino], Catalyst L3 Switch Software (CAT9K_LITE_IOSXE), Version 17.9.5, RELEASE SOFTWARE (fc4)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2024 by Cisco Systems, Inc.
+
+advertisement version: 2
+VTP Management Domain: ''
+Native VLAN: 1
+Duplex: full
+Management address(es): 
+  IP address: 10.10.99.12
+
+-------------------------
+Device ID: SW-HQ-ACC2.esempio.example
+Entry address(es): 
+  IP address: 10.10.99.12
+Platform: cisco C9200-24P,  Capabilities: Switch IGMP 
+Interface: GigabitEthernet3/0/48,  Port ID (outgoing port): GigabitEthernet1/1/2
+Holdtime : 152 sec
+
+Version :
+Cisco IOS Software [Cupertino], Catalyst L3 Switch Software (CAT9K_LITE_IOSXE), Version 17.9.5, RELEASE SOFTWARE (fc4)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2024 by Cisco Systems, Inc.
+
+advertisement version: 2
+VTP Management Domain: ''
+Native VLAN: 1
+Duplex: full
+Management address(es): 
+  IP address: 10.10.99.12
+
+
+Total cdp entries displayed : 4
+SW-HQ-CORE#show lldp neighbors detail
+------------------------------------------------
+Local Intf: Te1/1/1
+Chassis id: 0000.5e00.5310
+Port id: x1
+Port Description: x1
+System Name: FGT-HQ
+
+System Description: 
+FortiGate-100F v7.2.10,build1706,240808 (GA.M)
+
+Time remaining: 101 seconds
+System Capabilities: B,R
+Enabled Capabilities: R
+Management Addresses:
+    IP: 10.10.99.250
+Auto Negotiation - not supported
+Physical media capabilities - not advertised
+Media Attachment Unit type - not advertised
+Vlan ID: - not advertised
+
+------------------------------------------------
+Local Intf: Te2/1/1
+Chassis id: 0000.5e00.5310
+Port id: x2
+Port Description: x2
+System Name: FGT-HQ
+
+System Description: 
+FortiGate-100F v7.2.10,build1706,240808 (GA.M)
+
+Time remaining: 101 seconds
+System Capabilities: B,R
+Enabled Capabilities: R
+Management Addresses:
+    IP: 10.10.99.250
+Auto Negotiation - not supported
+Physical media capabilities - not advertised
+Media Attachment Unit type - not advertised
+Vlan ID: - not advertised
+
+
+Total entries displayed: 2
+
+SW-HQ-CORE#
