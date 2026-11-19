@@ -46,6 +46,14 @@ export default defineConfig(
     },
   },
   {
+    // Plain scripts served as they are, before the app starts.
+    files: ['packages/web/public/**/*.js'],
+    languageOptions: {
+      sourceType: 'script',
+      globals: { ...globals.browser },
+    },
+  },
+  {
     files: ['packages/web/src/**/*.{ts,tsx}'],
     languageOptions: {
       globals: { ...globals.browser },

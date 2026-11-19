@@ -1,6 +1,5 @@
 :root {
-  color-scheme: light dark;
-
+  /* color-scheme follows the chosen theme: Mantine sets it from data-mantine-color-scheme. */
   --ncv-syntax-keyword: #6d28d9;
   --ncv-syntax-negation: #b91c1c;
   --ncv-syntax-property: #0b5cad;

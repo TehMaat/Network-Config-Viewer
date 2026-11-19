@@ -20,8 +20,9 @@ Le fasi successive (lettura delle config, mappa dell'infrastruttura, analisi, ra
 - **Non modifica mai le config**: il testo si copia o si scarica identico al file, byte per byte, anche con i fine riga di Windows.
 - **Segnala i file che non si possono leggere**: binari, vuoti, archivi danneggiati o protetti da password, backup FortiGate cifrati.
 - Interfaccia in **italiano e inglese**, a scelta.
+- Tema **chiaro, scuro o come il sistema**, a scelta. La scelta resta salvata nel browser.
 
-![La config di uno stack Catalyst 9300 con la struttura filtrata sui port-channel](docs/img/app-cisco.png)
+![La config di uno stack Catalyst 9300 in tema scuro, con la struttura filtrata sui port-channel](docs/img/app-cisco-scuro.png)
 
 ## Come avviarlo
 
@@ -72,7 +73,7 @@ Struttura del codice:
 - `samples`: config di esempio sintetiche, con il riconoscimento atteso in `expected.json`.
 - `docker`: configurazione di nginx e delle regole di sicurezza; `Dockerfile` e `compose.yaml` sono nella radice.
 
-Gli screenshot in `docs/img/app-*.png` si rigenerano con `NCV_SCREENSHOTS=1 npm run test:e2e -- screenshots`.
+Gli screenshot in `docs/img/app-*.png`, in tema chiaro e in tema scuro (`-scuro`), si rigenerano con `NCV_SCREENSHOTS=1 npm run test:e2e -- screenshots`.
 
 ## Come si lavora
 

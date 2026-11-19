@@ -50,6 +50,7 @@
 | Controller UniFi e Omada | Sia locali sia in cloud: servono entrambi i modi di lettura |
 | Frontali degli apparati | Per tutti i modelli, ricavati dalla NetBox devicetype-library; frontale generico per i modelli che mancano |
 | Lingua dell'interfaccia | Italiano e inglese, a scelta di chi la usa |
+| Tema dell'interfaccia | Chiaro, scuro o come il sistema, a scelta di chi la usa; si parte da "sistema" e la scelta resta salvata nel browser. Il tema salvato si applica prima dell'avvio dell'app con un piccolo script separato, senza allentare la Content Security Policy |
 | Config reali per lo sviluppo | Nessuna repo con config dei clienti, nemmeno privata. Si sviluppa su config sintetiche; quando un parser sbaglia su una config reale, l'utente passa in chat solo le righe che danno problemi, con i valori sensibili cambiati a mano |
 | Documentazione e screenshot | Solo con dati sintetici, generati dalle config di esempio in `samples/` |
 | Licenza | Open source, MIT |
@@ -426,7 +427,7 @@ Il punto forte di Python (librerie SSH come Netmiko) serve solo per la lettura l
 
 | Area | Scelta |
 |---|---|
-| Interfaccia | React + Vite, con Mantine come libreria di componenti (tema chiaro e scuro, segue il sistema) |
+| Interfaccia | React + Vite, con Mantine come libreria di componenti (tema chiaro, scuro o come il sistema, a scelta) |
 | Traduzioni | i18next, un file JSON per lingua; un test verifica che italiano e inglese abbiano le stesse chiavi, e il lint segnala i testi scritti direttamente nel codice |
 | Gestore pacchetti | npm workspaces: nessuno strumento in più da installare |
 | Tabelle grandi (migliaia di policy) | TanStack Table con virtualizzazione |
