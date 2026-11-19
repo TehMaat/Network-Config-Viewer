@@ -1,0 +1,592 @@
+config-file-header
+SW-BR3-ACC
+v3.4.1.3 / RCBS3.4.1.3_950_377_003
+CLI v1.0
+file SSD indicator encrypted
+@
+ssd-control-start
+ssd config
+ssd file passphrase control unrestricted
+no ssd file integrity control
+ssd-control-end 7d7e1a8b5c3e44f6a1b2c3d4e5f60718
+!
+!
+unit-type-control-start
+unit-type unit 1 network gi uplink te
+unit-type unit 2 network gi uplink te
+unit-type-control-end
+!
+vlan database
+vlan 10,20,60,70,99
+exit
+voice vlan id 20
+voice vlan state oui-enabled
+voice vlan oui-table add 0001e3 Siemens_AG_phone________
+voice vlan oui-table add 00036b Cisco_phone_____________
+voice vlan oui-table add 00096e Avaya___________________
+hostname SW-BR3-ACC
+line ssh
+exec-timeout 30
+exit
+line telnet
+exec-timeout 30
+exit
+logging host 10.40.100.30
+username netadmin password encrypted 53572d4252332d4143432d6e657461646d696e2d privilege 15
+enable password level 15 encrypted 53572d4252332d4143432d656e61626c652d4553
+ip ssh server
+ip ssh password-auth
+clock timezone CET +1
+clock summer-time web recurring eu
+clock source sntp
+sntp unicast client enable
+sntp server 10.40.100.53 poll
+ip domain name esempio.example
+ip name-server  10.40.100.53 10.40.100.54
+management access-list MGMT
+permit ip-source 10.10.99.0 mask 255.255.255.0 service ssh
+permit ip-source 10.23.99.0 mask 255.255.255.0 service ssh
+permit ip-source 10.10.99.0 mask 255.255.255.0 service snmp
+exit
+management access-class MGMT
+ip access-list extended ACL-OSPITI
+deny ip any 10.0.0.0 0.255.255.255 ace-priority 10
+permit ip any any ace-priority 20
+exit
+snmp-server server
+snmp-server community ESEMPIO-RO ro view Default
+snmp-server location "Filiale 3 - armadio rete"
+snmp-server contact "noc@esempio.example"
+ip default-gateway 10.23.99.1
+banner motd ^C
+Accesso consentito solo al personale autorizzato.
+^C
+!
+interface vlan 1
+ no ip address dhcp
+!
+interface vlan 10
+ name DATI
+!
+interface vlan 20
+ name VOCE
+!
+interface vlan 60
+ name AP
+!
+interface vlan 70
+ name WIFI
+!
+interface vlan 99
+ name GESTIONE
+ ip address 10.23.99.2 255.255.255.0
+ no ip address dhcp
+!
+interface GigabitEthernet1/0/1
+ description PDL-101
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/2
+ description PDL-102
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/3
+ description PDL-103
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/4
+ description PDL-104
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/5
+ description PDL-105
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/6
+ description PDL-106
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/7
+ description PDL-107
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/8
+ description PDL-108
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/9
+ description PDL-109
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/10
+ description AP-110
+ switchport mode trunk
+ switchport trunk native vlan 60
+ switchport trunk allowed vlan add 60,70
+!
+interface GigabitEthernet1/0/11
+ description PDL-111
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/12
+ description PDL-112
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/13
+ description PDL-113
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/14
+ description PDL-114
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/15
+ description PDL-115
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/16
+ description PDL-116
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/17
+ description PDL-117
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/18
+ description PDL-118
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/19
+ description PDL-119
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/20
+ description AP-120
+ switchport mode trunk
+ switchport trunk native vlan 60
+ switchport trunk allowed vlan add 60,70
+!
+interface GigabitEthernet1/0/21
+ description PDL-121
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/22
+ description PDL-122
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/23
+ description PDL-123
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/24
+ description PDL-124
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/25
+ description PDL-125
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/26
+ description PDL-126
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/27
+ description PDL-127
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/28
+ description PDL-128
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/29
+ description PDL-129
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/30
+ description AP-130
+ switchport mode trunk
+ switchport trunk native vlan 60
+ switchport trunk allowed vlan add 60,70
+!
+interface GigabitEthernet1/0/31
+ description PDL-131
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/32
+ description PDL-132
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/33
+ description PDL-133
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/34
+ description PDL-134
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/35
+ description PDL-135
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/36
+ description PDL-136
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/37
+ description PDL-137
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/38
+ description PDL-138
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/39
+ description PDL-139
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/40
+ description AP-140
+ switchport mode trunk
+ switchport trunk native vlan 60
+ switchport trunk allowed vlan add 60,70
+!
+interface GigabitEthernet1/0/41
+ description PDL-141
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/42
+ description PDL-142
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/43
+ description LIBERA
+ shutdown
+!
+interface GigabitEthernet1/0/44
+ description LIBERA
+ shutdown
+!
+interface GigabitEthernet1/0/45
+ description LIBERA
+ shutdown
+!
+interface GigabitEthernet1/0/46
+ description LIBERA
+ shutdown
+!
+interface GigabitEthernet1/0/47
+ description LIBERA
+ shutdown
+!
+interface GigabitEthernet1/0/48
+ description UPLINK-1
+ channel-group 1 mode auto
+!
+interface TenGigabitEthernet1/0/1
+ shutdown
+!
+interface TenGigabitEthernet1/0/2
+ shutdown
+!
+interface TenGigabitEthernet1/0/3
+ shutdown
+!
+interface TenGigabitEthernet1/0/4
+ shutdown
+!
+interface GigabitEthernet2/0/1
+ description PDL-201
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/2
+ description PDL-202
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/3
+ description PDL-203
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/4
+ description PDL-204
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/5
+ description PDL-205
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/6
+ description PDL-206
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/7
+ description PDL-207
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/8
+ description PDL-208
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/9
+ description PDL-209
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/10
+ description AP-210
+ switchport mode trunk
+ switchport trunk native vlan 60
+ switchport trunk allowed vlan add 60,70
+!
+interface GigabitEthernet2/0/11
+ description PDL-211
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/12
+ description PDL-212
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/13
+ description PDL-213
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/14
+ description PDL-214
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/15
+ description PDL-215
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/16
+ description PDL-216
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/17
+ description PDL-217
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/18
+ description PDL-218
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/19
+ description PDL-219
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/20
+ description AP-220
+ switchport mode trunk
+ switchport trunk native vlan 60
+ switchport trunk allowed vlan add 60,70
+!
+interface GigabitEthernet2/0/21
+ description PDL-221
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/22
+ description PDL-222
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/23
+ description PDL-223
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/24
+ description PDL-224
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/25
+ description PDL-225
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/26
+ description PDL-226
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/27
+ description PDL-227
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/28
+ description PDL-228
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/29
+ description PDL-229
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/30
+ description AP-230
+ switchport mode trunk
+ switchport trunk native vlan 60
+ switchport trunk allowed vlan add 60,70
+!
+interface GigabitEthernet2/0/31
+ description PDL-231
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/32
+ description PDL-232
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/33
+ description PDL-233
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/34
+ description PDL-234
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/35
+ description PDL-235
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/36
+ description PDL-236
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/37
+ description PDL-237
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/38
+ description PDL-238
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/39
+ description PDL-239
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/40
+ description AP-240
+ switchport mode trunk
+ switchport trunk native vlan 60
+ switchport trunk allowed vlan add 60,70
+!
+interface GigabitEthernet2/0/41
+ description PDL-241
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/42
+ description PDL-242
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet2/0/43
+ description LIBERA
+ shutdown
+!
+interface GigabitEthernet2/0/44
+ description LIBERA
+ shutdown
+!
+interface GigabitEthernet2/0/45
+ description LIBERA
+ shutdown
+!
+interface GigabitEthernet2/0/46
+ description LIBERA
+ shutdown
+!
+interface GigabitEthernet2/0/47
+ description LIBERA
+ shutdown
+!
+interface GigabitEthernet2/0/48
+ description UPLINK-2
+ channel-group 1 mode auto
+!
+interface TenGigabitEthernet2/0/1
+ shutdown
+!
+interface TenGigabitEthernet2/0/2
+ shutdown
+!
+interface TenGigabitEthernet2/0/3
+ shutdown
+!
+interface TenGigabitEthernet2/0/4
+ shutdown
+!
+interface Port-channel1
+ description UPLINK-SEDE
+ switchport mode trunk
+ switchport trunk allowed vlan add 10,20,60,70,99
+!
+exit
+macro auto disabled
+

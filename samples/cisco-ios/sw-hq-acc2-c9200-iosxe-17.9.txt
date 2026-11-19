@@ -1,0 +1,355 @@
+Building configuration...
+
+Current configuration : 14522 bytes
+!
+! Last configuration change at 11:47:03 CET Thu Oct 2 2025 by netadmin
+! NVRAM config last updated at 11:47:03 CET Thu Oct 2 2025 by netadmin
+!
+version 17.9
+no service pad
+service timestamps debug datetime msec localtime show-timezone
+service timestamps log datetime msec localtime show-timezone
+service password-encryption
+service call-home
+platform punt-keepalive disable-kernel-core
+!
+hostname SW-HQ-ACC2
+!
+boot-start-marker
+boot-end-marker
+!
+logging buffered 64000
+enable secret 9 $9$EsempioSWHQACC$SinteticoNonRealeSWHQACC2enableEsempioSinte
+!
+username netadmin privilege 15 secret 9 $9$EsempioSWHQACC$SinteticoNonRealeSWHQACC2netadminEsempioSin
+aaa new-model
+!
+aaa group server tacacs+ TACACS-ESEMPIO
+ server name TACACS-01
+!
+aaa authentication login default group TACACS-ESEMPIO local
+aaa authorization exec default group TACACS-ESEMPIO local
+aaa accounting exec default start-stop group TACACS-ESEMPIO
+!
+aaa session-id common
+clock timezone CET 1 0
+clock summer-time CEST recurring last Sun Mar 2:00 last Sun Oct 3:00
+switch 1 provision c9200-24p
+!
+vrf definition Mgmt-vrf
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+ip domain name esempio.example
+ip name-server 10.40.100.53 10.40.100.54
+login on-success log
+!
+license boot level network-essentials addon dna-essentials
+memory free low-watermark processor 10869
+diagnostic bootup level minimal
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+!
+redundancy
+ mode sso
+!
+vlan 10
+ name DATI
+!
+vlan 20
+ name VOCE
+!
+vlan 60
+ name AP
+!
+vlan 99
+ name GESTIONE
+!
+vlan 999
+ name PARCHEGGIO
+!
+lldp run
+!
+interface Port-channel1
+ description UPLINK-SW-HQ-CORE-Po11
+ switchport trunk allowed vlan 10,20,60,99
+ switchport mode trunk
+!
+interface GigabitEthernet0/0
+ vrf forwarding Mgmt-vrf
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet1/0/1
+ description PDL-001
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/2
+ description PDL-002
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/3
+ description PDL-003
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/4
+ description PDL-004
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/5
+ description PDL-005
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/6
+ description PDL-006
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/7
+ description PDL-007
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/8
+ description PDL-008
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/9
+ description PDL-009
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/10
+ description PDL-010
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/11
+ description PDL-011
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/12
+ description AP-12
+ switchport trunk native vlan 60
+ switchport trunk allowed vlan 60,70,71
+ switchport mode trunk
+ spanning-tree portfast trunk
+!
+interface GigabitEthernet1/0/13
+ description PDL-013
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/14
+ description PDL-014
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/15
+ description PDL-015
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/16
+ description PDL-016
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/17
+ description PDL-017
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/18
+ description PDL-018
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/19
+ description PDL-019
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/20
+ description PDL-020
+ switchport access vlan 10
+ switchport mode access
+ switchport voice vlan 20
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/21
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/22
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/23
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/24
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/1/1
+ description UPLINK-SW-HQ-CORE-Gi3/0/47
+ switchport trunk allowed vlan 10,20,60,99
+ switchport mode trunk
+ channel-group 1 mode active
+!
+interface GigabitEthernet1/1/2
+ description UPLINK-SW-HQ-CORE-Gi3/0/48
+ switchport trunk allowed vlan 10,20,60,99
+ switchport mode trunk
+ channel-group 1 mode active
+!
+interface GigabitEthernet1/1/3
+!
+interface GigabitEthernet1/1/4
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan99
+ description GESTIONE
+ ip address 10.10.99.12 255.255.255.0
+!
+ip default-gateway 10.10.99.250
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+ip ssh version 2
+ip ssh source-interface Vlan99
+!
+ip access-list standard MGMT-ACCESS
+ 10 permit 10.10.99.0 0.0.0.255
+ 20 permit 10.10.99.0 0.0.0.255
+ 30 deny   any log
+!
+logging trap informational
+logging source-interface Vlan99
+logging host 10.40.100.30
+!
+snmp-server community ESEMPIO-RO RO MGMT-ACCESS
+snmp-server location Sede - piano 2 - armadio B
+snmp-server contact noc@esempio.example
+snmp-server enable traps snmp linkdown linkup
+snmp-server host 10.40.100.20 version 2c ESEMPIO-RO
+tacacs server TACACS-01
+ address ipv4 10.40.100.40
+ key 7 08045F4B04090C18210202102F3F2D2B3C
+!
+banner motd ^C
+*******************************************************************
+*  Accesso consentito solo al personale autorizzato.              *
+*  Ogni attivita' viene registrata.                                *
+*******************************************************************
+^C
+!
+line con 0
+ exec-timeout 15 0
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ access-class MGMT-ACCESS in
+ exec-timeout 15 0
+ transport input ssh
+line vty 5 15
+ access-class MGMT-ACCESS in
+ exec-timeout 15 0
+ transport input ssh
+!
+ntp source Vlan99
+ntp server 10.40.100.53
+ntp server 10.40.100.54
+!
+!
+end
+
