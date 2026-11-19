@@ -1,0 +1,4 @@
+* text=auto eol=lf
+# Le config di esempio restano byte per byte come sono state scritte (anche con fine riga Windows).
+samples/** -text
+*.png binary
