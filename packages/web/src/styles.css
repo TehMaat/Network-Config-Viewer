@@ -315,3 +315,7 @@ body {
 .ncv-ref:hover {
   text-decoration-style: solid;
 }
+
+.ncv-row[data-group-start] td {
+  border-top: 2px solid var(--mantine-color-default-border);
+}

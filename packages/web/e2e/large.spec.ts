@@ -1,18 +1,29 @@
 import { expect, test } from '@playwright/test';
 import { statSync, writeFileSync } from 'node:fs';
-import { field, openApp } from './helpers';
+import { field, openApp, openConfigTab } from './helpers';
 
-/** A synthetic FortiOS configuration of about 20 MB, with tens of thousands of policies. */
-function bigConfig(): string {
+/**
+ * A synthetic FortiOS configuration with 500 addresses and, by default, enough policies to
+ * reach about 20 MB (tens of thousands).
+ */
+function bigConfig(policies = Infinity): string {
   const parts = [
     '#config-version=FG100F-7.4.4-FW-build2662-240514:opmode=0:vdom=0:user=admin',
     'config system global',
     '    set hostname "FGT-GRANDE"',
     'end',
-    'config firewall policy',
+    'config firewall address',
   ];
+  for (let i = 0; i < 500; i++) {
+    parts.push(
+      `    edit "net-${i}"`,
+      `        set subnet 10.${Math.floor(i / 250)}.${i % 250}.0 255.255.255.0`,
+      '    next',
+    );
+  }
+  parts.push('end', 'config firewall policy');
   let size = 0;
-  for (let id = 1; size < 20 * 1024 * 1024; id++) {
+  for (let id = 1; id <= policies && size < 20 * 1024 * 1024; id++) {
     const block = [
       `    edit ${id}`,
       `        set name "regola-${id}"`,
@@ -59,6 +70,7 @@ test('opens a 20 MB configuration without freezing the interface', async ({ page
   await expect(field(page, 'hostname')).toHaveAttribute('data-value', 'FGT-GRANDE', {
     timeout: 60_000,
   });
+  await openConfigTab(page);
   await expect(page.locator('.cm-line').first()).toBeVisible();
   const elapsed = Date.now() - started;
   const maxGap = await page.evaluate(() => {
@@ -78,6 +90,54 @@ test('opens a 20 MB configuration without freezing the interface', async ({ page
   // The structure is there: the policy table can be folded.
   await expect(page.getByTestId('outline-entry')).toHaveText([
     'config system global',
+    'config firewall address',
     'config firewall policy',
   ]);
+});
+
+test('keeps the policy table fluid with 10,000 policies', async ({ page }, testInfo) => {
+  const path = testInfo.outputPath('fgt-10000.conf');
+  writeFileSync(path, bigConfig(10_000));
+  await openApp(page);
+  await page.getByTestId('file-input').setInputFiles(path);
+  await expect(page.getByTestId('view-summary')).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByTestId('count-policies')).toHaveAttribute('data-value', '10000');
+
+  await page.getByTestId('tab-policies').click();
+  const table = page.getByTestId('table-policies');
+  await expect(table).toHaveAttribute('data-rows', '10000');
+  // Only the visible rows exist in the page.
+  expect(await page.getByTestId('row-policies').count()).toBeLessThan(100);
+
+  // Scroll to the end while measuring the longest pause between two frames.
+  const maxGap = await table.locator('.ncv-table-scroll').evaluate(async (scroller) => {
+    let max = 0;
+    let last = performance.now();
+    // The rows are measured while they appear, so the height grows: scroll until the end.
+    for (let step = 0; step < 400; step++) {
+      scroller.scrollTop += Math.max(scroller.clientHeight, scroller.scrollHeight / 40);
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      const now = performance.now();
+      max = Math.max(max, now - last);
+      last = now;
+      if (scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 1) break;
+    }
+    return max;
+  });
+  testInfo.annotations.push({
+    type: 'timing',
+    description: `longest frame while scrolling ${Math.round(maxGap)} ms`,
+  });
+  expect(maxGap).toBeLessThan(500);
+  await expect(page.locator('[data-testid="row-policies"][data-id="10000"]')).toBeVisible();
+
+  // Text filter and IP search on the whole table.
+  await page.getByTestId('filter-policies').fill('regola-9999');
+  await expect(table).toHaveAttribute('data-rows', '1');
+  await page.getByTestId('filter-policies').fill('');
+  await page.getByTestId('policy-ip-search').fill('10.0.7.20');
+  // net-7 is the source of every 500th policy, starting from policy 7.
+  await expect(
+    page.locator('[data-testid="row-policies"][data-state="match"]').first(),
+  ).toBeVisible();
 });

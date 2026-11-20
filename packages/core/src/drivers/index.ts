@@ -2,13 +2,16 @@ import type { Detection, FileKind, OsId } from '../detect/types';
 import type { DeviceModel } from '../model/types';
 import type { SyntaxTree } from '../syntax/types';
 import { buildCiscoModel } from './cisco';
+import { buildFortiosModel } from './fortios';
 
 export { buildCiscoModel, parseAclEntry, poeCapable, type DriverInput } from './cisco';
 export { DriverContext, findWord, type SymbolKind } from './context';
+export { buildFortiosModel, parsePortRanges, tokenize, type Token } from './fortios';
+export { builtinAddresses, builtinServices } from './fortios-builtins';
 export * from './defaults';
 
 /** Operating systems that have a driver: the others are only shown as text. */
-export const MODEL_OS: readonly OsId[] = ['ios', 'ios-xe', 'cisco-sb'];
+export const MODEL_OS: readonly OsId[] = ['fortios', 'ios', 'ios-xe', 'cisco-sb'];
 
 export function hasDriver(os: OsId | undefined): os is OsId {
   return os !== undefined && MODEL_OS.includes(os);
@@ -57,6 +60,8 @@ export function buildModel(
     case 'ios-xe':
     case 'cisco-sb':
       return buildCiscoModel(input);
+    case 'fortios':
+      return buildFortiosModel(input);
     default:
       return null;
   }

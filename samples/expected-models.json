@@ -665,5 +665,617 @@
       "ignored": 134,
       "unknown": 27
     }
+  },
+  "fortigate/fgt-br1-60f-fortios-7.0.conf": {
+    "hostname": "FGT-BR1",
+    "model": "FortiGate-60F",
+    "version": "7.0.15",
+    "management": "10.21.99.1 VL99-MGMT",
+    "features": [
+      "advpn",
+      "bgp",
+      "ipsec",
+      "nat",
+      "sdwan",
+      "static-routes"
+    ],
+    "warnings": [],
+    "interfaces": {
+      "kinds": {
+        "hard-switch": 1,
+        "physical": 2,
+        "subinterface": 2,
+        "tunnel": 2
+      },
+      "byContext": {
+        "root": 7
+      },
+      "shutdown": 0,
+      "lags": [
+        "internal: internal1 internal2 internal3 internal4 internal5"
+      ],
+      "layer3": [
+        "wan1 192.0.2.34/30",
+        "internal 10.21.10.1/24",
+        "VL20-VOICE 10.21.20.1/24",
+        "VL99-MGMT 10.21.99.1/24",
+        "HUB-WAN1 10.255.1.21/32",
+        "HUB-WAN2 10.255.2.21/32"
+      ],
+      "vlans": [
+        "VL20-VOICE 20 on internal",
+        "VL99-MGMT 99 on internal"
+      ]
+    },
+    "contexts": [
+      {
+        "name": "root",
+        "zones": [
+          "LAN: internal VL20-VOICE"
+        ],
+        "addresses": "9 + 1 built in",
+        "addressGroups": [
+          "GRP-CORPORATE 6",
+          "GRP-DNS 2"
+        ],
+        "services": "0 + 2 built in",
+        "serviceGroups": [],
+        "policies": [
+          "1. #1 LAN-verso-Internet LAN>virtual-wan-link LAN-BR1>all ALL accept nat log all",
+          "2. #2 LAN-verso-Corporate LAN>overlay LAN-BR1>GRP-CORPORATE ALL accept log all",
+          "3. #3 Corporate-verso-LAN overlay>LAN GRP-CORPORATE>LAN-BR1 ALL accept log all",
+          "4. #4 Gestione-verso-DNS VL99-MGMT>overlay LAN-BR1>GRP-DNS DNS accept log all"
+        ],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0  ad 1 sdwan virtual-wan-link"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": "65000 neighbors 2 groups 0 ranges 0 networks 1",
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [
+          "HUB-WAN1 static ike2 wan1 203.0.113.2 receiver phase2 1",
+          "HUB-WAN2 static ike2 wan2 198.51.100.10 receiver phase2 1"
+        ],
+        "sdwan": {
+          "enabled": true,
+          "zones": [
+            "virtual-wan-link",
+            "overlay"
+          ],
+          "members": [
+            "1 wan1 virtual-wan-link",
+            "2 wan2 virtual-wan-link",
+            "3 HUB-WAN1 overlay",
+            "4 HUB-WAN2 overlay"
+          ],
+          "healthChecks": [
+            "INTERNET members 1,2 sla 1",
+            "HUB members 3,4 sla 1"
+          ],
+          "rules": [
+            "1 CORPORATE sla",
+            "2 INTERNET priority"
+          ]
+        }
+      }
+    ],
+    "references": 46,
+    "coverage": {
+      "total": 448,
+      "understood": 321,
+      "ignored": 26,
+      "unknown": 101
+    }
+  },
+  "fortigate/fgt-br2-60f-fortios-7.4.conf": {
+    "hostname": "FGT-BR2",
+    "model": "FortiGate-60F",
+    "version": "7.4.4",
+    "management": "10.22.99.1 VL99-MGMT",
+    "features": [
+      "advpn",
+      "bgp",
+      "ipsec",
+      "nat",
+      "sdwan",
+      "static-routes"
+    ],
+    "warnings": [],
+    "interfaces": {
+      "kinds": {
+        "hard-switch": 1,
+        "physical": 2,
+        "subinterface": 2,
+        "tunnel": 2
+      },
+      "byContext": {
+        "root": 7
+      },
+      "shutdown": 0,
+      "lags": [
+        "internal: internal1 internal2 internal3 internal4 internal5"
+      ],
+      "layer3": [
+        "wan1 192.0.2.38/30",
+        "internal 10.22.10.1/24",
+        "VL20-VOICE 10.22.20.1/24",
+        "VL99-MGMT 10.22.99.1/24",
+        "HUB-WAN1 10.255.1.22/32",
+        "HUB-WAN2 10.255.2.22/32"
+      ],
+      "vlans": [
+        "VL20-VOICE 20 on internal",
+        "VL99-MGMT 99 on internal"
+      ]
+    },
+    "contexts": [
+      {
+        "name": "root",
+        "zones": [
+          "LAN: internal VL20-VOICE"
+        ],
+        "addresses": "9 + 1 built in",
+        "addressGroups": [
+          "GRP-CORPORATE 6",
+          "GRP-DNS 2"
+        ],
+        "services": "0 + 2 built in",
+        "serviceGroups": [],
+        "policies": [
+          "1. #1 LAN-verso-Internet LAN>underlay LAN-BR2>all ALL accept nat log all",
+          "2. #2 LAN-verso-Corporate LAN>overlay LAN-BR2>GRP-CORPORATE ALL accept log all",
+          "3. #3 Corporate-verso-LAN overlay>LAN GRP-CORPORATE>LAN-BR2 ALL accept log all",
+          "4. #4 Gestione-verso-DNS VL99-MGMT>overlay LAN-BR2>GRP-DNS DNS accept log all"
+        ],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0  ad 1 sdwan underlay"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": "65000 neighbors 2 groups 0 ranges 0 networks 1",
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [
+          "HUB-WAN1 static ike2 wan1 203.0.113.2 receiver phase2 1",
+          "HUB-WAN2 static ike2 wan2 198.51.100.10 receiver phase2 1"
+        ],
+        "sdwan": {
+          "enabled": true,
+          "zones": [
+            "underlay",
+            "overlay"
+          ],
+          "members": [
+            "1 wan1 underlay",
+            "2 wan2 underlay",
+            "3 HUB-WAN1 overlay",
+            "4 HUB-WAN2 overlay"
+          ],
+          "healthChecks": [
+            "INTERNET members 1,2 sla 1",
+            "HUB members 3,4 sla 1"
+          ],
+          "rules": [
+            "1 CORPORATE sla",
+            "2 INTERNET priority"
+          ]
+        }
+      }
+    ],
+    "references": 46,
+    "coverage": {
+      "total": 448,
+      "understood": 321,
+      "ignored": 26,
+      "unknown": 101
+    }
+  },
+  "fortigate/fgt-campus-200f-fortios-7.6.conf": {
+    "hostname": "FGT-CAMPUS",
+    "model": "FortiGate-200F",
+    "version": "7.6.3",
+    "management": "10.30.99.1 VL99-MGMT",
+    "features": [
+      "advpn",
+      "ipsec",
+      "lag",
+      "nat",
+      "static-routes"
+    ],
+    "warnings": [],
+    "interfaces": {
+      "kinds": {
+        "lag": 1,
+        "physical": 2,
+        "subinterface": 6,
+        "tunnel": 1
+      },
+      "byContext": {
+        "root": 10
+      },
+      "shutdown": 0,
+      "lags": [
+        "fortilink: x1 x2"
+      ],
+      "layer3": [
+        "wan1 192.0.2.42/29",
+        "fortilink 10.255.250.1/24",
+        "VL10-DATA 10.30.10.1/24",
+        "VL20-VOICE 10.30.20.1/24",
+        "VL60-AP 10.30.60.1/24",
+        "VL70-WIFI-CORP 10.30.70.1/24",
+        "VL71-WIFI-GUEST 10.30.71.1/24",
+        "VL99-MGMT 10.30.99.1/24",
+        "HUB-WAN1 10.255.1.30/32"
+      ],
+      "vlans": [
+        "VL10-DATA 10 on fortilink",
+        "VL20-VOICE 20 on fortilink",
+        "VL60-AP 60 on fortilink",
+        "VL70-WIFI-CORP 70 on fortilink",
+        "VL71-WIFI-GUEST 71 on fortilink",
+        "VL99-MGMT 99 on fortilink"
+      ]
+    },
+    "contexts": [
+      {
+        "name": "root",
+        "zones": [],
+        "addresses": "9 + 1 built in",
+        "addressGroups": [
+          "GRP-CORPORATE 6",
+          "GRP-DNS 2"
+        ],
+        "services": "0 + 4 built in",
+        "serviceGroups": [],
+        "policies": [
+          "1. #1 LAN-verso-Internet VL10-DATA,VL20-VOICE,VL70-WIFI-CORP>wan1,wan2 LAN-CAMPUS>all ALL accept nat log all",
+          "2. #2 Ospiti-verso-Internet VL71-WIFI-GUEST>wan1 all>all HTTP,HTTPS,DNS accept nat log all",
+          "3. #3 Campus-verso-Corporate VL10-DATA,VL99-MGMT>HUB-WAN1 LAN-CAMPUS>GRP-CORPORATE ALL accept log all"
+        ],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0 wan1 192.0.2.41 ad 10"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": null,
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [
+          "HUB-WAN1 static ike2 wan1 203.0.113.2 receiver phase2 1"
+        ],
+        "sdwan": null
+      }
+    ],
+    "references": 31,
+    "coverage": {
+      "total": 935,
+      "understood": 201,
+      "ignored": 64,
+      "unknown": 670
+    }
+  },
+  "fortigate/fgt-dc-120g-fortios-8.0-vdom.conf": {
+    "hostname": "FGT-DC",
+    "model": "FortiGate-120G",
+    "version": "8.0.0",
+    "management": "10.40.99.250 mgmt",
+    "features": [
+      "bgp",
+      "nat",
+      "static-routes",
+      "vdom"
+    ],
+    "warnings": [],
+    "interfaces": {
+      "kinds": {
+        "management": 1,
+        "physical": 3,
+        "vdom-link": 2
+      },
+      "byContext": {
+        "CORE": 2,
+        "EXTRANET": 3,
+        "root": 1
+      },
+      "shutdown": 0,
+      "lags": [],
+      "layer3": [
+        "mgmt 10.40.99.250/24",
+        "port1 203.0.113.130/28",
+        "port2 198.51.100.130/28",
+        "x1 10.40.0.1/24",
+        "vlce0 10.254.1.1/30",
+        "vlce1 10.254.1.2/30"
+      ],
+      "vlans": []
+    },
+    "contexts": [
+      {
+        "name": "root",
+        "zones": [],
+        "addresses": "0 + 0 built in",
+        "addressGroups": [],
+        "services": "0 + 0 built in",
+        "serviceGroups": [],
+        "policies": [],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0 mgmt 10.40.99.1 ad 10"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": null,
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [],
+        "sdwan": null
+      },
+      {
+        "name": "CORE",
+        "zones": [],
+        "addresses": "10 + 1 built in",
+        "addressGroups": [
+          "GRP-CORPORATE 6",
+          "GRP-DNS 2"
+        ],
+        "services": "0 + 4 built in",
+        "serviceGroups": [],
+        "policies": [
+          "1. #1 Corporate-verso-Server vlce0>x1 GRP-CORPORATE>NET-DC-SRV ALL accept log all",
+          "2. #2 Server-verso-Internet x1>vlce0 NET-DC-SRV>all HTTP,HTTPS,DNS accept log all"
+        ],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0 vlce0 10.254.1.2 ad 10"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": null,
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [],
+        "sdwan": null
+      },
+      {
+        "name": "EXTRANET",
+        "zones": [],
+        "addresses": "9 + 1 built in",
+        "addressGroups": [
+          "GRP-CORPORATE 6",
+          "GRP-DNS 2"
+        ],
+        "services": "0 + 1 built in",
+        "serviceGroups": [],
+        "policies": [
+          "1. #1 DC-verso-Internet vlce1>port1,port2 LAN-DC>all ALL accept nat log all"
+        ],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "10.40.0.0/16 vlce1 10.254.1.1 ad 10"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": "64512 neighbors 2 groups 0 ranges 0 networks 1",
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [],
+        "sdwan": null
+      }
+    ],
+    "references": 30,
+    "coverage": {
+      "total": 336,
+      "understood": 244,
+      "ignored": 35,
+      "unknown": 57
+    }
+  },
+  "fortigate/fgt-hq-100f-fortios-7.2-vdom.conf": {
+    "hostname": "FGT-HQ",
+    "model": "FortiGate-100F",
+    "version": "7.2.10",
+    "management": "10.10.99.249 mgmt",
+    "features": [
+      "advpn",
+      "bgp",
+      "ha",
+      "ipsec",
+      "lag",
+      "nat",
+      "ospf",
+      "pbr",
+      "static-routes",
+      "vdom",
+      "vip"
+    ],
+    "warnings": [
+      "policy-disabled OFFICE 510",
+      "policy-any-any OFFICE 510",
+      "policy-no-log OFFICE 524",
+      "policy-all-management OFFICE 524"
+    ],
+    "interfaces": {
+      "kinds": {
+        "lag": 1,
+        "management": 1,
+        "physical": 7,
+        "subinterface": 6,
+        "tunnel": 2,
+        "vdom-link": 2
+      },
+      "byContext": {
+        "DMZ": 2,
+        "OFFICE": 14,
+        "root": 3
+      },
+      "shutdown": 0,
+      "lags": [
+        "LAG-CORE: x1 x2"
+      ],
+      "layer3": [
+        "mgmt 10.10.99.249/24",
+        "wan1 203.0.113.2/29",
+        "wan2 198.51.100.10/29",
+        "port10 172.16.10.1/24",
+        "VL10-DATA 10.10.10.1/24",
+        "VL20-VOICE 10.10.20.1/24",
+        "VL50-GUEST 10.10.50.1/24",
+        "VL99-MGMT 10.10.99.250/24",
+        "VL100-SRV 10.10.100.1/24",
+        "VL900-CORE 10.10.254.1/29",
+        "ADVPN-WAN1 10.255.1.254/32",
+        "ADVPN-WAN2 10.255.2.254/32",
+        "vlod0 10.254.0.1/30",
+        "vlod1 10.254.0.2/30"
+      ],
+      "vlans": [
+        "VL10-DATA 10 on LAG-CORE",
+        "VL20-VOICE 20 on LAG-CORE",
+        "VL50-GUEST 50 on LAG-CORE",
+        "VL99-MGMT 99 on LAG-CORE",
+        "VL100-SRV 100 on LAG-CORE",
+        "VL900-CORE 900 on LAG-CORE"
+      ]
+    },
+    "contexts": [
+      {
+        "name": "root",
+        "zones": [],
+        "addresses": "0 + 0 built in",
+        "addressGroups": [],
+        "services": "0 + 0 built in",
+        "serviceGroups": [],
+        "policies": [],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0 mgmt 10.10.99.1 ad 10"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": null,
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [],
+        "sdwan": null
+      },
+      {
+        "name": "OFFICE",
+        "zones": [
+          "OVERLAY: ADVPN-WAN1 ADVPN-WAN2"
+        ],
+        "addresses": "12 + 1 built in",
+        "addressGroups": [
+          "GRP-CORPORATE 6",
+          "GRP-DNS 2"
+        ],
+        "services": "3 + 6 built in",
+        "serviceGroups": [
+          "GRP-WEB 3"
+        ],
+        "policies": [
+          "1. #1 LAN-verso-Internet VL10-DATA,VL20-VOICE>wan1,wan2 LAN-HQ>all ALL accept nat log all",
+          "2. #2 Ospiti-verso-Internet VL50-GUEST>wan1 NET-GUEST>all HTTP,HTTPS,DNS accept nat log all",
+          "3. #3 Filiali-tra-loro OVERLAY>OVERLAY GRP-CORPORATE>GRP-CORPORATE ALL accept log all",
+          "4. #4 Filiali-verso-Sede OVERLAY>VL10-DATA,VL100-SRV GRP-CORPORATE>LAN-HQ ALL accept log all",
+          "5. #5 Sede-verso-Filiali VL10-DATA,VL99-MGMT>OVERLAY LAN-HQ>GRP-CORPORATE ALL accept log all",
+          "6. #6 Posta-in-ingresso wan1>VL100-SRV all>VIP-MAIL-SMTP SMTP accept log all",
+          "7. #7 Sede-verso-DMZ VL10-DATA>vlod0 LAN-HQ>DMZ-WEB01 GRP-WEB accept log all",
+          "8. #8 Stampa-dalle-filiali OVERLAY>VL10-DATA GRP-CORPORATE>LAN-HQ STAMPA accept log all",
+          "9. #9 Test-temporaneo VL10-DATA>wan1 all>all ALL accept nat disabled log utm",
+          "10. #10 Assistenza-remota wan1>VL99-MGMT all>LAN-HQ SSH accept log disable",
+          "11. #11 Blocca-ospiti-verso-sede VL50-GUEST>VL10-DATA,VL100-SRV NET-GUEST>LAN-HQ ALL deny log all"
+        ],
+        "vips": [
+          "VIP-MAIL-SMTP 203.0.113.3 > 10.10.100.25"
+        ],
+        "ippools": [
+          "POOL-GUEST overload 203.0.113.4-203.0.113.4"
+        ],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0 wan1 203.0.113.1 ad 10",
+            "0.0.0.0/0 wan2 198.51.100.9 ad 20",
+            "172.16.10.0/24 vlod0 10.254.0.2 ad 10"
+          ],
+          "policyRoutes": [
+            "VL50-GUEST 10.10.50.0/24 -> 0.0.0.0/0 via 198.51.100.9 wan2"
+          ],
+          "ospf": [
+            "10.10.255.1 networks 10.10.254.0/29 area 0.0.0.0; interfaces VL900-CORE"
+          ],
+          "bgp": "65000 neighbors 0 groups 2 ranges 2 networks 2",
+          "routeMaps": [
+            "RM-VERSO-SPOKE 1"
+          ],
+          "prefixLists": [
+            "PL-SEDE 1"
+          ]
+        },
+        "ipsec": [
+          "ADVPN-WAN1 dynamic ike2 wan1 sender phase2 1",
+          "ADVPN-WAN2 dynamic ike2 wan2 sender phase2 1"
+        ],
+        "sdwan": null
+      },
+      {
+        "name": "DMZ",
+        "zones": [],
+        "addresses": "2 + 0 built in",
+        "addressGroups": [],
+        "services": "0 + 1 built in",
+        "serviceGroups": [],
+        "policies": [
+          "1. #1 Sede-verso-Web vlod1>port10 LAN-HQ>DMZ-WEB01 HTTPS accept log all"
+        ],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0 vlod1 10.254.0.1 ad 10"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": null,
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [],
+        "sdwan": null
+      }
+    ],
+    "references": 93,
+    "coverage": {
+      "total": 701,
+      "understood": 596,
+      "ignored": 43,
+      "unknown": 62
+    }
   }
 }

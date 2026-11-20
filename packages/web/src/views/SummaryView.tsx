@@ -25,6 +25,8 @@ interface Props {
 }
 
 const SECTIONS_SHOWN = 12;
+/** Links to the lines shown for each kind of warning. */
+const WARNING_LINKS = 5;
 
 export function SummaryView({ model, detection }: Props) {
   const { t, i18n } = useTranslation();
@@ -49,16 +51,40 @@ export function SummaryView({ model, detection }: Props) {
     </div>
   );
 
-  const counts: [string, number][] = [
-    ['ports', physical.length],
-    ['portsDown', physical.filter((i) => i.shutdown).length],
-    ['lags', model.interfaces.filter((i) => i.kind === 'lag').length],
-    ['svis', model.interfaces.filter((i) => i.kind === 'svi').length],
-    ['vlans', model.vlans.length],
-    ['acls', ctx.acls.length],
-    ['statics', ctx.routing.statics.length],
-    ['bgpNeighbors', ctx.routing.bgp?.neighbors.length ?? 0],
-  ];
+  const sum = (f: (c: (typeof model.contexts)[number]) => number) =>
+    model.contexts.reduce((n, c) => n + f(c), 0);
+  const counts: [string, number][] =
+    model.vendor === 'fortinet'
+      ? [
+          ['interfaces', model.interfaces.length],
+          ['vlanInterfaces', model.interfaces.filter((i) => i.vlanId !== undefined).length],
+          ['policies', sum((c) => c.policies.length)],
+          ['addresses', sum((c) => c.addresses.filter((a) => !a.builtin).length)],
+          ['vips', sum((c) => c.vips.length)],
+          ['statics', sum((c) => c.routing.statics.length)],
+          ['tunnels', sum((c) => c.ipsec.length)],
+          [
+            'bgpNeighbors',
+            sum((c) =>
+              c.routing.bgp ? c.routing.bgp.neighbors.length + c.routing.bgp.ranges.length : 0,
+            ),
+          ],
+        ]
+      : [
+          ['ports', physical.length],
+          ['portsDown', physical.filter((i) => i.shutdown).length],
+          ['lags', model.interfaces.filter((i) => i.kind === 'lag').length],
+          ['svis', model.interfaces.filter((i) => i.kind === 'svi').length],
+          ['vlans', model.vlans.length],
+          ['acls', ctx.acls.length],
+          ['statics', ctx.routing.statics.length],
+          ['bgpNeighbors', ctx.routing.bgp?.neighbors.length ?? 0],
+        ];
+  // Warnings of the same kind together: a firewall can have many policies to check.
+  const warningGroups = [...new Set(model.warnings.map((w) => w.code))].map((code) => ({
+    code,
+    items: model.warnings.filter((w) => w.code === code),
+  }));
 
   const management = model.management
     ? `${model.management.ip}${model.management.interface ? ` (${model.management.interface})` : ''}`
@@ -69,7 +95,18 @@ export function SummaryView({ model, detection }: Props) {
       : null;
   const facts: [string, string, ReactNode][] = [
     ['management', t('summary.management'), management],
-    ['stack', t('detection.stack'), stack],
+    ...(model.vendor === 'cisco'
+      ? [['stack', t('detection.stack'), stack] as [string, string, ReactNode]]
+      : []),
+    ...(model.contexts.length > 1
+      ? [
+          ['vdoms', t('detection.vdoms'), model.contexts.map((c) => c.name).join(' · ')] as [
+            string,
+            string,
+            ReactNode,
+          ],
+        ]
+      : []),
     ...(model.vtpMode
       ? [['vtp', t('summary.vtp'), model.vtpMode] as [string, string, ReactNode]]
       : []),
@@ -129,21 +166,30 @@ export function SummaryView({ model, detection }: Props) {
           data-testid="warnings"
         >
           <Stack gap={4}>
-            {model.warnings.map((w) => (
-              <Text key={w.code} size="sm" data-warning={w.code}>
-                {t(`warning.${w.code}`)}
-                {w.line !== undefined && (
-                  <>
-                    {' '}
+            {warningGroups.map(({ code, items }) => (
+              <Text key={code} size="sm" data-warning={code} data-count={items.length}>
+                {t(`warning.${code}`, { count: items.length })}
+                {items
+                  .filter((w) => w.line !== undefined)
+                  .slice(0, WARNING_LINKS)
+                  .map((w) => (
                     <Anchor
+                      key={`${w.context ?? ''}${w.line}`}
                       component="button"
                       type="button"
                       size="sm"
+                      ml={8}
                       onClick={() => showSource([[w.line!, w.line!]])}
                     >
-                      {t('source.line', { line: w.line })}
+                      {w.context && model.contexts.length > 1
+                        ? t('source.lineIn', { line: w.line, context: w.context })
+                        : t('source.line', { line: w.line })}
                     </Anchor>
-                  </>
+                  ))}
+                {items.length > WARNING_LINKS && (
+                  <Text span size="sm" c="dimmed" ml={8}>
+                    {t('summary.moreWarnings', { count: items.length - WARNING_LINKS })}
+                  </Text>
                 )}
               </Text>
             ))}

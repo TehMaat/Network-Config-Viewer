@@ -221,6 +221,8 @@ export interface PolicyRoute extends Element {
   /** Cisco PBR: route-map applied on an interface. */
   routeMap?: string;
   interface?: string;
+  enabled?: boolean;
+  comment?: string;
 }
 
 export interface PrefixListEntry extends Element {
@@ -289,6 +291,8 @@ export interface Ospf extends Element {
   passive: string[];
   notPassive: string[];
   redistribute: (Element & { protocol: string; routeMap?: string })[];
+  /** Announces a default route ("default-information originate"). */
+  defaultOriginate?: boolean;
 }
 
 export interface Routing {
@@ -570,11 +574,19 @@ export type FeatureCode =
   | 'nat'
   | 'vip';
 
-export type ModelWarningCode = 'vtp-vlans-not-in-config' | 'unverified-defaults';
+export type ModelWarningCode =
+  | 'vtp-vlans-not-in-config'
+  | 'unverified-defaults'
+  | 'policy-disabled'
+  | 'policy-no-log'
+  | 'policy-any-any'
+  | 'policy-all-management';
 
 export interface ModelWarning {
   code: ModelWarningCode;
   line?: number;
+  /** Logical context (VDOM) the warning is about. */
+  context?: string;
 }
 
 export interface DeviceModel {

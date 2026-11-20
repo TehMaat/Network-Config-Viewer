@@ -9,6 +9,8 @@ export interface ConfigRoute {
   distance: number;
   vrf?: string;
   name?: string;
+  /** FortiOS: the route goes to the members of these SD-WAN zones. */
+  sdwanZones?: string[];
   /** The interface is shut down, or the route is disabled. */
   inactive: boolean;
   src: Src;
@@ -45,6 +47,7 @@ export function configRoutes(model: DeviceModel, contextName?: string): ConfigRo
       distance: route.distance ?? 1,
       ...(route.vrf ? { vrf: route.vrf } : {}),
       ...(route.name ? { name: route.name } : {}),
+      ...(route.sdwanZones ? { sdwanZones: route.sdwanZones } : {}),
       inactive: !route.enabled,
       src: route.src,
     });

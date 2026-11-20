@@ -18,6 +18,7 @@ import {
   type BgpNeighbor,
   type ConfigRoute,
   type DeviceModel,
+  type LogicalContext,
   type Ospf,
   type PolicyRoute,
   type PrefixList,
@@ -32,10 +33,10 @@ import { DataTable } from './DataTable';
 import { SourceButton } from './source';
 import { formatRoutePrefix, shortInterfaceName } from './values';
 
-export function RoutingView({ model }: { model: DeviceModel }) {
+export function RoutingView({ model, context }: { model: DeviceModel; context: LogicalContext }) {
   const { t } = useTranslation();
-  const routing = model.contexts[0]!.routing;
-  const routes = useMemo(() => configRoutes(model), [model]);
+  const routing = context.routing;
+  const routes = useMemo(() => configRoutes(model, context.name), [model, context]);
   const [query, setQuery] = useState('');
   const ip = isIpv4(query.trim()) ? query.trim() : null;
   const best = useMemo(() => new Set(ip ? lookupRoute(routes, ip) : []), [ip, routes]);
@@ -69,7 +70,12 @@ export function RoutingView({ model }: { model: DeviceModel }) {
           </Group>
         ),
       },
-      { id: 'gateway', header: t('routing.col.gateway'), accessorFn: (r) => r.gateway ?? '' },
+      {
+        id: 'gateway',
+        header: t('routing.col.gateway'),
+        accessorFn: (r) =>
+          r.gateway ?? (r.sdwanZones ? t('routing.sdwan', { zones: r.sdwanZones.join(', ') }) : ''),
+      },
       {
         id: 'interface',
         header: t('routing.col.interface'),
@@ -141,7 +147,7 @@ export function RoutingView({ model }: { model: DeviceModel }) {
       {routing.ospf.map((o) => (
         <OspfView key={o.process ?? ''} ospf={o} />
       ))}
-      {routing.bgp && <BgpView model={model} />}
+      {routing.bgp && <BgpView context={context} />}
       {routing.routeMaps.length > 0 && <RouteMaps routeMaps={routing.routeMaps} />}
       {routing.prefixLists.length > 0 && <PrefixLists lists={routing.prefixLists} />}
     </Stack>
@@ -187,23 +193,36 @@ function Facts({ items }: { items: [string, ReactNode][] }) {
 
 function PolicyRoutes({ routes, routeMaps }: { routes: PolicyRoute[]; routeMaps: RouteMap[] }) {
   const { t } = useTranslation();
+  const rules = (p: PolicyRoute) => {
+    if (!p.routeMap) {
+      const protocol = p.protocol ? ` (${p.protocol})` : '';
+      return `${p.srcaddr.join(', ') || 'any'} → ${p.dstaddr.join(', ') || 'any'}${protocol}`;
+    }
+    const entries = routeMaps
+      .find((r) => r.name === p.routeMap)
+      ?.entries.map((e) =>
+        [...e.match.map((m) => `match ${m}`), ...e.set.map((x) => `set ${x}`)].join(' · '),
+      )
+      .join(' | ');
+    return `${p.routeMap}: ${entries ?? ''}`;
+  };
   const columns: ColumnDef<PolicyRoute, unknown>[] = [
     {
       id: 'interface',
-      header: t('routing.col.interface'),
-      accessorFn: (p) => (p.interface ? shortInterfaceName(p.interface) : ''),
-    },
-    { id: 'routeMap', header: t('routing.col.routeMap'), accessorFn: (p) => p.routeMap ?? '' },
-    {
-      id: 'rules',
-      header: t('routing.col.rules'),
+      header: t('routing.col.input'),
       accessorFn: (p) =>
-        routeMaps
-          .find((r) => r.name === p.routeMap)
-          ?.entries.map((e) =>
-            [...e.match.map((m) => `match ${m}`), ...e.set.map((s) => `set ${s}`)].join(' · '),
-          )
-          .join(' | ') ?? '',
+        p.interface ? shortInterfaceName(p.interface) : p.inputDevices.join(', '),
+    },
+    { id: 'rules', header: t('routing.col.rules'), accessorFn: rules },
+    {
+      id: 'output',
+      header: t('routing.col.output'),
+      accessorFn: (p) => [p.gateway, p.outputDevice].filter(Boolean).join(' · '),
+    },
+    {
+      id: 'state',
+      header: t('routing.col.state'),
+      accessorFn: (p) => (p.enabled === false ? t('policies.disabled') : ''),
     },
     {
       id: 'src',
@@ -218,7 +237,7 @@ function PolicyRoutes({ routes, routeMaps }: { routes: PolicyRoute[]; routeMaps:
         name="policy-routes"
         data={routes}
         columns={columns}
-        getRowId={(p) => `${p.interface}|${p.routeMap}`}
+        getRowId={(p) => `${p.id ?? ''}|${p.interface ?? ''}|${p.routeMap ?? ''}|${p.src[0]?.[0]}`}
         filter={false}
         height={200}
       />
@@ -287,9 +306,9 @@ function OspfView({ ospf }: { ospf: Ospf }) {
   );
 }
 
-function BgpView({ model }: { model: DeviceModel }) {
+function BgpView({ context }: { context: LogicalContext }) {
   const { t } = useTranslation();
-  const bgp = model.contexts[0]!.routing.bgp!;
+  const bgp = context.routing.bgp!;
   const columns: ColumnDef<BgpNeighbor, unknown>[] = [
     { id: 'address', header: t('routing.bgp.neighbor'), accessorFn: (n) => n.address },
     {

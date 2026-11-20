@@ -11,6 +11,7 @@ import {
   splitLines,
   type DeviceModel,
   type Element,
+  type Routing,
 } from '../src';
 import { readSampleText, SAMPLES_DIR, sampleFiles } from './helpers';
 
@@ -32,7 +33,7 @@ const count = (values: string[]) => {
   return out;
 };
 
-export function summarize(m: DeviceModel) {
+function summarizeSwitch(m: DeviceModel) {
   const ctx = m.contexts[0]!;
   const r = ctx.routing;
   return {
@@ -89,24 +90,7 @@ export function summarize(m: DeviceModel) {
           .join(', ')}`,
     ),
     objectGroups: ctx.objectGroups.map((g) => `${g.name} ${g.type} ${g.entries.length}`),
-    routing: {
-      statics: r.statics.map(
-        (s) =>
-          `${s.vrf ? `vrf ${s.vrf} ` : ''}${formatPrefix(s.dst)} ${[s.device, s.gateway].filter(Boolean).join(' ')}${s.distance ? ` ad ${s.distance}` : ''}${s.kind === 'default-gateway' ? ' (default-gateway)' : ''}`,
-      ),
-      policyRoutes: r.policyRoutes.map((p) => `${p.interface} route-map ${p.routeMap}`),
-      ospf: r.ospf.map(
-        (o) =>
-          `${o.process} networks ${o.networks.map((n) => `${n.prefix} area ${n.area}`).join(', ')}; interfaces ${o.interfaces
-            .map((i) => `${i.name}${i.passive ? ' passive' : ''}`)
-            .join(', ')}`,
-      ),
-      bgp: r.bgp
-        ? `${r.bgp.asn} neighbors ${r.bgp.neighbors.length} groups ${r.bgp.groups.length}`
-        : null,
-      routeMaps: r.routeMaps.map((x) => `${x.name} ${x.entries.length}`),
-      prefixLists: r.prefixLists.map((x) => `${x.name} ${x.entries.length}`),
-    },
+    routing: routingSummary(r),
     references: m.references.length,
     coverage: {
       total: m.coverage.total,
@@ -117,22 +101,131 @@ export function summarize(m: DeviceModel) {
   };
 }
 
+function routingSummary(r: Routing) {
+  return {
+    statics: r.statics.map(
+      (s) =>
+        `${s.vrf ? `vrf ${s.vrf} ` : ''}${formatPrefix(s.dst)} ${[s.device, s.gateway].filter(Boolean).join(' ')}${s.distance ? ` ad ${s.distance}` : ''}${s.kind === 'default-gateway' ? ' (default-gateway)' : ''}${s.sdwanZones ? ` sdwan ${s.sdwanZones.join(' ')}` : ''}`,
+    ),
+    policyRoutes: r.policyRoutes.map((p) =>
+      p.routeMap
+        ? `${p.interface} route-map ${p.routeMap}`
+        : `${p.inputDevices.join(' ')} ${p.srcaddr.join(' ')} -> ${p.dstaddr.join(' ')} via ${p.gateway ?? ''} ${p.outputDevice ?? ''}`.trim(),
+    ),
+    ospf: r.ospf.map(
+      (o) =>
+        `${o.process ?? o.routerId} networks ${o.networks.map((n) => `${n.prefix} area ${n.area}`).join(', ')}; interfaces ${o.interfaces
+          .map((i) => `${i.name}${i.passive ? ' passive' : ''}`)
+          .join(', ')}`,
+    ),
+    bgp: r.bgp
+      ? `${r.bgp.asn} neighbors ${r.bgp.neighbors.length} groups ${r.bgp.groups.length} ranges ${r.bgp.ranges.length} networks ${r.bgp.networks.length}`
+      : null,
+    routeMaps: r.routeMaps.map((x) => `${x.name} ${x.entries.length}`),
+    prefixLists: r.prefixLists.map((x) => `${x.name} ${x.entries.length}`),
+  };
+}
+
+function summarizeFirewall(m: DeviceModel) {
+  return {
+    hostname: m.hostname,
+    model: m.model,
+    version: m.version,
+    management: m.management ? `${m.management.ip} ${m.management.interface ?? ''}`.trim() : null,
+    features: m.features,
+    warnings: m.warnings.map((w) => `${w.code} ${w.context ?? ''} ${w.line ?? ''}`.trim()),
+    interfaces: {
+      kinds: count(m.interfaces.map((i) => i.kind)),
+      byContext: count(m.interfaces.map((i) => i.context ?? '')),
+      shutdown: m.interfaces.filter((i) => i.shutdown).length,
+      lags: m.interfaces
+        .filter((i) => i.members && i.members.length > 0)
+        .map((i) => `${i.name}: ${i.members!.join(' ')}`),
+      layer3: m.interfaces
+        .filter((i) => i.ipv4.length > 0)
+        .map((i) => `${i.name} ${i.ipv4.map((a) => `${a.ip}/${a.prefix}`).join(' ')}`),
+      vlans: m.interfaces
+        .filter((i) => i.vlanId !== undefined)
+        .map((i) => `${i.name} ${i.vlanId} on ${i.parent}`),
+    },
+    contexts: m.contexts.map((c) => ({
+      name: c.name,
+      zones: c.zones.map((z) => `${z.name}: ${z.interfaces.join(' ')}`),
+      addresses: `${c.addresses.filter((a) => !a.builtin).length} + ${c.addresses.filter((a) => a.builtin).length} built in`,
+      addressGroups: c.addressGroups.map((g) => `${g.name} ${g.members.length}`),
+      services: `${c.services.filter((a) => !a.builtin).length} + ${c.services.filter((a) => a.builtin).length} built in`,
+      serviceGroups: c.serviceGroups.map((g) => `${g.name} ${g.members.length}`),
+      policies: c.policies.map(
+        (p) =>
+          `${p.order}. #${p.id} ${p.name ?? ''} ${p.srcintf.join(',')}>${p.dstintf.join(',')} ${p.srcaddr.join(',')}>${p.dstaddr.join(',')} ${p.service.join(',')} ${p.action}${p.nat ? ' nat' : ''}${p.enabled ? '' : ' disabled'} log ${p.logtraffic}`,
+      ),
+      vips: c.vips.map((v) => `${v.name} ${v.extip} > ${v.mappedip.join(' ')}`),
+      ippools: c.ippools.map((v) => `${v.name} ${v.type} ${v.startip}-${v.endip}`),
+      routing: routingSummary(c.routing),
+      ipsec: c.ipsec.map((t) =>
+        `${t.name} ${t.type} ike${t.ikeVersion} ${t.interface ?? ''} ${t.remoteGw ?? ''} ${t.advpn ?? ''} phase2 ${t.phase2.length}`.replace(
+          / +/g,
+          ' ',
+        ),
+      ),
+      sdwan: c.sdwan
+        ? {
+            enabled: c.sdwan.enabled,
+            zones: c.sdwan.zones.map((z) => z.name),
+            members: c.sdwan.members.map((x) => `${x.seq} ${x.interface} ${x.zone ?? ''}`.trim()),
+            healthChecks: c.sdwan.healthChecks.map(
+              (h) => `${h.name} members ${h.members.join(',')} sla ${h.sla.length}`,
+            ),
+            rules: c.sdwan.rules.map((x) => `${x.id} ${x.name ?? ''} ${x.mode}`),
+          }
+        : null,
+    })),
+    references: m.references.length,
+    coverage: {
+      total: m.coverage.total,
+      understood: m.coverage.understood,
+      ignored: m.coverage.ignored,
+      unknown: m.coverage.unknown,
+    },
+  };
+}
+
+export function summarize(m: DeviceModel) {
+  return m.vendor === 'cisco' ? summarizeSwitch(m) : summarizeFirewall(m);
+}
+
 /** Every element of the model with its lines, for the checks on the line ranges. */
 function elements(m: DeviceModel): Element[] {
-  const ctx = m.contexts[0]!;
   return [
     ...m.interfaces,
     ...m.vlans,
     ...m.stack,
-    ...ctx.acls,
-    ...ctx.acls.flatMap((a) => a.entries),
-    ...ctx.objectGroups,
-    ...ctx.routing.statics,
-    ...ctx.routing.ospf,
-    ...ctx.routing.routeMaps,
-    ...ctx.routing.prefixLists,
-    ...ctx.routing.policyRoutes,
-    ...(ctx.routing.bgp ? [ctx.routing.bgp, ...ctx.routing.bgp.neighbors] : []),
+    ...m.contexts.flatMap((ctx) => [
+      ...ctx.acls,
+      ...ctx.acls.flatMap((a) => a.entries),
+      ...ctx.objectGroups,
+      ...ctx.zones,
+      ...ctx.addresses,
+      ...ctx.addressGroups,
+      ...ctx.services,
+      ...ctx.serviceGroups,
+      ...ctx.policies,
+      ...ctx.vips,
+      ...ctx.ippools,
+      ...ctx.ipsec,
+      ...ctx.ipsec.flatMap((t) => t.phase2),
+      ...(ctx.sdwan
+        ? [ctx.sdwan, ...ctx.sdwan.members, ...ctx.sdwan.healthChecks, ...ctx.sdwan.rules]
+        : []),
+      ...ctx.routing.statics,
+      ...ctx.routing.ospf,
+      ...ctx.routing.routeMaps,
+      ...ctx.routing.prefixLists,
+      ...ctx.routing.policyRoutes,
+      ...(ctx.routing.bgp
+        ? [ctx.routing.bgp, ...ctx.routing.bgp.neighbors, ...ctx.routing.bgp.groups]
+        : []),
+    ]),
   ];
 }
 

@@ -185,7 +185,12 @@
     "vlans": "VLAN",
     "acls": "ACL",
     "routing": "Routing",
-    "config": "Config"
+    "config": "Config",
+    "interfaces": "Interfacce",
+    "policies": "Policy",
+    "objects": "Oggetti",
+    "vpn": "VPN",
+    "sdwan": "SD-WAN"
   },
   "table": {
     "filter": "Filtra la tabella",
@@ -201,7 +206,8 @@
     "lines": "Righe {{first}}–{{last}}",
     "default": "Valore di default: non è scritto nella config, l'apparato lo usa quando manca.",
     "defaultUnverified": "Valore di default da verificare: per questa marca e versione non è ancora confermato su apparati reali.",
-    "toCheck": "da verificare"
+    "toCheck": "da verificare",
+    "lineIn": "riga {{line}} ({{context}})"
   },
   "summary": {
     "device": "Apparato",
@@ -216,10 +222,18 @@
       "vlans": "VLAN",
       "acls": "ACL",
       "statics": "rotte statiche",
-      "bgpNeighbors": "vicini BGP"
+      "bgpNeighbors": "vicini BGP",
+      "interfaces": "interfacce",
+      "vlanInterfaces": "interfacce VLAN",
+      "policies": "policy",
+      "addresses": "indirizzi",
+      "vips": "VIP",
+      "tunnels": "tunnel IPsec"
     },
     "features": "Funzioni in uso",
-    "warnings": "Da controllare"
+    "warnings": "Da controllare",
+    "moreWarnings_one": "e un'altra",
+    "moreWarnings_other": "e altre {{count}}"
   },
   "feature": {
     "stack": "Stack",
@@ -246,7 +260,15 @@
   },
   "warning": {
     "vtp-vlans-not-in-config": "Le VLAN non sono scritte nella config: con il VTP in modalità server o client stanno nel file vlan.dat dello switch. Per vederne i nomi carica l'output di show vlan brief.",
-    "unverified-defaults": "Alcuni valori di default di questo sistema sono ancora da verificare: sono segnati nelle viste."
+    "unverified-defaults": "Alcuni valori di default di questo sistema sono ancora da verificare: sono segnati nelle viste.",
+    "policy-disabled_one": "{{count}} policy disattivata.",
+    "policy-disabled_other": "{{count}} policy disattivate.",
+    "policy-no-log_one": "{{count}} policy che permette traffico senza registrarlo.",
+    "policy-no-log_other": "{{count}} policy che permettono traffico senza registrarlo.",
+    "policy-any-any_one": "{{count}} policy che permette tutto: sorgente all, destinazione all, servizio ALL.",
+    "policy-any-any_other": "{{count}} policy che permettono tutto: sorgente all, destinazione all, servizio ALL.",
+    "policy-all-management_one": "{{count}} policy che apre un servizio di gestione (SSH, Telnet, SNMP, RDP, VNC) a qualsiasi sorgente.",
+    "policy-all-management_other": "{{count}} policy che aprono un servizio di gestione (SSH, Telnet, SNMP, RDP, VNC) a qualsiasi sorgente."
   },
   "coverage": {
     "title": "Copertura della lettura",
@@ -349,7 +371,8 @@
     "col": {
       "id": "ID",
       "name": "Nome",
-      "gateway": "Gateway qui"
+      "gateway": "Gateway qui",
+      "interface": "Interfaccia"
     },
     "implicit": "non nella config",
     "voice": "voce",
@@ -409,7 +432,9 @@
       "any": "tramite any",
       "host": "esatto",
       "subnet": "nella subnet",
-      "group": "nel gruppo"
+      "group": "nel gruppo",
+      "vip": "tramite VIP",
+      "negated": "fuori dalla lista negata"
     },
     "objectGroups": "Object-group",
     "groupType": {
@@ -435,7 +460,9 @@
       "seq": "N.",
       "action": "Azione",
       "match": "Condizioni (match)",
-      "set": "Azioni (set)"
+      "set": "Azioni (set)",
+      "input": "Ingresso",
+      "output": "Uscita"
     },
     "type": {
       "connected": "connessa",
@@ -472,13 +499,185 @@
       "groups": "Gruppi"
     },
     "routeMaps": "Route-map",
-    "prefixLists": "Prefix-list"
+    "prefixLists": "Prefix-list",
+    "sdwan": "SD-WAN: {{zones}}"
   },
   "config": {
     "followLink": "Vai alla definizione (riga {{line}})",
     "back": "Torna indietro",
     "highlightUnknown_one": "Evidenzia la riga non interpretata ({{count}})",
     "highlightUnknown_other": "Evidenzia le righe non interpretate ({{count}})"
+  },
+  "device": {
+    "vdom": "VDOM"
+  },
+  "interfaces": {
+    "col": {
+      "alias": "Alias",
+      "kind": "Tipo",
+      "role": "Ruolo",
+      "parent": "Interfaccia padre o membri",
+      "zone": "Zona",
+      "access": "Accesso amministrativo"
+    },
+    "zones": "Zone",
+    "intrazone": "traffico nella zona: {{value}}",
+    "addressing": "Indirizzamento",
+    "remoteIp": "IP remoto del tunnel"
+  },
+  "policies": {
+    "col": {
+      "pair": "Coppia di interfacce",
+      "order": "Ordine",
+      "name": "Nome",
+      "srcintf": "Da",
+      "dstintf": "A",
+      "srcaddr": "Sorgente",
+      "dstaddr": "Destinazione",
+      "service": "Servizio",
+      "action": "Azione",
+      "log": "Log",
+      "status": "Stato",
+      "warnings": "Avvisi"
+    },
+    "warning": {
+      "policy-disabled": "disattivata",
+      "policy-no-log": "senza log",
+      "policy-any-any": "tutto permesso",
+      "policy-all-management": "gestione aperta a tutti"
+    },
+    "searchIp": "Cerca un IP nelle policy",
+    "searchIpHelp": "Trova le policy che contengono l'IP tramite indirizzi, subnet, gruppi e VIP. Quelle che lo contengono solo tramite all restano in secondo piano.",
+    "modeList": "Lista unica",
+    "modePairs": "Per coppia di interfacce",
+    "onlyWarnings": "Solo con avvisi",
+    "orderHelp": "Il FortiGate valuta le policy dall'alto in basso nell'ordine della tabella, non per ID: la prima che corrisponde decide. Il traffico che non corrisponde a nessuna è bloccato dalla policy implicita.",
+    "none": "Nessuna policy in questa VDOM.",
+    "disabled": "disattivata",
+    "enabled": "attiva",
+    "negated": "{{field}} (negata)",
+    "natInterface": "sì, con l'IP dell'interfaccia di uscita",
+    "natPool": "sì, con l'IP pool {{pools}}",
+    "schedule": "Pianificazione",
+    "users": "Utenti e gruppi",
+    "internetService": "Internet service",
+    "profiles": "Profili di sicurezza",
+    "comments": "Commenti",
+    "title": "{{id}} · {{name}}",
+    "nat": "NAT"
+  },
+  "objects": {
+    "kind": {
+      "addresses_one": "Indirizzi ({{count}})",
+      "addresses_other": "Indirizzi ({{count}})",
+      "groups_one": "Gruppi ({{count}})",
+      "groups_other": "Gruppi ({{count}})",
+      "services_one": "Servizi ({{count}})",
+      "services_other": "Servizi ({{count}})",
+      "serviceGroups_one": "Gruppi di servizi ({{count}})",
+      "serviceGroups_other": "Gruppi di servizi ({{count}})",
+      "vips_one": "VIP ({{count}})",
+      "vips_other": "VIP ({{count}})",
+      "ippools_one": "IP pool ({{count}})",
+      "ippools_other": "IP pool ({{count}})"
+    },
+    "col": {
+      "name": "Nome",
+      "type": "Tipo",
+      "value": "Contenuto",
+      "used": "Usato",
+      "comment": "Commento"
+    },
+    "addressType": {
+      "subnet": "subnet",
+      "iprange": "intervallo",
+      "fqdn": "FQDN",
+      "geography": "paese",
+      "wildcard": "wildcard",
+      "interface-subnet": "subnet dell'interfaccia",
+      "dynamic": "dinamico",
+      "mac": "MAC"
+    },
+    "builtin": "predefinito",
+    "group": "gruppo",
+    "country": "paese {{country}}",
+    "interfaceSubnet": "subnet di {{name}}",
+    "excluded": "esclusi: {{names}}",
+    "notDefined": "non definito nella config",
+    "unused": "non usato",
+    "usedBy": "Usato da",
+    "use": {
+      "policy": "policy {{id}}",
+      "sdwanRule": "regola SD-WAN {{id}}"
+    }
+  },
+  "vpn": {
+    "col": {
+      "name": "Nome",
+      "type": "Tipo",
+      "interface": "Interfaccia",
+      "remote": "Gateway remoto",
+      "proposals": "Proposte",
+      "phase2": "Fasi 2"
+    },
+    "type": {
+      "static": "statico",
+      "dynamic": "dial-up",
+      "ddns": "DDNS"
+    },
+    "advpn": {
+      "sender": "hub (sender)",
+      "receiver": "spoke (receiver)"
+    },
+    "dialup": "qualsiasi (dial-up)",
+    "dhgrp": "Gruppi DH",
+    "peertype": "Tipo di peer",
+    "netDevice": "Interfaccia per ogni peer (net-device)",
+    "addRoute": "Rotte aggiunte dal tunnel (add-route)",
+    "phase2Title_one": "{{count}} fase 2",
+    "phase2Title_other": "{{count}} fasi 2",
+    "noPhase2": "Nessuna fase 2 per questo tunnel.",
+    "selectors": "Selettori",
+    "autoNegotiate": "Negoziazione automatica",
+    "keylife": "Durata chiave (s)",
+    "unverified": "Alcuni default di questa versione sono da verificare",
+    "none": "Nessun tunnel IPsec in questa VDOM.",
+    "pfsDh": "PFS / gruppi DH"
+  },
+  "sdwan": {
+    "none": "SD-WAN non configurato in questa VDOM.",
+    "enabled": "SD-WAN attivo",
+    "disabled": "SD-WAN disattivato",
+    "members": "Membri",
+    "healthChecks": "Health check e SLA",
+    "rules": "Regole",
+    "rulesHelp": "Le regole si valutano dall'alto in basso: la prima che corrisponde sceglie il membro.",
+    "col": {
+      "seq": "N.",
+      "interface": "Interfaccia",
+      "zone": "Zona",
+      "gateway": "Gateway",
+      "cost": "Costo",
+      "priority": "Priorità",
+      "name": "Nome",
+      "servers": "Server",
+      "protocol": "Protocollo",
+      "mode": "Strategia",
+      "match": "Traffico",
+      "quality": "Qualità richiesta",
+      "preferred": "Membri preferiti"
+    },
+    "mode": {
+      "manual": "manuale",
+      "priority": "migliore qualità",
+      "sla": "costo minore (SLA)",
+      "load-balance": "massima banda"
+    },
+    "sla": "SLA {{id}}: latenza {{latency}} ms, jitter {{jitter}} ms, perdita {{packetloss}}%",
+    "from": "da {{names}}",
+    "to": "verso {{names}}",
+    "implicit": "Regola implicita",
+    "implicitHelp": "Il traffico che non corrisponde a nessuna regola segue la tabella di routing e si distribuisce tra i membri."
   },
   "codemirror": {
     "Find": "Trova",

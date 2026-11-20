@@ -1,11 +1,13 @@
 // Model values written the way network engineers read them. Only data, no translated text:
 // the views add the words around them.
+import type { TFunction } from 'i18next';
 import {
   formatPrefix,
   formatVlanSet,
   prefixToMask,
   shortInterfaceName,
   type AddressMatch,
+  type AddressObject,
   type ObjectGroupEntry,
   type PortMatch,
   type Prefix,
@@ -74,4 +76,15 @@ export { shortInterfaceName };
 export function shortList(names: readonly string[], max = 6): string {
   const short = names.slice(0, max).map(shortInterfaceName);
   return names.length > max ? `${short.join(', ')} +${names.length - max}` : short.join(', ');
+}
+
+/** The content of a FortiOS address object: subnet, range, FQDN, country, interface subnet. */
+export function addressText(a: AddressObject, t: TFunction): string {
+  if (a.subnet) return `${a.subnet.ip}/${a.subnet.prefix}`;
+  if (a.range) return `${a.range.start}-${a.range.end}`;
+  if (a.fqdn) return a.fqdn;
+  if (a.country) return t('objects.country', { country: a.country });
+  if (a.wildcard) return `${a.wildcard.ip} ${a.wildcard.wildcard}`;
+  if (a.interface) return t('objects.interfaceSubnet', { name: a.interface });
+  return a.type;
 }

@@ -11,9 +11,9 @@ Le config descrivono una rete immaginaria: una sede, tre filiali, un campus e un
 | Cartella | File | Apparato | Sistema |
 |---|---|---|---|
 | `fortigate/` | `fgt-br1-60f-fortios-7.0.conf` | FortiGate 60F, filiale 1 | FortiOS 7.0 |
-| | `fgt-hq-100f-fortios-7.2-vdom.conf` | FortiGate 100F, sede, hub ADVPN, **VDOM multiple** | FortiOS 7.2 |
+| | `fgt-hq-100f-fortios-7.2-vdom.conf` | FortiGate 100F, sede, hub ADVPN, **VDOM multiple**, HA, OSPF verso il centro stella, policy route, servizi personalizzati, policy da controllare (disattivata, senza log, gestione aperta a tutti) | FortiOS 7.2 |
 | | `fgt-br2-60f-fortios-7.4.conf` | FortiGate 60F, filiale 2 | FortiOS 7.4 |
-| | `fgt-campus-200f-fortios-7.6.conf` | FortiGate 200F con FortiSwitch e FortiAP gestiti, certificato e messaggio su più righe | FortiOS 7.6 |
+| | `fgt-campus-200f-fortios-7.6.conf` | FortiGate 200F con FortiSwitch e FortiAP gestiti, certificato e messaggio su più righe, VPN verso la sede con la versione IKE di default | FortiOS 7.6 |
 | | `fgt-dc-120g-fortios-8.0-vdom.conf` | FortiGate 120G, datacenter, **VDOM multiple** | FortiOS 8.0 |
 | `cisco-ios/` | `sw-br1-acc-c2960x-ios-15.2-stack.txt` | Catalyst 2960-X, **stack di 2**, fine riga Windows (CRLF), **VTP server**: le VLAN non sono nella config ma solo nello show | IOS 15.2 |
 | | `sw-hq-acc1-c3850-iosxe-16.12-stack.txt` | Catalyst 3850, **stack di 2**, port security con MAC sticky, PoE statico sugli AP | IOS-XE 16.12 |

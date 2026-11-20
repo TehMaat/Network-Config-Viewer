@@ -90,6 +90,7 @@ test('folds, searches and navigates the outline', async ({ page }) => {
 
   await openApp(page);
   await loadFiles(page, [samplePath(rel)], 1);
+  await openConfigTab(page);
 
   const outline = page.getByTestId('outline');
   await expect(outline.getByTestId('outline-entry').first()).toHaveText('config vdom');

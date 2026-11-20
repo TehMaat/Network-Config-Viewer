@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { loadFiles, openApp, samplePath } from './helpers';
+import { fileItem, loadFiles, openApp, openConfigTab, samplePath } from './helpers';
 
 test('sends the security policy that blocks connections to other sites', async ({ page }) => {
   const response = await page.goto('/');
@@ -30,6 +30,16 @@ test('never contacts another site, and cannot', async ({ page, baseURL }) => {
     ],
     3,
   );
+  // Every view of the firewall and of the switch, then the config.
+  for (const name of [
+    'fgt-campus-200f-fortios-7.6.conf',
+    'sw-hq-core-c9300-iosxe-17.12-stack.txt',
+  ]) {
+    await fileItem(page, name).click();
+    const tabs = page.locator('[data-testid^="tab-"]');
+    for (let i = 0; i < (await tabs.count()); i++) await tabs.nth(i).click();
+  }
+  await openConfigTab(page);
   await page.getByTestId('btn-search').click();
   await page.getByTestId('language-switch').getByText('EN').click();
 

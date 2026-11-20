@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   Group,
+  Select,
   Stack,
   Switch,
   Tabs,
@@ -32,6 +33,11 @@ import { contentStore, type FileContent } from '../state/content';
 import { effectiveDetection } from '../state/effective';
 import type { FileEntry, Overrides, TextEntry } from '../state/files';
 import { AclsView } from '../views/AclsView';
+import { FirewallVlansView, InterfacesView } from '../views/InterfacesView';
+import { ObjectsView } from '../views/ObjectsView';
+import { PoliciesView } from '../views/PoliciesView';
+import { SdwanView } from '../views/SdwanView';
+import { VpnView } from '../views/VpnView';
 import { PortsView } from '../views/PortsView';
 import { RoutingView } from '../views/RoutingView';
 import { DeviceViewContext, sourceRange, type DeviceViewApi } from '../views/source';
@@ -77,14 +83,50 @@ function IssueView({ entry }: { entry: Extract<FileEntry, { type: 'issue' }> }) 
   );
 }
 
-type Tab = 'summary' | 'ports' | 'vlans' | 'acls' | 'routing' | 'config';
+type Tab =
+  | 'summary'
+  | 'ports'
+  | 'interfaces'
+  | 'vlans'
+  | 'policies'
+  | 'objects'
+  | 'acls'
+  | 'routing'
+  | 'vpn'
+  | 'sdwan'
+  | 'config';
+
+/** Views that show one logical context (VDOM) at a time. */
+const PER_CONTEXT: Tab[] = [
+  'interfaces',
+  'vlans',
+  'policies',
+  'objects',
+  'routing',
+  'vpn',
+  'sdwan',
+];
 
 /** The views of a device, after the summary; the config is always the last one. */
 function tabsFor(model: DeviceModel): Tab[] {
+  if (model.vendor === 'fortinet') {
+    const tabs: Tab[] = ['summary', 'interfaces', 'vlans', 'policies', 'objects', 'routing'];
+    if (model.contexts.some((c) => c.ipsec.length > 0)) tabs.push('vpn');
+    if (model.contexts.some((c) => c.sdwan)) tabs.push('sdwan');
+    tabs.push('config');
+    return tabs;
+  }
   const tabs: Tab[] = ['summary', 'ports', 'vlans'];
   if (model.contexts.some((c) => c.acls.length > 0)) tabs.push('acls');
   tabs.push('routing', 'config');
   return tabs;
+}
+
+/** The VDOM shown first: the one with the most policies. */
+function mainContext(model: DeviceModel): string {
+  return (
+    [...model.contexts].sort((a, b) => b.policies.length - a.policies.length)[0]?.name ?? 'root'
+  );
 }
 
 function TextView({ entry, onOverride }: { entry: TextEntry; onOverride: Props['onOverride'] }) {
@@ -99,6 +141,7 @@ function TextView({ entry, onOverride }: { entry: TextEntry; onOverride: Props['
   const content = useMemo(() => contentStore.get(entry.id), [entry.id, entry.structureVersion]);
   const model = content?.model ?? null;
   const [tab, setTab] = useState<Tab>('summary');
+  const [contextName, setContextName] = useState<string | null>(null);
   // Lines to show once the config tab is visible: the editor cannot scroll while hidden.
   const [pending, setPending] = useState<[number, number] | null>(null);
 
@@ -245,22 +288,57 @@ function TextView({ entry, onOverride }: { entry: TextEntry; onOverride: Props['
   }
 
   const tabs = tabsFor(model);
+  const context =
+    model.contexts.find((c) => c.name === (contextName ?? mainContext(model))) ??
+    model.contexts[0]!;
+  const firewall = model.vendor === 'fortinet';
   const view = (name: Tab): ReactNode => {
     switch (name) {
       case 'summary':
         return <SummaryView model={model} detection={detection} />;
       case 'ports':
         return <PortsView model={model} />;
+      case 'interfaces':
+        return <InterfacesView model={model} context={context} />;
       case 'vlans':
-        return <VlansView model={model} />;
+        return firewall ? (
+          <FirewallVlansView model={model} context={context} />
+        ) : (
+          <VlansView model={model} />
+        );
+      case 'policies':
+        return <PoliciesView model={model} context={context} />;
+      case 'objects':
+        return <ObjectsView context={context} />;
       case 'acls':
         return <AclsView model={model} />;
       case 'routing':
-        return <RoutingView model={model} />;
+        return <RoutingView model={model} context={context} />;
+      case 'vpn':
+        return <VpnView context={context} />;
+      case 'sdwan':
+        return <SdwanView context={context} />;
       default:
         return null;
     }
   };
+  const vdomSelector =
+    model.contexts.length > 1 && PER_CONTEXT.includes(tab) ? (
+      <Select
+        size="xs"
+        w={180}
+        ml="auto"
+        my={4}
+        aria-label={t('device.vdom')}
+        leftSection={<Text size="xs">{t('device.vdom')}</Text>}
+        leftSectionWidth={52}
+        data={model.contexts.map((c) => c.name)}
+        value={context.name}
+        onChange={(v) => v && setContextName(v)}
+        allowDeselect={false}
+        data-testid="vdom-select"
+      />
+    ) : null;
 
   return (
     <DeviceViewContext.Provider value={api}>
@@ -278,6 +356,7 @@ function TextView({ entry, onOverride }: { entry: TextEntry; onOverride: Props['
                 {t(`tabs.${name}`)}
               </Tabs.Tab>
             ))}
+            {vdomSelector}
           </Tabs.List>
           {tabs
             .filter((name) => name !== 'config')

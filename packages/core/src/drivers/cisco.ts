@@ -903,11 +903,9 @@ class CiscoReader {
           this.ctx.ref(child.line, m[2], 'route-map', t.indexOf('route-map') + this.indent(child));
       } else if ((m = /^area\s+(\S+)\s+(stub|nssa|range|authentication)\b/.exec(t))) {
         ospf.areas.push({ id: m[1]!, type: m[2]!, src: lineSrc(child.line) });
-      } else if (
-        /^(log-adjacency-changes|default-information originate|auto-cost reference-bandwidth)\b/.test(
-          t,
-        )
-      ) {
+      } else if (/^default-information originate\b/.test(t)) {
+        ospf.defaultOriginate = true;
+      } else if (/^(log-adjacency-changes|auto-cost reference-bandwidth)\b/.test(t)) {
         // known commands, kept as understood
       } else continue;
       this.ctx.understood(child);

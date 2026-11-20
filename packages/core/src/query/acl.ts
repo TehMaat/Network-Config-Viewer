@@ -1,8 +1,11 @@
 import { ipToInt, prefixContains, wildcardMatches } from '../model/ip';
 import type { AclEntry, AddressMatch, ObjectGroup, ObjectGroupEntry } from '../model/types';
 
-/** How an address matched an IP: through "any", exactly, through a subnet or through a group. */
-export type IpMatch = 'any' | 'host' | 'subnet' | 'group';
+/**
+ * How an address matched an IP: through "any" (or "all"), exactly, through a subnet, through a
+ * group, through a VIP, or because the IP is not in a negated list.
+ */
+export type IpMatch = 'any' | 'host' | 'subnet' | 'group' | 'vip' | 'negated';
 
 /** The entries of an object group with the nested groups resolved (each group once). */
 export function expandObjectGroup(

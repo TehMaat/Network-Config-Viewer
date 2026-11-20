@@ -25,6 +25,8 @@ export interface DataTableProps<T> {
   onRowClick?(row: T): void;
   /** Extra attributes of a row, for example to dim it or mark it as matching a search. */
   rowState?(row: T): 'dim' | 'match' | null;
+  /** First row of a group (for example a pair of interfaces): drawn with a line above it. */
+  groupStart?(row: T, previous: T | undefined): boolean;
   /** Height of the scrolling area; the rows are virtualized, so only the visible ones exist. */
   height?: number | string;
   filter?: boolean;
@@ -51,6 +53,7 @@ export function DataTable<T>({
   selectedId,
   onRowClick,
   rowState,
+  groupStart,
   height = 420,
   filter = true,
   toolbar,
@@ -90,6 +93,7 @@ export function DataTable<T>({
 
   const renderRow = (row: Row<T>, index: number) => {
     const state = rowState?.(row.original) ?? null;
+    const start = groupStart?.(row.original, rows[index - 1]?.original) ?? false;
     return (
       <Table.Tr
         key={row.id}
@@ -99,6 +103,7 @@ export function DataTable<T>({
         data-id={row.id}
         data-state={state ?? undefined}
         data-selected={row.id === selectedId || undefined}
+        data-group-start={start || undefined}
         className="ncv-row"
         onClick={onRowClick ? () => onRowClick(row.original) : undefined}
         style={onRowClick ? { cursor: 'pointer' } : undefined}
