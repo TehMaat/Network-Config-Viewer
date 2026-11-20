@@ -11,7 +11,7 @@ export function sampleFiles(): string[] {
     for (const name of readdirSync(dir)) {
       const full = join(dir, name);
       if (statSync(full).isDirectory()) walk(full);
-      else if (name !== 'README.md' && name !== 'expected.json') {
+      else if (name !== 'README.md' && !/^expected.*\.json$/.test(name)) {
         out.push(relative(SAMPLES_DIR, full).split(sep).join('/'));
       }
     }

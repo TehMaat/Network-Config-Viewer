@@ -20,9 +20,16 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
 - Config di esempio sintetiche: FortiOS 7.0, 7.2, 7.4, 7.6 e 8.0, Catalyst 2960, 3850, 9200 e 9300, Cisco SG350, CBS350 e Catalyst 1300, output di comandi show ([#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4)).
 - Test automatici su GitHub Actions a ogni pull request: lint, tipi, formattazione, test unitari, build, immagine Docker e test nel browser sul container ([#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4)).
 - Scelta del tema nell'intestazione: chiaro, scuro o come il sistema, con la scelta salvata nel browser e applicata già all'avvio, senza lampi del tema sbagliato ([#7](https://github.com/TehMaat/Network-Config-Viewer/issues/7)).
+- Fase 1, lettura degli switch Cisco ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)):
+  - modello neutro degli apparati, in cui ogni elemento ricorda le righe della config da cui viene;
+  - driver per Cisco IOS, IOS-XE e Small Business: interfacce, VLAN, trunk, modalità `general`, port-channel, stack e posizione delle porte, SVI, PoE, 802.1X e MAB, port security, VLAN voce, ACL e object-group con i punti in cui sono applicate (interfacce, VTY, SNMP, route-map, accesso di gestione), rotte statiche, policy route, OSPF, BGP, route-map e prefix-list;
+  - valori di default per marca indicati come tali, con quelli ancora incerti dei Small Business segnati "da verificare"; avviso quando le VLAN non sono nella config per via del VTP;
+  - ogni riga classificata come compresa, ignorata di proposito o sconosciuta, con la copertura e l'elenco delle sezioni non interpretate;
+  - nomi nella config collegati alla loro definizione (VLAN, ACL, object-group, interfacce, route-map, prefix-list, peer-group).
 
 ### Modificato
 
+- Config di esempio Cisco arricchite con OSPF, policy route, ACL applicate a interfacce, VTY e SNMP, object-group, 802.1X e MAB, PoE, port security con MAC sticky, VTP in modalità server con le VLAN solo nello show e modalità `general` dei Small Business; per ogni config c'è il riassunto atteso del modello in `samples/expected-models.json`, verificato dai test ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
 - Screenshot della documentazione rifatti con il nuovo selettore del tema, in tema chiaro e in tema scuro; il README mostra entrambi ([#7](https://github.com/TehMaat/Network-Config-Viewer/issues/7)).
 - Intestazione più compatta sugli schermi stretti: il nome dell'app compare da 768 px e sotto i 576 px il pulsante "Aggiungi file" diventa un'icona ([#7](https://github.com/TehMaat/Network-Config-Viewer/issues/7)).
 - README e studio rimandano alle regole di lavoro e al registro delle modifiche ([#2](https://github.com/TehMaat/Network-Config-Viewer/issues/2)).
