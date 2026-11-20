@@ -76,6 +76,7 @@ interface vlan 60
 !
 interface vlan 70
  name WIFI
+ service-acl input ACL-OSPITI
 !
 interface vlan 99
  name GESTIONE
