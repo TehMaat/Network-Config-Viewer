@@ -179,6 +179,506 @@
     "title": "Encrypted backup",
     "message": "This FortiGate backup is encrypted with a password: only the header and the model information can be read. Export the backup again without encryption to see its content."
   },
+  "tabs": {
+    "summary": "Summary",
+    "ports": "Ports",
+    "vlans": "VLANs",
+    "acls": "ACLs",
+    "routing": "Routing",
+    "config": "Config",
+    "interfaces": "Interfaces",
+    "policies": "Policies",
+    "objects": "Objects",
+    "vpn": "VPN",
+    "sdwan": "SD-WAN"
+  },
+  "table": {
+    "filter": "Filter the table",
+    "count_one": "{{count}} row",
+    "count_other": "{{count}} rows",
+    "countFiltered": "{{count}} of {{total}}",
+    "noMatch": "No row matches the filter",
+    "empty": "No items"
+  },
+  "source": {
+    "notWritten": "Not written in the config",
+    "line": "Line {{line}}",
+    "lines": "Lines {{first}}–{{last}}",
+    "default": "Default value: it is not written in the config, the device uses it when it is missing.",
+    "defaultUnverified": "Default value to be checked: for this vendor and version it is not confirmed on real devices yet.",
+    "toCheck": "to be checked",
+    "lineIn": "line {{line}} ({{context}})"
+  },
+  "summary": {
+    "device": "Device",
+    "management": "Management IP",
+    "vtp": "VTP mode",
+    "counts": "In numbers",
+    "count": {
+      "ports": "ports",
+      "portsDown": "ports shut down",
+      "lags": "port-channels",
+      "svis": "VLAN interfaces",
+      "vlans": "VLANs",
+      "acls": "ACLs",
+      "statics": "static routes",
+      "bgpNeighbors": "BGP neighbours",
+      "interfaces": "interfaces",
+      "vlanInterfaces": "VLAN interfaces",
+      "policies": "policies",
+      "addresses": "addresses",
+      "vips": "VIPs",
+      "tunnels": "IPsec tunnels"
+    },
+    "features": "Features in use",
+    "warnings": "To check",
+    "moreWarnings_one": "and one more",
+    "moreWarnings_other": "and {{count}} more"
+  },
+  "feature": {
+    "stack": "Stack",
+    "vdom": "VDOMs",
+    "lag": "Port-channels",
+    "poe": "PoE",
+    "dot1x": "802.1X / MAB",
+    "port-security": "Port security",
+    "voice-vlan": "Voice VLAN",
+    "svi": "VLAN interfaces",
+    "ip-routing": "IP routing",
+    "static-routes": "Static routes",
+    "ospf": "OSPF",
+    "bgp": "BGP",
+    "pbr": "Policy routes",
+    "acl": "ACLs",
+    "vtp": "VTP",
+    "sdwan": "SD-WAN",
+    "ipsec": "IPsec VPN",
+    "advpn": "ADVPN",
+    "ha": "High availability",
+    "nat": "NAT",
+    "vip": "VIPs"
+  },
+  "warning": {
+    "vtp-vlans-not-in-config": "The VLANs are not written in the config: with VTP in server or client mode they are kept in the vlan.dat file of the switch. To see their names, load the output of show vlan brief.",
+    "unverified-defaults": "Some default values of this system still have to be checked: they are marked in the views.",
+    "policy-disabled_one": "{{count}} policy disabled.",
+    "policy-disabled_other": "{{count}} policies disabled.",
+    "policy-no-log_one": "{{count}} policy allows traffic without logging it.",
+    "policy-no-log_other": "{{count}} policies allow traffic without logging it.",
+    "policy-any-any_one": "{{count}} policy allows everything: source all, destination all, service ALL.",
+    "policy-any-any_other": "{{count}} policies allow everything: source all, destination all, service ALL.",
+    "policy-all-management_one": "{{count}} policy opens a management service (SSH, Telnet, SNMP, RDP, VNC) to any source.",
+    "policy-all-management_other": "{{count}} policies open a management service (SSH, Telnet, SNMP, RDP, VNC) to any source."
+  },
+  "coverage": {
+    "title": "Reading coverage",
+    "summary": "{{understood}}% understood, {{ignored}}% ignored on purpose, {{unknown}}% not interpreted, out of {{total}} lines.",
+    "understood_one": "{{count}} line understood",
+    "understood_other": "{{count}} lines understood",
+    "ignored_one": "{{count}} line ignored on purpose",
+    "ignored_other": "{{count}} lines ignored on purpose",
+    "unknown_one": "{{count}} line not interpreted",
+    "unknown_other": "{{count}} lines not interpreted",
+    "explain": "The lines not interpreted are highlighted in the Config tab: they are not part of the views, but they stay in the file as they are.",
+    "sections": "Sections not interpreted",
+    "section": "Section",
+    "lines": "Lines",
+    "firstLine": "First line",
+    "showAll_one": "Show {{count}} section",
+    "showAll_other": "Show all {{count}} sections",
+    "showFewer": "Show fewer sections"
+  },
+  "ports": {
+    "member": "Member {{member}}",
+    "state": {
+      "up": "up",
+      "down": "shut down"
+    },
+    "mode": {
+      "access": "access",
+      "trunk": "trunk",
+      "dynamic-auto": "dynamic auto (DTP)",
+      "dynamic-desirable": "dynamic desirable (DTP)",
+      "general": "general",
+      "routed": "L3"
+    },
+    "kind": {
+      "physical": "port",
+      "lag": "port-channel",
+      "svi": "VLAN interface",
+      "loopback": "loopback",
+      "tunnel": "tunnel",
+      "subinterface": "subinterface",
+      "hard-switch": "hardware switch",
+      "vdom-link": "VDOM link",
+      "management": "management",
+      "virtual": "virtual",
+      "other": "other"
+    },
+    "vlanShort": "VLAN {{vlan}}",
+    "voiceShort": "voice {{vlan}}",
+    "trunkVlans": "{{vlans}} (native {{native}})",
+    "untaggedShort": "untagged {{vlans}}",
+    "taggedShort": "tagged {{vlans}}",
+    "filterVlan": "Highlight a VLAN",
+    "allVlans": "All VLANs",
+    "noPanel": "No port with a recognised position: the panel cannot be drawn.",
+    "table": "All interfaces",
+    "col": {
+      "port": "Port",
+      "description": "Description",
+      "state": "State",
+      "mode": "Mode",
+      "vlan": "VLAN",
+      "voice": "Voice",
+      "lag": "Port-channel",
+      "poe": "PoE",
+      "dot1x": "802.1X",
+      "ip": "IP"
+    },
+    "legend": {
+      "trunk": "trunk",
+      "l3": "L3",
+      "down": "shut down",
+      "poe": "PoE",
+      "dot1x": "802.1X / MAB",
+      "voice": "voice VLAN",
+      "lag": "port-channel"
+    },
+    "detail": {
+      "accessVlan": "Access VLAN",
+      "nativeVlan": "Native VLAN",
+      "allowed": "Allowed VLANs",
+      "untagged": "Untagged VLANs",
+      "none": "none",
+      "dtp": "DTP",
+      "nonegotiate": "negotiation disabled",
+      "members": "Members",
+      "portSecurity": "Port security",
+      "portSecurityMax_one": "up to {{count}} MAC",
+      "portSecurityMax_other": "up to {{count}} MACs",
+      "sticky": "sticky MACs",
+      "stp": "Spanning tree",
+      "speed": "Speed / duplex",
+      "aclIn": "Inbound ACL",
+      "aclOut": "Outbound ACL",
+      "helper": "DHCP relay",
+      "pbr": "Policy route",
+      "secondary": "{{ip}} (secondary)"
+    }
+  },
+  "vlans": {
+    "col": {
+      "id": "ID",
+      "name": "Name",
+      "gateway": "Gateway here",
+      "interface": "Interface"
+    },
+    "implicit": "not in the config",
+    "voice": "voice",
+    "role": {
+      "access": "Access ports",
+      "voice": "Voice ports",
+      "untagged": "Untagged",
+      "tagged": "Tagged on trunks"
+    },
+    "title": "VLAN {{id}}",
+    "titleNamed": "VLAN {{id}} · {{name}}"
+  },
+  "acls": {
+    "col": {
+      "name": "Name",
+      "type": "Type",
+      "entries": "Entries",
+      "applied": "Applied to",
+      "matches": "Entries with the IP",
+      "seq": "No.",
+      "action": "Action",
+      "protocol": "Protocol",
+      "source": "Source",
+      "sourcePort": "Src port",
+      "destination": "Destination",
+      "destinationPort": "Dst port",
+      "options": "Options",
+      "groupEntries": "Content",
+      "expanded": "Expanded addresses",
+      "usedBy": "Used by"
+    },
+    "type": {
+      "standard": "standard",
+      "extended": "extended",
+      "mac": "MAC",
+      "ipv6": "IPv6",
+      "management": "management"
+    },
+    "notApplied": "not applied",
+    "searchIp": "Search an IP in the ACLs",
+    "searchIpHelp": "Finds the entries that contain the IP, also through subnets and object groups. Those that contain it only through any stay in the background.",
+    "searchIpPlaceholder": "e.g. 10.10.70.25",
+    "notAnIp": "Not an IPv4 address",
+    "none": "No ACL in this config.",
+    "binding": {
+      "interface": "{{name}} {{direction}}",
+      "line": "line {{line}}",
+      "snmp": "SNMP",
+      "routeMap": "route-map {{name}}",
+      "management": "management access"
+    },
+    "direction": {
+      "in": "inbound",
+      "out": "outbound"
+    },
+    "match": {
+      "any": "through any",
+      "host": "exact",
+      "subnet": "in the subnet",
+      "group": "in the group",
+      "vip": "through a VIP",
+      "negated": "outside the negated list"
+    },
+    "objectGroups": "Object groups",
+    "groupType": {
+      "network": "network",
+      "service": "service"
+    }
+  },
+  "routing": {
+    "col": {
+      "prefix": "Destination",
+      "type": "Source",
+      "gateway": "Gateway",
+      "interface": "Interface",
+      "distance": "Distance",
+      "name": "Name",
+      "routeMap": "Route map",
+      "rules": "Rules",
+      "area": "Area",
+      "passive": "Passive",
+      "cost": "Cost",
+      "description": "Description",
+      "state": "State",
+      "seq": "No.",
+      "action": "Action",
+      "match": "Conditions (match)",
+      "set": "Actions (set)",
+      "input": "Incoming",
+      "output": "Outgoing"
+    },
+    "type": {
+      "connected": "connected",
+      "static": "static",
+      "default-gateway": "default gateway"
+    },
+    "inactive": "not active",
+    "configRoutes": "Routes from the config",
+    "configRoutesHelp": "Networks of the interfaces and static routes. The routes learnt with OSPF and BGP appear when the routing table from the show commands is loaded.",
+    "lookup": "Find the route for an IP",
+    "noRoute": "No route of the config leads to {{ip}}.",
+    "policyRoutes": "Policy routes",
+    "ospf": {
+      "title": "OSPF {{process}}",
+      "process": "process {{process}}",
+      "area": "area {{area}}",
+      "cost": "cost {{cost}}",
+      "passiveDefault": "Interfaces passive by default",
+      "networks": "Networks"
+    },
+    "routerId": "Router ID",
+    "redistribute": "Redistribution",
+    "yes": "yes",
+    "no": "no",
+    "bgp": {
+      "title": "BGP AS {{asn}}",
+      "neighbor": "Neighbour or group",
+      "remoteAs": "Remote AS",
+      "group": "Group",
+      "in": "Inbound filters",
+      "out": "Outbound filters",
+      "shutdown": "shut down",
+      "networks": "Announced networks",
+      "groups": "Groups"
+    },
+    "routeMaps": "Route maps",
+    "prefixLists": "Prefix lists",
+    "sdwan": "SD-WAN: {{zones}}"
+  },
+  "config": {
+    "followLink": "Go to the definition (line {{line}})",
+    "back": "Go back",
+    "highlightUnknown_one": "Highlight the line not interpreted ({{count}})",
+    "highlightUnknown_other": "Highlight the lines not interpreted ({{count}})"
+  },
+  "device": {
+    "vdom": "VDOM"
+  },
+  "interfaces": {
+    "col": {
+      "alias": "Alias",
+      "kind": "Type",
+      "role": "Role",
+      "parent": "Parent interface or members",
+      "zone": "Zone",
+      "access": "Administrative access"
+    },
+    "zones": "Zones",
+    "intrazone": "traffic inside the zone: {{value}}",
+    "addressing": "Addressing",
+    "remoteIp": "Remote tunnel IP"
+  },
+  "policies": {
+    "col": {
+      "pair": "Interface pair",
+      "order": "Order",
+      "name": "Name",
+      "srcintf": "From",
+      "dstintf": "To",
+      "srcaddr": "Source",
+      "dstaddr": "Destination",
+      "service": "Service",
+      "action": "Action",
+      "log": "Log",
+      "status": "State",
+      "warnings": "Warnings"
+    },
+    "warning": {
+      "policy-disabled": "disabled",
+      "policy-no-log": "no log",
+      "policy-any-any": "everything allowed",
+      "policy-all-management": "management open to all"
+    },
+    "searchIp": "Search an IP in the policies",
+    "searchIpHelp": "Finds the policies that contain the IP through addresses, subnets, groups and VIPs. Those that contain it only through all stay in the background.",
+    "modeList": "Single list",
+    "modePairs": "By interface pair",
+    "onlyWarnings": "Only with warnings",
+    "orderHelp": "The FortiGate evaluates the policies from top to bottom in the order of the table, not by ID: the first one that matches decides. Traffic that matches none is blocked by the implicit policy.",
+    "none": "No policy in this VDOM.",
+    "disabled": "disabled",
+    "enabled": "enabled",
+    "negated": "{{field}} (negated)",
+    "natInterface": "yes, with the IP of the outgoing interface",
+    "natPool": "yes, with the IP pool {{pools}}",
+    "schedule": "Schedule",
+    "users": "Users and groups",
+    "internetService": "Internet service",
+    "profiles": "Security profiles",
+    "comments": "Comments",
+    "title": "{{id}} · {{name}}",
+    "nat": "NAT"
+  },
+  "objects": {
+    "kind": {
+      "addresses_one": "Addresses ({{count}})",
+      "addresses_other": "Addresses ({{count}})",
+      "groups_one": "Groups ({{count}})",
+      "groups_other": "Groups ({{count}})",
+      "services_one": "Services ({{count}})",
+      "services_other": "Services ({{count}})",
+      "serviceGroups_one": "Service groups ({{count}})",
+      "serviceGroups_other": "Service groups ({{count}})",
+      "vips_one": "VIPs ({{count}})",
+      "vips_other": "VIPs ({{count}})",
+      "ippools_one": "IP pools ({{count}})",
+      "ippools_other": "IP pools ({{count}})"
+    },
+    "col": {
+      "name": "Name",
+      "type": "Type",
+      "value": "Content",
+      "used": "Used",
+      "comment": "Comment"
+    },
+    "addressType": {
+      "subnet": "subnet",
+      "iprange": "range",
+      "fqdn": "FQDN",
+      "geography": "country",
+      "wildcard": "wildcard",
+      "interface-subnet": "interface subnet",
+      "dynamic": "dynamic",
+      "mac": "MAC"
+    },
+    "builtin": "predefined",
+    "group": "group",
+    "country": "country {{country}}",
+    "interfaceSubnet": "subnet of {{name}}",
+    "excluded": "excluded: {{names}}",
+    "notDefined": "not defined in the config",
+    "unused": "not used",
+    "usedBy": "Used by",
+    "use": {
+      "policy": "policy {{id}}",
+      "sdwanRule": "SD-WAN rule {{id}}"
+    }
+  },
+  "vpn": {
+    "col": {
+      "name": "Name",
+      "type": "Type",
+      "interface": "Interface",
+      "remote": "Remote gateway",
+      "proposals": "Proposals",
+      "phase2": "Phase 2s"
+    },
+    "type": {
+      "static": "static",
+      "dynamic": "dial-up",
+      "ddns": "DDNS"
+    },
+    "advpn": {
+      "sender": "hub (sender)",
+      "receiver": "spoke (receiver)"
+    },
+    "dialup": "any (dial-up)",
+    "dhgrp": "DH groups",
+    "peertype": "Peer type",
+    "netDevice": "Interface for each peer (net-device)",
+    "addRoute": "Routes added by the tunnel (add-route)",
+    "phase2Title_one": "{{count}} phase 2",
+    "phase2Title_other": "{{count}} phase 2s",
+    "noPhase2": "No phase 2 for this tunnel.",
+    "selectors": "Selectors",
+    "autoNegotiate": "Auto-negotiate",
+    "keylife": "Key lifetime (s)",
+    "unverified": "Some defaults of this version still have to be checked",
+    "none": "No IPsec tunnel in this VDOM.",
+    "pfsDh": "PFS / DH groups"
+  },
+  "sdwan": {
+    "none": "SD-WAN is not configured in this VDOM.",
+    "enabled": "SD-WAN enabled",
+    "disabled": "SD-WAN disabled",
+    "members": "Members",
+    "healthChecks": "Health checks and SLAs",
+    "rules": "Rules",
+    "rulesHelp": "The rules are evaluated from top to bottom: the first one that matches chooses the member.",
+    "col": {
+      "seq": "No.",
+      "interface": "Interface",
+      "zone": "Zone",
+      "gateway": "Gateway",
+      "cost": "Cost",
+      "priority": "Priority",
+      "name": "Name",
+      "servers": "Servers",
+      "protocol": "Protocol",
+      "mode": "Strategy",
+      "match": "Traffic",
+      "quality": "Required quality",
+      "preferred": "Preferred members"
+    },
+    "mode": {
+      "manual": "manual",
+      "priority": "best quality",
+      "sla": "lowest cost (SLA)",
+      "load-balance": "maximize bandwidth"
+    },
+    "sla": "SLA {{id}}: latency {{latency}} ms, jitter {{jitter}} ms, loss {{packetloss}}%",
+    "from": "from {{names}}",
+    "to": "to {{names}}",
+    "implicit": "Implicit rule",
+    "implicitHelp": "Traffic that matches no rule follows the routing table and is spread across the members."
+  },
   "codemirror": {
     "Find": "Find",
     "Replace": "Replace",

@@ -17,21 +17,25 @@ export interface Analysis extends Structure {
 
 /** Recognises a text file and builds its structure for the viewer. */
 export function analyzeText(text: string): Analysis {
-  const lines = splitLines(text);
+  return analyzeLines(splitLines(text));
+}
+
+/** Same as analyzeText, for a text already split into lines. */
+export function analyzeLines(lines: string[]): Analysis {
   const detection = detect(lines);
   return {
     detection,
     lineCount: lines.length,
-    ...structureOf(lines, detection.syntax, detection.os?.value),
+    ...structureOfLines(lines, detection.syntax, detection.os?.value),
   };
 }
 
 /** Structure of a text with a given syntax family, for example after a manual correction. */
 export function structureFor(text: string, family: SyntaxFamily, os?: OsId): Structure {
-  return structureOf(splitLines(text), family, os);
+  return structureOfLines(splitLines(text), family, os);
 }
 
-function structureOf(lines: string[], family: SyntaxFamily, os?: OsId): Structure {
+export function structureOfLines(lines: string[], family: SyntaxFamily, os?: OsId): Structure {
   const tree = parseSyntax(lines, family, { dialect: os === 'cisco-sb' ? 'cisco-sb' : 'cisco' });
   return { tree, folds: foldRanges(tree), outline: buildOutline(tree) };
 }

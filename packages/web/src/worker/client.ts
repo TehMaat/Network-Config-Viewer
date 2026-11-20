@@ -1,4 +1,4 @@
-import type { OsId, SyntaxFamily } from '@ncv/core';
+import type { ModelHints, OsId, SyntaxFamily } from '@ncv/core';
 import type { WorkerMessage, WorkerRequest } from './protocol';
 
 /** Talks to the analysis worker. */
@@ -24,8 +24,9 @@ export class AnalyzerClient {
     return batch;
   }
 
-  restructure(id: string, family: SyntaxFamily, os?: OsId): void {
-    this.post({ type: 'structure', id, family, ...(os ? { os } : {}) });
+  /** New structure and model after a manual correction of the recognition. */
+  restructure(id: string, family: SyntaxFamily, hints: ModelHints, os?: OsId): void {
+    this.post({ type: 'structure', id, family, hints, ...(os ? { os } : {}) });
   }
 
   forget(ids: string[]): void {

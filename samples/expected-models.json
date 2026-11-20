@@ -1,0 +1,1281 @@
+{
+  "cisco-ios/sw-br1-acc-c2960x-ios-15.2-stack.txt": {
+    "hostname": "SW-BR1-ACC",
+    "model": "WS-C2960X-48FPD-L",
+    "version": "15.2",
+    "stack": [
+      "1 WS-C2960X-48FPD-L",
+      "2 WS-C2960X-48FPD-L"
+    ],
+    "management": "10.21.99.2 Vlan99",
+    "features": [
+      "acl",
+      "poe",
+      "stack",
+      "static-routes",
+      "svi",
+      "voice-vlan",
+      "vtp"
+    ],
+    "warnings": [
+      "vtp-vlans-not-in-config"
+    ],
+    "interfaces": {
+      "kinds": {
+        "management": 1,
+        "physical": 100,
+        "svi": 2
+      },
+      "modes": {
+        "access": 95,
+        "dynamic-auto": 3,
+        "trunk": 2
+      },
+      "shutdown": 30,
+      "uplinks": [
+        "TenGigabitEthernet1/0/1",
+        "TenGigabitEthernet1/0/2",
+        "TenGigabitEthernet2/0/1",
+        "TenGigabitEthernet2/0/2"
+      ],
+      "lags": [],
+      "layer3": [
+        "Vlan99 10.21.99.2/24"
+      ],
+      "poe": {
+        "auto": 96
+      },
+      "dot1x": 0,
+      "portSecurity": 0,
+      "voice": 71,
+      "trunks": {
+        "trunk 10,20,99": 2
+      },
+      "withDefaults": 100,
+      "unverified": {}
+    },
+    "vlans": [
+      "1 default (implicit)",
+      "10 (implicit)",
+      "20 (implicit) (voice)",
+      "99 (implicit)",
+      "999 (implicit)"
+    ],
+    "acls": [
+      "MGMT-ACCESS standard 3: line vty 0 4, line vty 5 15, snmp"
+    ],
+    "objectGroups": [],
+    "routing": {
+      "statics": [
+        "0.0.0.0/0 10.21.99.1 (default-gateway)"
+      ],
+      "policyRoutes": [],
+      "ospf": [],
+      "bgp": null,
+      "routeMaps": [],
+      "prefixLists": []
+    },
+    "references": 6,
+    "coverage": {
+      "total": 914,
+      "understood": 703,
+      "ignored": 160,
+      "unknown": 51
+    }
+  },
+  "cisco-ios/sw-hq-acc1-c3850-iosxe-16.12-stack.txt": {
+    "hostname": "SW-HQ-ACC1",
+    "model": "WS-C3850-48P",
+    "version": "16.12",
+    "stack": [
+      "1 WS-C3850-48P",
+      "2 WS-C3850-48P"
+    ],
+    "management": "10.10.99.11 Vlan99",
+    "features": [
+      "acl",
+      "lag",
+      "poe",
+      "port-security",
+      "stack",
+      "static-routes",
+      "svi",
+      "voice-vlan"
+    ],
+    "warnings": [],
+    "interfaces": {
+      "kinds": {
+        "lag": 1,
+        "management": 1,
+        "physical": 104,
+        "svi": 2
+      },
+      "modes": {
+        "access": 91,
+        "dynamic-auto": 6,
+        "trunk": 8
+      },
+      "shutdown": 10,
+      "uplinks": [
+        "TenGigabitEthernet1/1/1",
+        "TenGigabitEthernet1/1/2",
+        "TenGigabitEthernet1/1/3",
+        "TenGigabitEthernet1/1/4",
+        "TenGigabitEthernet2/1/1",
+        "TenGigabitEthernet2/1/2",
+        "TenGigabitEthernet2/1/3",
+        "TenGigabitEthernet2/1/4"
+      ],
+      "lags": [
+        "Port-channel1: TenGigabitEthernet1/1/1 TenGigabitEthernet2/1/1"
+      ],
+      "layer3": [
+        "Vlan99 10.10.99.11/24"
+      ],
+      "poe": {
+        "auto": 84,
+        "never": 7,
+        "static": 5
+      },
+      "dot1x": 0,
+      "portSecurity": 2,
+      "voice": 83,
+      "trunks": {
+        "trunk 10,20,50,60,70,99": 3,
+        "trunk 60,70": 5
+      },
+      "withDefaults": 93,
+      "unverified": {}
+    },
+    "vlans": [
+      "1 default (implicit)",
+      "10 DATI",
+      "20 VOCE (voice)",
+      "50 OSPITI",
+      "60 AP",
+      "70 WIFI-OSPITI",
+      "99 GESTIONE",
+      "999 PARCHEGGIO"
+    ],
+    "acls": [
+      "MGMT-ACCESS standard 3: line vty 0 4, line vty 5 15, snmp"
+    ],
+    "objectGroups": [],
+    "routing": {
+      "statics": [
+        "0.0.0.0/0 10.10.99.250 (default-gateway)"
+      ],
+      "policyRoutes": [],
+      "ospf": [],
+      "bgp": null,
+      "routeMaps": [],
+      "prefixLists": []
+    },
+    "references": 187,
+    "coverage": {
+      "total": 991,
+      "understood": 749,
+      "ignored": 178,
+      "unknown": 64
+    }
+  },
+  "cisco-ios/sw-hq-acc2-c9200-iosxe-17.9.txt": {
+    "hostname": "SW-HQ-ACC2",
+    "model": "C9200-24P",
+    "version": "17.9",
+    "stack": [
+      "1 C9200-24P"
+    ],
+    "management": "10.10.99.12 Vlan99",
+    "features": [
+      "acl",
+      "dot1x",
+      "lag",
+      "poe",
+      "static-routes",
+      "svi",
+      "voice-vlan"
+    ],
+    "warnings": [],
+    "interfaces": {
+      "kinds": {
+        "lag": 1,
+        "management": 1,
+        "physical": 28,
+        "svi": 2
+      },
+      "modes": {
+        "access": 23,
+        "dynamic-auto": 2,
+        "trunk": 4
+      },
+      "shutdown": 6,
+      "uplinks": [
+        "GigabitEthernet1/1/1",
+        "GigabitEthernet1/1/2",
+        "GigabitEthernet1/1/3",
+        "GigabitEthernet1/1/4"
+      ],
+      "lags": [
+        "Port-channel1: GigabitEthernet1/1/1 GigabitEthernet1/1/2"
+      ],
+      "layer3": [
+        "Vlan99 10.10.99.12/24"
+      ],
+      "poe": {
+        "auto": 21,
+        "never": 3
+      },
+      "dot1x": 19,
+      "portSecurity": 0,
+      "voice": 19,
+      "trunks": {
+        "trunk 10,20,60,70,99": 3,
+        "trunk 60,70": 1
+      },
+      "withDefaults": 26,
+      "unverified": {}
+    },
+    "vlans": [
+      "1 default (implicit)",
+      "10 DATI",
+      "20 VOCE (voice)",
+      "60 AP",
+      "70 WIFI-OSPITI",
+      "99 GESTIONE",
+      "999 PARCHEGGIO"
+    ],
+    "acls": [
+      "MGMT-ACCESS standard 3: line vty 0 4, line vty 5 15, snmp"
+    ],
+    "objectGroups": [],
+    "routing": {
+      "statics": [
+        "0.0.0.0/0 10.10.99.250 (default-gateway)"
+      ],
+      "policyRoutes": [],
+      "ospf": [],
+      "bgp": null,
+      "routeMaps": [],
+      "prefixLists": []
+    },
+    "references": 51,
+    "coverage": {
+      "total": 475,
+      "understood": 317,
+      "ignored": 81,
+      "unknown": 77
+    }
+  },
+  "cisco-ios/sw-hq-core-c9300-iosxe-17.12-stack.txt": {
+    "hostname": "SW-HQ-CORE",
+    "model": "C9300-48P",
+    "version": "17.12",
+    "stack": [
+      "1 C9300-48P",
+      "2 C9300-48P",
+      "3 C9300-48P"
+    ],
+    "management": "10.10.99.2 Vlan99",
+    "features": [
+      "acl",
+      "ip-routing",
+      "lag",
+      "ospf",
+      "pbr",
+      "poe",
+      "stack",
+      "static-routes",
+      "svi"
+    ],
+    "warnings": [],
+    "interfaces": {
+      "kinds": {
+        "lag": 3,
+        "loopback": 1,
+        "management": 1,
+        "physical": 168,
+        "svi": 5,
+        "virtual": 3
+      },
+      "modes": {
+        "access": 142,
+        "dynamic-auto": 20,
+        "trunk": 9
+      },
+      "shutdown": 24,
+      "uplinks": [
+        "TenGigabitEthernet1/1/1",
+        "TenGigabitEthernet1/1/2",
+        "TenGigabitEthernet1/1/3",
+        "TenGigabitEthernet1/1/4",
+        "TenGigabitEthernet1/1/5",
+        "TenGigabitEthernet1/1/6",
+        "TenGigabitEthernet1/1/7",
+        "TenGigabitEthernet1/1/8",
+        "TenGigabitEthernet2/1/1",
+        "TenGigabitEthernet2/1/2",
+        "TenGigabitEthernet2/1/3",
+        "TenGigabitEthernet2/1/4",
+        "TenGigabitEthernet2/1/5",
+        "TenGigabitEthernet2/1/6",
+        "TenGigabitEthernet2/1/7",
+        "TenGigabitEthernet2/1/8",
+        "TenGigabitEthernet3/1/1",
+        "TenGigabitEthernet3/1/2",
+        "TenGigabitEthernet3/1/3",
+        "TenGigabitEthernet3/1/4",
+        "TenGigabitEthernet3/1/5",
+        "TenGigabitEthernet3/1/6",
+        "TenGigabitEthernet3/1/7",
+        "TenGigabitEthernet3/1/8"
+      ],
+      "lags": [
+        "Port-channel1: TenGigabitEthernet1/1/1 TenGigabitEthernet2/1/1",
+        "Port-channel10: TenGigabitEthernet1/1/2 TenGigabitEthernet2/1/2",
+        "Port-channel11: GigabitEthernet3/0/47 GigabitEthernet3/0/48"
+      ],
+      "layer3": [
+        "Loopback0 10.10.255.2/32",
+        "Vlan60 10.10.60.1/24",
+        "Vlan70 10.10.70.1/24",
+        "Vlan99 10.10.99.2/24",
+        "Vlan900 10.10.254.2/29"
+      ],
+      "poe": {
+        "auto": 144
+      },
+      "dot1x": 0,
+      "portSecurity": 0,
+      "voice": 0,
+      "trunks": {
+        "trunk 10,20,50,60,70,99": 3,
+        "trunk 10,20,50,60,99-100,900": 3,
+        "trunk 10,20,60,70,99": 3
+      },
+      "withDefaults": 171,
+      "unverified": {}
+    },
+    "vlans": [
+      "1 default (implicit)",
+      "10 DATI",
+      "20 VOCE",
+      "50 OSPITI",
+      "60 AP",
+      "70 WIFI-OSPITI",
+      "99 GESTIONE",
+      "100 SERVER",
+      "900 TRANSITO-FGT",
+      "999 PARCHEGGIO"
+    ],
+    "acls": [
+      "ACL-OSPITI-IN extended 4: Vlan70 in",
+      "ACL-PBR-OSPITI extended 1: route-map PBR-OSPITI",
+      "ACL-SERVER-IN extended 4: GigabitEthernet1/0/1 in, GigabitEthernet1/0/2 in, GigabitEthernet1/0/3 in, GigabitEthernet1/0/4 in",
+      "MGMT-ACCESS standard 3: line vty 0 4, line vty 5 15, snmp"
+    ],
+    "objectGroups": [
+      "OG-DC network 2",
+      "OG-RETI-INTERNE network 3",
+      "OG-SERVIZI-WEB service 3"
+    ],
+    "routing": {
+      "statics": [
+        "0.0.0.0/0 10.10.254.1 ad 250",
+        "10.99.0.0/16 Null0"
+      ],
+      "policyRoutes": [
+        "Vlan70 route-map PBR-OSPITI"
+      ],
+      "ospf": [
+        "1 networks 10.10.60.0/24 area 0, 10.10.70.0/24 area 0, 10.10.254.0/29 area 0; interfaces Loopback0 passive, Vlan60 passive, Vlan70 passive, Vlan900"
+      ],
+      "bgp": null,
+      "routeMaps": [
+        "PBR-OSPITI 1",
+        "RM-STATICHE-OSPF 1"
+      ],
+      "prefixLists": [
+        "PL-STATICHE-OSPF 1"
+      ]
+    },
+    "references": 167,
+    "coverage": {
+      "total": 1306,
+      "understood": 974,
+      "ignored": 265,
+      "unknown": 67
+    }
+  },
+  "cisco-sb/sw-br2-acc-sg350-28p-2.5.txt": {
+    "hostname": "SW-BR2-ACC",
+    "model": "Sx250/Sx350/Sx550X",
+    "version": "2.5.9.54",
+    "stack": [
+      "1"
+    ],
+    "management": "10.22.99.2 Vlan99",
+    "features": [
+      "acl",
+      "static-routes",
+      "svi",
+      "voice-vlan"
+    ],
+    "warnings": [
+      "unverified-defaults"
+    ],
+    "interfaces": {
+      "kinds": {
+        "physical": 28,
+        "svi": 6
+      },
+      "modes": {
+        "access": 25,
+        "general": 2,
+        "trunk": 1
+      },
+      "shutdown": 5,
+      "uplinks": [],
+      "lags": [],
+      "layer3": [
+        "Vlan99 10.22.99.2/24"
+      ],
+      "poe": {},
+      "dot1x": 0,
+      "portSecurity": 0,
+      "voice": 0,
+      "trunks": {
+        "general 70": 2,
+        "trunk 10,20,60,70,99": 1
+      },
+      "withDefaults": 6,
+      "unverified": {
+        "switchport.mode": 5
+      }
+    },
+    "vlans": [
+      "1 default (implicit)",
+      "10 DATI",
+      "20 VOCE (voice)",
+      "60 AP",
+      "70 WIFI",
+      "99 GESTIONE"
+    ],
+    "acls": [
+      "MGMT management 3: management",
+      "ACL-OSPITI extended 2: Vlan70 in"
+    ],
+    "objectGroups": [],
+    "routing": {
+      "statics": [
+        "0.0.0.0/0 10.22.99.1 (default-gateway)"
+      ],
+      "policyRoutes": [],
+      "ospf": [],
+      "bgp": null,
+      "routeMaps": [],
+      "prefixLists": []
+    },
+    "references": 22,
+    "coverage": {
+      "total": 225,
+      "understood": 142,
+      "ignored": 56,
+      "unknown": 27
+    }
+  },
+  "cisco-sb/sw-br3-acc-cbs350-48p-3.4-stack.txt": {
+    "hostname": "SW-BR3-ACC",
+    "model": "CBS250/CBS350",
+    "version": "3.4.1.3",
+    "stack": [
+      "1",
+      "2"
+    ],
+    "management": "10.23.99.2 Vlan99",
+    "features": [
+      "acl",
+      "lag",
+      "stack",
+      "static-routes",
+      "svi",
+      "voice-vlan"
+    ],
+    "warnings": [
+      "unverified-defaults"
+    ],
+    "interfaces": {
+      "kinds": {
+        "lag": 1,
+        "physical": 104,
+        "svi": 6
+      },
+      "modes": {
+        "access": 96,
+        "trunk": 9
+      },
+      "shutdown": 18,
+      "uplinks": [
+        "TenGigabitEthernet1/0/1",
+        "TenGigabitEthernet1/0/2",
+        "TenGigabitEthernet1/0/3",
+        "TenGigabitEthernet1/0/4",
+        "TenGigabitEthernet2/0/1",
+        "TenGigabitEthernet2/0/2",
+        "TenGigabitEthernet2/0/3",
+        "TenGigabitEthernet2/0/4"
+      ],
+      "lags": [
+        "Port-channel1: GigabitEthernet1/0/48 GigabitEthernet2/0/48"
+      ],
+      "layer3": [
+        "Vlan99 10.23.99.2/24"
+      ],
+      "poe": {},
+      "dot1x": 0,
+      "portSecurity": 0,
+      "voice": 0,
+      "trunks": {
+        "trunk 10,20,60,70,99": 1,
+        "trunk 60,70": 8
+      },
+      "withDefaults": 21,
+      "unverified": {
+        "switchport.mode": 20
+      }
+    },
+    "vlans": [
+      "1 default (implicit)",
+      "10 DATI",
+      "20 VOCE (voice)",
+      "60 AP",
+      "70 WIFI",
+      "99 GESTIONE"
+    ],
+    "acls": [
+      "MGMT management 3: management",
+      "ACL-OSPITI extended 2: Vlan70 in"
+    ],
+    "objectGroups": [],
+    "routing": {
+      "statics": [
+        "0.0.0.0/0 10.23.99.1 (default-gateway)"
+      ],
+      "policyRoutes": [],
+      "ospf": [],
+      "bgp": null,
+      "routeMaps": [],
+      "prefixLists": []
+    },
+    "references": 88,
+    "coverage": {
+      "total": 592,
+      "understood": 431,
+      "ignored": 134,
+      "unknown": 27
+    }
+  },
+  "cisco-sb/sw-hq-acc3-c1300-48p-4.1-stack.txt": {
+    "hostname": "SW-HQ-ACC3",
+    "model": "Catalyst 1200/1300",
+    "version": "4.1.3.36",
+    "stack": [
+      "1",
+      "2"
+    ],
+    "management": "10.10.99.13 Vlan99",
+    "features": [
+      "acl",
+      "lag",
+      "stack",
+      "static-routes",
+      "svi",
+      "voice-vlan"
+    ],
+    "warnings": [
+      "unverified-defaults"
+    ],
+    "interfaces": {
+      "kinds": {
+        "lag": 1,
+        "physical": 104,
+        "svi": 6
+      },
+      "modes": {
+        "access": 96,
+        "trunk": 9
+      },
+      "shutdown": 18,
+      "uplinks": [
+        "TenGigabitEthernet1/0/1",
+        "TenGigabitEthernet1/0/2",
+        "TenGigabitEthernet1/0/3",
+        "TenGigabitEthernet1/0/4",
+        "TenGigabitEthernet2/0/1",
+        "TenGigabitEthernet2/0/2",
+        "TenGigabitEthernet2/0/3",
+        "TenGigabitEthernet2/0/4"
+      ],
+      "lags": [
+        "Port-channel1: GigabitEthernet1/0/48 GigabitEthernet2/0/48"
+      ],
+      "layer3": [
+        "Vlan99 10.10.99.13/24"
+      ],
+      "poe": {},
+      "dot1x": 0,
+      "portSecurity": 0,
+      "voice": 0,
+      "trunks": {
+        "trunk 10,20,60,70,99": 1,
+        "trunk 60,70": 8
+      },
+      "withDefaults": 21,
+      "unverified": {
+        "switchport.mode": 20
+      }
+    },
+    "vlans": [
+      "1 default (implicit)",
+      "10 DATI",
+      "20 VOCE (voice)",
+      "60 AP",
+      "70 WIFI",
+      "99 GESTIONE"
+    ],
+    "acls": [
+      "MGMT management 3: management",
+      "ACL-OSPITI extended 2: Vlan70 in"
+    ],
+    "objectGroups": [],
+    "routing": {
+      "statics": [
+        "0.0.0.0/0 10.10.99.250 (default-gateway)"
+      ],
+      "policyRoutes": [],
+      "ospf": [],
+      "bgp": null,
+      "routeMaps": [],
+      "prefixLists": []
+    },
+    "references": 88,
+    "coverage": {
+      "total": 592,
+      "understood": 431,
+      "ignored": 134,
+      "unknown": 27
+    }
+  },
+  "fortigate/fgt-br1-60f-fortios-7.0.conf": {
+    "hostname": "FGT-BR1",
+    "model": "FortiGate-60F",
+    "version": "7.0.15",
+    "management": "10.21.99.1 VL99-MGMT",
+    "features": [
+      "advpn",
+      "bgp",
+      "ipsec",
+      "nat",
+      "sdwan",
+      "static-routes"
+    ],
+    "warnings": [],
+    "interfaces": {
+      "kinds": {
+        "hard-switch": 1,
+        "physical": 2,
+        "subinterface": 2,
+        "tunnel": 2
+      },
+      "byContext": {
+        "root": 7
+      },
+      "shutdown": 0,
+      "lags": [
+        "internal: internal1 internal2 internal3 internal4 internal5"
+      ],
+      "layer3": [
+        "wan1 192.0.2.34/30",
+        "internal 10.21.10.1/24",
+        "VL20-VOICE 10.21.20.1/24",
+        "VL99-MGMT 10.21.99.1/24",
+        "HUB-WAN1 10.255.1.21/32",
+        "HUB-WAN2 10.255.2.21/32"
+      ],
+      "vlans": [
+        "VL20-VOICE 20 on internal",
+        "VL99-MGMT 99 on internal"
+      ]
+    },
+    "contexts": [
+      {
+        "name": "root",
+        "zones": [
+          "LAN: internal VL20-VOICE"
+        ],
+        "addresses": "9 + 1 built in",
+        "addressGroups": [
+          "GRP-CORPORATE 6",
+          "GRP-DNS 2"
+        ],
+        "services": "0 + 2 built in",
+        "serviceGroups": [],
+        "policies": [
+          "1. #1 LAN-verso-Internet LAN>virtual-wan-link LAN-BR1>all ALL accept nat log all",
+          "2. #2 LAN-verso-Corporate LAN>overlay LAN-BR1>GRP-CORPORATE ALL accept log all",
+          "3. #3 Corporate-verso-LAN overlay>LAN GRP-CORPORATE>LAN-BR1 ALL accept log all",
+          "4. #4 Gestione-verso-DNS VL99-MGMT>overlay LAN-BR1>GRP-DNS DNS accept log all"
+        ],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0  ad 1 sdwan virtual-wan-link"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": "65000 neighbors 2 groups 0 ranges 0 networks 1",
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [
+          "HUB-WAN1 static ike2 wan1 203.0.113.2 receiver phase2 1",
+          "HUB-WAN2 static ike2 wan2 198.51.100.10 receiver phase2 1"
+        ],
+        "sdwan": {
+          "enabled": true,
+          "zones": [
+            "virtual-wan-link",
+            "overlay"
+          ],
+          "members": [
+            "1 wan1 virtual-wan-link",
+            "2 wan2 virtual-wan-link",
+            "3 HUB-WAN1 overlay",
+            "4 HUB-WAN2 overlay"
+          ],
+          "healthChecks": [
+            "INTERNET members 1,2 sla 1",
+            "HUB members 3,4 sla 1"
+          ],
+          "rules": [
+            "1 CORPORATE sla",
+            "2 INTERNET priority"
+          ]
+        }
+      }
+    ],
+    "references": 46,
+    "coverage": {
+      "total": 448,
+      "understood": 321,
+      "ignored": 26,
+      "unknown": 101
+    }
+  },
+  "fortigate/fgt-br2-60f-fortios-7.4.conf": {
+    "hostname": "FGT-BR2",
+    "model": "FortiGate-60F",
+    "version": "7.4.4",
+    "management": "10.22.99.1 VL99-MGMT",
+    "features": [
+      "advpn",
+      "bgp",
+      "ipsec",
+      "nat",
+      "sdwan",
+      "static-routes"
+    ],
+    "warnings": [],
+    "interfaces": {
+      "kinds": {
+        "hard-switch": 1,
+        "physical": 2,
+        "subinterface": 2,
+        "tunnel": 2
+      },
+      "byContext": {
+        "root": 7
+      },
+      "shutdown": 0,
+      "lags": [
+        "internal: internal1 internal2 internal3 internal4 internal5"
+      ],
+      "layer3": [
+        "wan1 192.0.2.38/30",
+        "internal 10.22.10.1/24",
+        "VL20-VOICE 10.22.20.1/24",
+        "VL99-MGMT 10.22.99.1/24",
+        "HUB-WAN1 10.255.1.22/32",
+        "HUB-WAN2 10.255.2.22/32"
+      ],
+      "vlans": [
+        "VL20-VOICE 20 on internal",
+        "VL99-MGMT 99 on internal"
+      ]
+    },
+    "contexts": [
+      {
+        "name": "root",
+        "zones": [
+          "LAN: internal VL20-VOICE"
+        ],
+        "addresses": "9 + 1 built in",
+        "addressGroups": [
+          "GRP-CORPORATE 6",
+          "GRP-DNS 2"
+        ],
+        "services": "0 + 2 built in",
+        "serviceGroups": [],
+        "policies": [
+          "1. #1 LAN-verso-Internet LAN>underlay LAN-BR2>all ALL accept nat log all",
+          "2. #2 LAN-verso-Corporate LAN>overlay LAN-BR2>GRP-CORPORATE ALL accept log all",
+          "3. #3 Corporate-verso-LAN overlay>LAN GRP-CORPORATE>LAN-BR2 ALL accept log all",
+          "4. #4 Gestione-verso-DNS VL99-MGMT>overlay LAN-BR2>GRP-DNS DNS accept log all"
+        ],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0  ad 1 sdwan underlay"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": "65000 neighbors 2 groups 0 ranges 0 networks 1",
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [
+          "HUB-WAN1 static ike2 wan1 203.0.113.2 receiver phase2 1",
+          "HUB-WAN2 static ike2 wan2 198.51.100.10 receiver phase2 1"
+        ],
+        "sdwan": {
+          "enabled": true,
+          "zones": [
+            "underlay",
+            "overlay"
+          ],
+          "members": [
+            "1 wan1 underlay",
+            "2 wan2 underlay",
+            "3 HUB-WAN1 overlay",
+            "4 HUB-WAN2 overlay"
+          ],
+          "healthChecks": [
+            "INTERNET members 1,2 sla 1",
+            "HUB members 3,4 sla 1"
+          ],
+          "rules": [
+            "1 CORPORATE sla",
+            "2 INTERNET priority"
+          ]
+        }
+      }
+    ],
+    "references": 46,
+    "coverage": {
+      "total": 448,
+      "understood": 321,
+      "ignored": 26,
+      "unknown": 101
+    }
+  },
+  "fortigate/fgt-campus-200f-fortios-7.6.conf": {
+    "hostname": "FGT-CAMPUS",
+    "model": "FortiGate-200F",
+    "version": "7.6.3",
+    "management": "10.30.99.1 VL99-MGMT",
+    "features": [
+      "advpn",
+      "ipsec",
+      "lag",
+      "nat",
+      "static-routes"
+    ],
+    "warnings": [],
+    "interfaces": {
+      "kinds": {
+        "lag": 1,
+        "physical": 2,
+        "subinterface": 6,
+        "tunnel": 1
+      },
+      "byContext": {
+        "root": 10
+      },
+      "shutdown": 0,
+      "lags": [
+        "fortilink: x1 x2"
+      ],
+      "layer3": [
+        "wan1 192.0.2.42/29",
+        "fortilink 10.255.250.1/24",
+        "VL10-DATA 10.30.10.1/24",
+        "VL20-VOICE 10.30.20.1/24",
+        "VL60-AP 10.30.60.1/24",
+        "VL70-WIFI-CORP 10.30.70.1/24",
+        "VL71-WIFI-GUEST 10.30.71.1/24",
+        "VL99-MGMT 10.30.99.1/24",
+        "HUB-WAN1 10.255.1.30/32"
+      ],
+      "vlans": [
+        "VL10-DATA 10 on fortilink",
+        "VL20-VOICE 20 on fortilink",
+        "VL60-AP 60 on fortilink",
+        "VL70-WIFI-CORP 70 on fortilink",
+        "VL71-WIFI-GUEST 71 on fortilink",
+        "VL99-MGMT 99 on fortilink"
+      ]
+    },
+    "contexts": [
+      {
+        "name": "root",
+        "zones": [],
+        "addresses": "9 + 1 built in",
+        "addressGroups": [
+          "GRP-CORPORATE 6",
+          "GRP-DNS 2"
+        ],
+        "services": "0 + 4 built in",
+        "serviceGroups": [],
+        "policies": [
+          "1. #1 LAN-verso-Internet VL10-DATA,VL20-VOICE,VL70-WIFI-CORP>wan1,wan2 LAN-CAMPUS>all ALL accept nat log all",
+          "2. #2 Ospiti-verso-Internet VL71-WIFI-GUEST>wan1 all>all HTTP,HTTPS,DNS accept nat log all",
+          "3. #3 Campus-verso-Corporate VL10-DATA,VL99-MGMT>HUB-WAN1 LAN-CAMPUS>GRP-CORPORATE ALL accept log all"
+        ],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0 wan1 192.0.2.41 ad 10"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": null,
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [
+          "HUB-WAN1 static ike2 wan1 203.0.113.2 receiver phase2 1"
+        ],
+        "sdwan": null
+      }
+    ],
+    "references": 31,
+    "coverage": {
+      "total": 935,
+      "understood": 201,
+      "ignored": 64,
+      "unknown": 670
+    }
+  },
+  "fortigate/fgt-dc-120g-fortios-8.0-vdom.conf": {
+    "hostname": "FGT-DC",
+    "model": "FortiGate-120G",
+    "version": "8.0.0",
+    "management": "10.40.99.250 mgmt",
+    "features": [
+      "bgp",
+      "nat",
+      "static-routes",
+      "vdom"
+    ],
+    "warnings": [],
+    "interfaces": {
+      "kinds": {
+        "management": 1,
+        "physical": 3,
+        "vdom-link": 2
+      },
+      "byContext": {
+        "CORE": 2,
+        "EXTRANET": 3,
+        "root": 1
+      },
+      "shutdown": 0,
+      "lags": [],
+      "layer3": [
+        "mgmt 10.40.99.250/24",
+        "port1 203.0.113.130/28",
+        "port2 198.51.100.130/28",
+        "x1 10.40.0.1/24",
+        "vlce0 10.254.1.1/30",
+        "vlce1 10.254.1.2/30"
+      ],
+      "vlans": []
+    },
+    "contexts": [
+      {
+        "name": "root",
+        "zones": [],
+        "addresses": "0 + 0 built in",
+        "addressGroups": [],
+        "services": "0 + 0 built in",
+        "serviceGroups": [],
+        "policies": [],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0 mgmt 10.40.99.1 ad 10"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": null,
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [],
+        "sdwan": null
+      },
+      {
+        "name": "CORE",
+        "zones": [],
+        "addresses": "10 + 1 built in",
+        "addressGroups": [
+          "GRP-CORPORATE 6",
+          "GRP-DNS 2"
+        ],
+        "services": "0 + 4 built in",
+        "serviceGroups": [],
+        "policies": [
+          "1. #1 Corporate-verso-Server vlce0>x1 GRP-CORPORATE>NET-DC-SRV ALL accept log all",
+          "2. #2 Server-verso-Internet x1>vlce0 NET-DC-SRV>all HTTP,HTTPS,DNS accept log all"
+        ],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0 vlce0 10.254.1.2 ad 10"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": null,
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [],
+        "sdwan": null
+      },
+      {
+        "name": "EXTRANET",
+        "zones": [],
+        "addresses": "9 + 1 built in",
+        "addressGroups": [
+          "GRP-CORPORATE 6",
+          "GRP-DNS 2"
+        ],
+        "services": "0 + 1 built in",
+        "serviceGroups": [],
+        "policies": [
+          "1. #1 DC-verso-Internet vlce1>port1,port2 LAN-DC>all ALL accept nat log all"
+        ],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "10.40.0.0/16 vlce1 10.254.1.1 ad 10"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": "64512 neighbors 2 groups 0 ranges 0 networks 1",
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [],
+        "sdwan": null
+      }
+    ],
+    "references": 30,
+    "coverage": {
+      "total": 336,
+      "understood": 244,
+      "ignored": 35,
+      "unknown": 57
+    }
+  },
+  "fortigate/fgt-hq-100f-fortios-7.2-vdom.conf": {
+    "hostname": "FGT-HQ",
+    "model": "FortiGate-100F",
+    "version": "7.2.10",
+    "management": "10.10.99.249 mgmt",
+    "features": [
+      "advpn",
+      "bgp",
+      "ha",
+      "ipsec",
+      "lag",
+      "nat",
+      "ospf",
+      "pbr",
+      "static-routes",
+      "vdom",
+      "vip"
+    ],
+    "warnings": [
+      "policy-disabled OFFICE 510",
+      "policy-any-any OFFICE 510",
+      "policy-no-log OFFICE 524",
+      "policy-all-management OFFICE 524"
+    ],
+    "interfaces": {
+      "kinds": {
+        "lag": 1,
+        "management": 1,
+        "physical": 7,
+        "subinterface": 6,
+        "tunnel": 2,
+        "vdom-link": 2
+      },
+      "byContext": {
+        "DMZ": 2,
+        "OFFICE": 14,
+        "root": 3
+      },
+      "shutdown": 0,
+      "lags": [
+        "LAG-CORE: x1 x2"
+      ],
+      "layer3": [
+        "mgmt 10.10.99.249/24",
+        "wan1 203.0.113.2/29",
+        "wan2 198.51.100.10/29",
+        "port10 172.16.10.1/24",
+        "VL10-DATA 10.10.10.1/24",
+        "VL20-VOICE 10.10.20.1/24",
+        "VL50-GUEST 10.10.50.1/24",
+        "VL99-MGMT 10.10.99.250/24",
+        "VL100-SRV 10.10.100.1/24",
+        "VL900-CORE 10.10.254.1/29",
+        "ADVPN-WAN1 10.255.1.254/32",
+        "ADVPN-WAN2 10.255.2.254/32",
+        "vlod0 10.254.0.1/30",
+        "vlod1 10.254.0.2/30"
+      ],
+      "vlans": [
+        "VL10-DATA 10 on LAG-CORE",
+        "VL20-VOICE 20 on LAG-CORE",
+        "VL50-GUEST 50 on LAG-CORE",
+        "VL99-MGMT 99 on LAG-CORE",
+        "VL100-SRV 100 on LAG-CORE",
+        "VL900-CORE 900 on LAG-CORE"
+      ]
+    },
+    "contexts": [
+      {
+        "name": "root",
+        "zones": [],
+        "addresses": "0 + 0 built in",
+        "addressGroups": [],
+        "services": "0 + 0 built in",
+        "serviceGroups": [],
+        "policies": [],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0 mgmt 10.10.99.1 ad 10"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": null,
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [],
+        "sdwan": null
+      },
+      {
+        "name": "OFFICE",
+        "zones": [
+          "OVERLAY: ADVPN-WAN1 ADVPN-WAN2"
+        ],
+        "addresses": "12 + 1 built in",
+        "addressGroups": [
+          "GRP-CORPORATE 6",
+          "GRP-DNS 2"
+        ],
+        "services": "3 + 6 built in",
+        "serviceGroups": [
+          "GRP-WEB 3"
+        ],
+        "policies": [
+          "1. #1 LAN-verso-Internet VL10-DATA,VL20-VOICE>wan1,wan2 LAN-HQ>all ALL accept nat log all",
+          "2. #2 Ospiti-verso-Internet VL50-GUEST>wan1 NET-GUEST>all HTTP,HTTPS,DNS accept nat log all",
+          "3. #3 Filiali-tra-loro OVERLAY>OVERLAY GRP-CORPORATE>GRP-CORPORATE ALL accept log all",
+          "4. #4 Filiali-verso-Sede OVERLAY>VL10-DATA,VL100-SRV GRP-CORPORATE>LAN-HQ ALL accept log all",
+          "5. #5 Sede-verso-Filiali VL10-DATA,VL99-MGMT>OVERLAY LAN-HQ>GRP-CORPORATE ALL accept log all",
+          "6. #6 Posta-in-ingresso wan1>VL100-SRV all>VIP-MAIL-SMTP SMTP accept log all",
+          "7. #7 Sede-verso-DMZ VL10-DATA>vlod0 LAN-HQ>DMZ-WEB01 GRP-WEB accept log all",
+          "8. #8 Stampa-dalle-filiali OVERLAY>VL10-DATA GRP-CORPORATE>LAN-HQ STAMPA accept log all",
+          "9. #9 Test-temporaneo VL10-DATA>wan1 all>all ALL accept nat disabled log utm",
+          "10. #10 Assistenza-remota wan1>VL99-MGMT all>LAN-HQ SSH accept log disable",
+          "11. #11 Blocca-ospiti-verso-sede VL50-GUEST>VL10-DATA,VL100-SRV NET-GUEST>LAN-HQ ALL deny log all"
+        ],
+        "vips": [
+          "VIP-MAIL-SMTP 203.0.113.3 > 10.10.100.25"
+        ],
+        "ippools": [
+          "POOL-GUEST overload 203.0.113.4-203.0.113.4"
+        ],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0 wan1 203.0.113.1 ad 10",
+            "0.0.0.0/0 wan2 198.51.100.9 ad 20",
+            "172.16.10.0/24 vlod0 10.254.0.2 ad 10"
+          ],
+          "policyRoutes": [
+            "VL50-GUEST 10.10.50.0/24 -> 0.0.0.0/0 via 198.51.100.9 wan2"
+          ],
+          "ospf": [
+            "10.10.255.1 networks 10.10.254.0/29 area 0.0.0.0; interfaces VL900-CORE"
+          ],
+          "bgp": "65000 neighbors 0 groups 2 ranges 2 networks 2",
+          "routeMaps": [
+            "RM-VERSO-SPOKE 1"
+          ],
+          "prefixLists": [
+            "PL-SEDE 1"
+          ]
+        },
+        "ipsec": [
+          "ADVPN-WAN1 dynamic ike2 wan1 sender phase2 1",
+          "ADVPN-WAN2 dynamic ike2 wan2 sender phase2 1"
+        ],
+        "sdwan": null
+      },
+      {
+        "name": "DMZ",
+        "zones": [],
+        "addresses": "2 + 0 built in",
+        "addressGroups": [],
+        "services": "0 + 1 built in",
+        "serviceGroups": [],
+        "policies": [
+          "1. #1 Sede-verso-Web vlod1>port10 LAN-HQ>DMZ-WEB01 HTTPS accept log all"
+        ],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0 vlod1 10.254.0.1 ad 10"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": null,
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [],
+        "sdwan": null
+      }
+    ],
+    "references": 93,
+    "coverage": {
+      "total": 701,
+      "understood": 596,
+      "ignored": 43,
+      "unknown": 62
+    }
+  }
+}

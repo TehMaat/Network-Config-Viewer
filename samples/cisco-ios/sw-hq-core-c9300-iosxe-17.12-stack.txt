@@ -104,30 +104,52 @@ vlan 50
 vlan 60
  name AP
 !
+vlan 70
+ name WIFI-OSPITI
+!
 vlan 99
  name GESTIONE
 !
 vlan 100
  name SERVER
 !
+vlan 900
+ name TRANSITO-FGT
+!
 vlan 999
  name PARCHEGGIO
 !
 lldp run
 !
+object-group network OG-DC
+ description Servizi del datacenter
+ host 10.40.100.53
+ 10.40.100.0 255.255.255.0
+!
+object-group network OG-RETI-INTERNE
+ description Reti interne di sede e filiali
+ 10.10.0.0 255.255.0.0
+ 10.20.0.0 255.252.0.0
+ group-object OG-DC
+!
+object-group service OG-SERVIZI-WEB
+ tcp eq www
+ tcp eq 443
+ udp eq 443
+!
 interface Port-channel1
  description FGT-HQ-LAG-CORE
- switchport trunk allowed vlan 10,20,50,60,99,100
+ switchport trunk allowed vlan 10,20,50,60,99,100,900
  switchport mode trunk
 !
 interface Port-channel10
  description SW-HQ-ACC1
- switchport trunk allowed vlan 10,20,50,60,99
+ switchport trunk allowed vlan 10,20,50,60,70,99
  switchport mode trunk
 !
 interface Port-channel11
  description SW-HQ-ACC2
- switchport trunk allowed vlan 10,20,60,99
+ switchport trunk allowed vlan 10,20,60,70,99
  switchport mode trunk
 !
 interface GigabitEthernet0/0
@@ -140,24 +162,28 @@ interface GigabitEthernet1/0/1
  description SRV-101
  switchport access vlan 100
  switchport mode access
+ ip access-group ACL-SERVER-IN in
  spanning-tree portfast
 !
 interface GigabitEthernet1/0/2
  description SRV-102
  switchport access vlan 100
  switchport mode access
+ ip access-group ACL-SERVER-IN in
  spanning-tree portfast
 !
 interface GigabitEthernet1/0/3
  description SRV-103
  switchport access vlan 100
  switchport mode access
+ ip access-group ACL-SERVER-IN in
  spanning-tree portfast
 !
 interface GigabitEthernet1/0/4
  description SRV-104
  switchport access vlan 100
  switchport mode access
+ ip access-group ACL-SERVER-IN in
  spanning-tree portfast
 !
 interface GigabitEthernet1/0/5
@@ -458,13 +484,13 @@ interface GigabitEthernet1/0/48
 !
 interface TenGigabitEthernet1/1/1
  description FGT-HQ-x1
- switchport trunk allowed vlan 10,20,50,60,99,100
+ switchport trunk allowed vlan 10,20,50,60,99,100,900
  switchport mode trunk
  channel-group 1 mode active
 !
 interface TenGigabitEthernet1/1/2
  description SW-HQ-ACC1-Te1/1/1
- switchport trunk allowed vlan 10,20,50,60,99
+ switchport trunk allowed vlan 10,20,50,60,70,99
  switchport mode trunk
  channel-group 10 mode active
 !
@@ -802,13 +828,13 @@ interface GigabitEthernet2/0/48
 !
 interface TenGigabitEthernet2/1/1
  description FGT-HQ-x2
- switchport trunk allowed vlan 10,20,50,60,99,100
+ switchport trunk allowed vlan 10,20,50,60,99,100,900
  switchport mode trunk
  channel-group 1 mode active
 !
 interface TenGigabitEthernet2/1/2
  description SW-HQ-ACC1-Te2/1/1
- switchport trunk allowed vlan 10,20,50,60,99
+ switchport trunk allowed vlan 10,20,50,60,70,99
  switchport mode trunk
  channel-group 10 mode active
 !
@@ -1130,13 +1156,13 @@ interface GigabitEthernet3/0/46
 !
 interface GigabitEthernet3/0/47
  description SW-HQ-ACC2-Gi1/1/1
- switchport trunk allowed vlan 10,20,60,99
+ switchport trunk allowed vlan 10,20,60,70,99
  switchport mode trunk
  channel-group 11 mode active
 !
 interface GigabitEthernet3/0/48
  description SW-HQ-ACC2-Gi1/1/2
- switchport trunk allowed vlan 10,20,60,99
+ switchport trunk allowed vlan 10,20,60,70,99
  switchport mode trunk
  channel-group 11 mode active
 !
@@ -1162,24 +1188,72 @@ interface AppGigabitEthernet2/0/1
 !
 interface AppGigabitEthernet3/0/1
 !
+interface Loopback0
+ description ROUTER-ID
+ ip address 10.10.255.2 255.255.255.255
+ ip ospf 1 area 0
+!
 interface Vlan1
  no ip address
  shutdown
+!
+interface Vlan60
+ description AP
+ ip address 10.10.60.1 255.255.255.0
+ ip helper-address 10.40.100.67
+!
+interface Vlan70
+ description WIFI-OSPITI
+ ip address 10.10.70.1 255.255.255.0
+ ip helper-address 10.40.100.67
+ ip access-group ACL-OSPITI-IN in
+ ip policy route-map PBR-OSPITI
 !
 interface Vlan99
  description GESTIONE
  ip address 10.10.99.2 255.255.255.0
 !
+interface Vlan900
+ description TRANSITO-FGT-HQ
+ ip address 10.10.254.2 255.255.255.248
+ ip ospf cost 10
+!
+router ospf 1
+ router-id 10.10.255.2
+ passive-interface default
+ no passive-interface Vlan900
+ network 10.10.60.0 0.0.0.255 area 0
+ network 10.10.70.0 0.0.0.255 area 0
+ network 10.10.254.0 0.0.0.7 area 0
+ redistribute static subnets route-map RM-STATICHE-OSPF
+!
 ip forward-protocol nd
 no ip http server
 no ip http secure-server
-ip route 0.0.0.0 0.0.0.0 10.10.99.250
+ip route 0.0.0.0 0.0.0.0 10.10.254.1 250 name DEFAULT-RISERVA
+ip route 10.99.0.0 255.255.0.0 Null0 name LABORATORIO-SCARTATO
 !
-ip access-list extended ACL-SERVER-IN
- 10 permit tcp 10.10.0.0 0.0.255.255 10.10.100.0 0.0.0.255 eq 443
- 20 permit tcp 10.10.0.0 0.0.255.255 10.10.100.0 0.0.0.255 eq 445
- 30 permit udp any host 10.40.100.53 eq domain
+ip access-list extended ACL-OSPITI-IN
+ 10 permit udp 10.10.70.0 0.0.0.255 host 10.40.100.53 eq domain
+ 20 deny   ip 10.10.70.0 0.0.0.255 object-group OG-RETI-INTERNE log
+ 30 permit object-group OG-SERVIZI-WEB 10.10.70.0 0.0.0.255 any
  40 deny   ip any any log
+ip access-list extended ACL-PBR-OSPITI
+ 10 permit ip 10.10.70.0 0.0.0.255 any
+ip access-list extended ACL-SERVER-IN
+ 10 permit tcp 10.10.100.0 0.0.0.255 eq 443 10.10.0.0 0.0.255.255
+ 20 permit tcp 10.10.100.0 0.0.0.255 eq 445 10.10.0.0 0.0.255.255
+ 30 permit udp 10.10.100.0 0.0.0.255 host 10.40.100.53 eq domain
+ 40 deny   ip any any log
+!
+ip prefix-list PL-STATICHE-OSPF seq 10 permit 10.99.0.0/16
+!
+route-map PBR-OSPITI permit 10
+ match ip address ACL-PBR-OSPITI
+ set ip next-hop 10.10.254.1
+!
+route-map RM-STATICHE-OSPF permit 10
+ match ip address prefix-list PL-STATICHE-OSPF
 !
 banner exec ^C
 SW-HQ-CORE - centro stella sede (stack di 3 C9300-48P)

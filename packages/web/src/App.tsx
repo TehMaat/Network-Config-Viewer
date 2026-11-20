@@ -2,7 +2,7 @@ import { AppShell, Center, Stack, Text } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import { useDisclosure } from '@mantine/hooks';
 import { IconUpload } from '@tabler/icons-react';
-import { DEFAULT_LIMITS } from '@ncv/core';
+import { DEFAULT_LIMITS, type ModelHints } from '@ncv/core';
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from './components/AppHeader';
@@ -33,6 +33,7 @@ export function App() {
           bytes: new Uint8Array(message.bytes),
           folds: message.structure.folds,
           outline: message.structure.outline,
+          model: message.structure.model,
         });
         const entry: TextEntry = {
           type: 'text',
@@ -69,6 +70,7 @@ export function App() {
         contentStore.update(message.id, {
           folds: message.structure.folds,
           outline: message.structure.outline,
+          model: message.structure.model,
         });
         dispatch({
           type: 'structure',
@@ -158,14 +160,16 @@ export function App() {
     const effective = effectiveDetection(entry.detection, overrides);
     const family = effectiveFamily(effective);
     const os = effective.os.value;
-    const previousOs = effectiveDetection(entry.detection, entry.overrides).os.value;
-    // A different syntax family (or Small Business dialect) needs a new structure.
-    if (
-      family !== entry.family ||
-      (family === 'indent' && (os === 'cisco-sb') !== (previousOs === 'cisco-sb'))
-    ) {
-      client.current?.restructure(id, family, os);
-    }
+    // Every correction can change the structure (syntax family, Small Business dialect) or
+    // the model (kind, system, version, model, hostname): the worker rebuilds both.
+    const hints: ModelHints = {
+      ...(effective.kind.value ? { kind: effective.kind.value } : {}),
+      ...(os && !effective.encrypted ? { os } : {}),
+      ...(effective.version.value ? { version: effective.version.value } : {}),
+      ...(effective.model.value ? { model: effective.model.value } : {}),
+      ...(effective.hostname.value ? { hostname: effective.hostname.value } : {}),
+    };
+    client.current?.restructure(id, family, hints, os);
   };
 
   const selected = state.files.find((f) => f.id === state.selectedId) ?? null;

@@ -75,6 +75,7 @@ interface vlan 60
 !
 interface vlan 70
  name WIFI
+ service-acl input ACL-OSPITI
 !
 interface vlan 99
  name GESTIONE
@@ -128,9 +129,10 @@ interface GigabitEthernet1/0/9
 !
 interface GigabitEthernet1/0/10
  description AP-110
- switchport mode trunk
- switchport trunk native vlan 60
- switchport trunk allowed vlan add 60,70
+ switchport mode general
+ switchport general allowed vlan add 60 untagged
+ switchport general allowed vlan add 70 tagged
+ switchport general pvid 60
 !
 interface GigabitEthernet1/0/11
  description PDL-111
@@ -179,9 +181,10 @@ interface GigabitEthernet1/0/19
 !
 interface GigabitEthernet1/0/20
  description AP-120
- switchport mode trunk
- switchport trunk native vlan 60
- switchport trunk allowed vlan add 60,70
+ switchport mode general
+ switchport general allowed vlan add 60 untagged
+ switchport general allowed vlan add 70 tagged
+ switchport general pvid 60
 !
 interface GigabitEthernet1/0/21
  description PDL-121

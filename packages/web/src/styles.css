@@ -132,3 +132,190 @@ body {
 .ncv-link-button:hover {
   text-decoration: underline;
 }
+
+/* ---- Device views ------------------------------------------------------------------- */
+
+:root {
+  --ncv-panel-bg: #f1f3f5;
+  --ncv-port-down: #dee2e6;
+  --ncv-port-l3: #343a40;
+  --ncv-port-l3-text: #ffffff;
+  --ncv-port-stripe: #f8f9fa;
+  --ncv-unknown-line: rgba(250, 176, 5, 0.13);
+  --ncv-unknown-border: rgba(230, 150, 0, 0.85);
+  --ncv-ref: #1c5fb8;
+}
+
+[data-mantine-color-scheme='dark'] {
+  --ncv-panel-bg: #25262b;
+  --ncv-port-down: #3b3d42;
+  --ncv-port-l3: #dee2e6;
+  --ncv-port-l3-text: #1a1b1e;
+  --ncv-port-stripe: #2c2e33;
+  --ncv-unknown-line: rgba(250, 176, 5, 0.1);
+  --ncv-unknown-border: rgba(250, 176, 5, 0.7);
+  --ncv-ref: #8ab4f8;
+}
+
+.ncv-file-header-compact {
+  max-height: none;
+}
+
+.ncv-tabs {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex-shrink: 0;
+}
+
+.ncv-tabs-grow {
+  flex: 1;
+}
+
+.ncv-tab-list {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 0 var(--mantine-spacing-md);
+  flex-shrink: 0;
+}
+
+.ncv-tab-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.ncv-config-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ncv-config-panel[hidden] {
+  display: none;
+}
+
+.ncv-table-scroll {
+  overflow: auto;
+}
+
+.ncv-row[data-selected] td {
+  background: var(--mantine-primary-color-light);
+}
+
+.ncv-row[data-state='dim'] {
+  opacity: 0.45;
+}
+
+.ncv-row[data-state='match'] td:first-child {
+  box-shadow: inset 3px 0 0 var(--mantine-color-teal-6);
+}
+
+.ncv-sort {
+  font-weight: inherit;
+}
+
+.ncv-panel-scroll {
+  overflow-x: auto;
+}
+
+.ncv-panel {
+  display: block;
+}
+
+.ncv-panel-body {
+  fill: var(--ncv-panel-bg);
+  stroke: var(--mantine-color-default-border);
+}
+
+.ncv-port {
+  cursor: pointer;
+  outline: none;
+}
+
+.ncv-port-box {
+  stroke: rgba(0, 0, 0, 0.25);
+  stroke-width: 1;
+}
+
+.ncv-port-selected,
+.ncv-port:focus-visible .ncv-port-box {
+  stroke: var(--mantine-primary-color-filled);
+  stroke-width: 2.5;
+}
+
+.ncv-port-label {
+  fill: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--mantine-font-family-monospace);
+  pointer-events: none;
+}
+
+.ncv-port-label-down {
+  fill: var(--mantine-color-dimmed);
+}
+
+.ncv-port-label-l3 {
+  fill: var(--ncv-port-l3-text);
+}
+
+.ncv-port-cross {
+  stroke: var(--mantine-color-dimmed);
+  stroke-width: 1.2;
+}
+
+.ncv-mark-poe {
+  fill: #fab005;
+  stroke: #ffffff;
+  stroke-width: 0.8;
+}
+
+.ncv-mark-dot1x {
+  fill: #fa5252;
+  stroke: #ffffff;
+  stroke-width: 0.8;
+}
+
+.ncv-mark-voice {
+  fill: #be4bdb;
+  stroke: #ffffff;
+  stroke-width: 0.8;
+}
+
+.ncv-mark-lag {
+  fill: #15aabf;
+  stroke: #ffffff;
+  stroke-width: 0.8;
+}
+
+.ncv-legend-trunk {
+  border-radius: 3px;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--mantine-color-blue-6) 0 3px,
+    var(--mantine-color-teal-7) 3px 6px
+  );
+}
+
+/* Config view: lines no driver understood, and names that point to their definition. */
+.ncv-line-unknown {
+  background-color: var(--ncv-unknown-line);
+  box-shadow: inset 3px 0 0 var(--ncv-unknown-border);
+}
+
+.ncv-ref {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  color: var(--ncv-ref);
+}
+
+.ncv-ref:hover {
+  text-decoration-style: solid;
+}
+
+.ncv-row[data-group-start] td {
+  border-top: 2px solid var(--mantine-color-default-border);
+}

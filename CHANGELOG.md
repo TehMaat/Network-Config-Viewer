@@ -20,9 +20,28 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
 - Config di esempio sintetiche: FortiOS 7.0, 7.2, 7.4, 7.6 e 8.0, Catalyst 2960, 3850, 9200 e 9300, Cisco SG350, CBS350 e Catalyst 1300, output di comandi show ([#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4)).
 - Test automatici su GitHub Actions a ogni pull request: lint, tipi, formattazione, test unitari, build, immagine Docker e test nel browser sul container ([#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4)).
 - Scelta del tema nell'intestazione: chiaro, scuro o come il sistema, con la scelta salvata nel browser e applicata già all'avvio, senza lampi del tema sbagliato ([#7](https://github.com/TehMaat/Network-Config-Viewer/issues/7)).
+- Fase 1, lettura degli switch Cisco ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)):
+  - modello neutro degli apparati, in cui ogni elemento ricorda le righe della config da cui viene;
+  - driver per Cisco IOS, IOS-XE e Small Business: interfacce, VLAN, trunk, modalità `general`, port-channel, stack e posizione delle porte, SVI, PoE, 802.1X e MAB, port security, VLAN voce, ACL e object-group con i punti in cui sono applicate (interfacce, VTY, SNMP, route-map, accesso di gestione), rotte statiche, policy route, OSPF, BGP, route-map e prefix-list;
+  - valori di default per marca indicati come tali, con quelli ancora incerti dei Small Business segnati "da verificare"; avviso quando le VLAN non sono nella config per via del VTP;
+  - ogni riga classificata come compresa, ignorata di proposito o sconosciuta, con la copertura e l'elenco delle sezioni non interpretate;
+  - nomi nella config collegati alla loro definizione (VLAN, ACL, object-group, interfacce, route-map, prefix-list, peer-group).
+  - viste di ogni switch: riepilogo con la copertura e le sezioni non interpretate; pannello delle porte di ogni membro dello stack, con colori per VLAN, trunk a strisce, porte spente, L3, PoE, 802.1X/MAB, VLAN voce e port-channel, filtro per VLAN e dettaglio della porta; VLAN con porte e gateway; ACL con la ricerca per IP anche tramite subnet, object-group e any; routing con le rotte ricavate dalla config, OSPF, BGP, policy route, route-map e prefix-list;
+  - config collegata: righe non interpretate evidenziate, nomi cliccabili verso la definizione con "Torna indietro", e da ogni elemento delle viste si salta alle sue righe;
+  - tabelle con ordinamento, filtro e righe virtualizzate, con TanStack Table e TanStack Virtual (licenza MIT).
+- Fase 1, lettura dei FortiGate ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)):
+  - driver FortiOS 7.0–8.0, con le VDOM come contesti separati: interfacce (fisiche, aggregate, VLAN, tunnel, VDOM link, switch hardware), zone, indirizzi, gruppi con esclusioni, servizi, VIP, IP pool, policy nell'ordine reale di valutazione, rotte statiche anche verso le zone SD-WAN, policy route, BGP con gruppi e range dinamici, OSPF, route-map, prefix-list, VPN IPsec con fase 1 e fase 2 e ruolo ADVPN, SD-WAN con zone, membri, health check, SLA e regole;
+  - valori di default di FortiOS indicati come tali; quelli incerti (versione IKE, proposte, gruppi DH) segnati "da verificare";
+  - oggetti predefiniti (all, ALL, HTTP, HTTPS, DNS…) aggiunti quando le policy li usano;
+  - avvisi sulle policy disattivate, senza log, che permettono tutto o che aprono servizi di gestione a qualsiasi sorgente;
+  - certificati e messaggi sostitutivi ignorati di proposito nella copertura;
+  - viste di ogni FortiGate, con la scelta della VDOM: riepilogo, interfacce e zone, VLAN, policy (lista unica o per coppia di interfacce, ricerca per IP tramite indirizzi, subnet, gruppi, VIP e all, oggetti espansi fino agli IP, avvisi), oggetti con "dove è usato", routing, VPN IPsec, SD-WAN con la regola implicita;
+  - test con una config da 10.000 policy: la tabella resta fluida durante lo scorrimento.
 
 ### Modificato
 
+- Config di esempio FortiGate arricchite con servizi personalizzati e gruppi di servizi, OSPF verso il centro stella, policy route, prefix-list e route-map per BGP, la VPN del campus e policy che fanno scattare gli avvisi ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
+- Config di esempio Cisco arricchite con OSPF, policy route, ACL applicate a interfacce, VTY e SNMP, object-group, 802.1X e MAB, PoE, port security con MAC sticky, VTP in modalità server con le VLAN solo nello show e modalità `general` dei Small Business; per ogni config c'è il riassunto atteso del modello in `samples/expected-models.json`, verificato dai test ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
 - Screenshot della documentazione rifatti con il nuovo selettore del tema, in tema chiaro e in tema scuro; il README mostra entrambi ([#7](https://github.com/TehMaat/Network-Config-Viewer/issues/7)).
 - Intestazione più compatta sugli schermi stretti: il nome dell'app compare da 768 px e sotto i 576 px il pulsante "Aggiungi file" diventa un'icona ([#7](https://github.com/TehMaat/Network-Config-Viewer/issues/7)).
 - README e studio rimandano alle regole di lavoro e al registro delle modifiche ([#2](https://github.com/TehMaat/Network-Config-Viewer/issues/2)).

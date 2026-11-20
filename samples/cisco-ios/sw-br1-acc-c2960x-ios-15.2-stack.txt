@@ -37,8 +37,6 @@ switch 2 provision ws-c2960x-48fpd-l
 !
 ip domain-name esempio.example
 ip name-server 10.40.100.53 10.40.100.54
-vtp domain ESEMPIO
-vtp mode transparent
 !
 crypto pki trustpoint TP-self-signed-1203948576
  enrollment selfsigned
@@ -70,18 +68,6 @@ crypto pki certificate chain TP-self-signed-1203948576
 !
 spanning-tree mode rapid-pvst
 spanning-tree extend system-id
-!
-vlan 10
- name DATI
-!
-vlan 20
- name VOCE
-!
-vlan 99
- name GESTIONE
-!
-vlan 999
- name PARCHEGGIO
 !
 lldp run
 !
