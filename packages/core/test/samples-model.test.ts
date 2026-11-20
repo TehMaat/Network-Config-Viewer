@@ -7,6 +7,7 @@ import {
   formatPrefix,
   formatVlanSet,
   hasDriver,
+  modelHints,
   splitLines,
   type DeviceModel,
   type Element,
@@ -22,7 +23,7 @@ function modelOf(rel: string): { lines: string[]; model: DeviceModel | null } {
   const text = readSampleText(rel);
   const lines = splitLines(text);
   const analysis = analyzeText(text);
-  return { lines, model: buildModel(lines, analysis.tree, analysis.detection) };
+  return { lines, model: buildModel(lines, analysis.tree, modelHints(analysis.detection)) };
 }
 
 const count = (values: string[]) => {

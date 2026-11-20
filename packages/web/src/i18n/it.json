@@ -179,6 +179,307 @@
     "title": "Backup cifrato",
     "message": "Questo backup FortiGate è cifrato con una password: si leggono solo l'intestazione e le informazioni sul modello. Esporta di nuovo il backup senza cifratura per vederne il contenuto."
   },
+  "tabs": {
+    "summary": "Riepilogo",
+    "ports": "Porte",
+    "vlans": "VLAN",
+    "acls": "ACL",
+    "routing": "Routing",
+    "config": "Config"
+  },
+  "table": {
+    "filter": "Filtra la tabella",
+    "count_one": "{{count}} riga",
+    "count_other": "{{count}} righe",
+    "countFiltered": "{{count}} di {{total}}",
+    "noMatch": "Nessuna riga corrisponde al filtro",
+    "empty": "Nessun elemento"
+  },
+  "source": {
+    "notWritten": "Non scritto nella config",
+    "line": "Riga {{line}}",
+    "lines": "Righe {{first}}–{{last}}",
+    "default": "Valore di default: non è scritto nella config, l'apparato lo usa quando manca.",
+    "defaultUnverified": "Valore di default da verificare: per questa marca e versione non è ancora confermato su apparati reali.",
+    "toCheck": "da verificare"
+  },
+  "summary": {
+    "device": "Apparato",
+    "management": "IP di gestione",
+    "vtp": "Modalità VTP",
+    "counts": "In numeri",
+    "count": {
+      "ports": "porte",
+      "portsDown": "porte spente",
+      "lags": "port-channel",
+      "svis": "interfacce VLAN",
+      "vlans": "VLAN",
+      "acls": "ACL",
+      "statics": "rotte statiche",
+      "bgpNeighbors": "vicini BGP"
+    },
+    "features": "Funzioni in uso",
+    "warnings": "Da controllare"
+  },
+  "feature": {
+    "stack": "Stack",
+    "vdom": "VDOM",
+    "lag": "Port-channel",
+    "poe": "PoE",
+    "dot1x": "802.1X / MAB",
+    "port-security": "Port security",
+    "voice-vlan": "VLAN voce",
+    "svi": "Interfacce VLAN",
+    "ip-routing": "Routing IP",
+    "static-routes": "Rotte statiche",
+    "ospf": "OSPF",
+    "bgp": "BGP",
+    "pbr": "Policy route",
+    "acl": "ACL",
+    "vtp": "VTP",
+    "sdwan": "SD-WAN",
+    "ipsec": "VPN IPsec",
+    "advpn": "ADVPN",
+    "ha": "Alta affidabilità",
+    "nat": "NAT",
+    "vip": "VIP"
+  },
+  "warning": {
+    "vtp-vlans-not-in-config": "Le VLAN non sono scritte nella config: con il VTP in modalità server o client stanno nel file vlan.dat dello switch. Per vederne i nomi carica l'output di show vlan brief.",
+    "unverified-defaults": "Alcuni valori di default di questo sistema sono ancora da verificare: sono segnati nelle viste."
+  },
+  "coverage": {
+    "title": "Copertura della lettura",
+    "summary": "{{understood}}% compreso, {{ignored}}% ignorato di proposito, {{unknown}}% non interpretato, su {{total}} righe.",
+    "understood_one": "{{count}} riga compresa",
+    "understood_other": "{{count}} righe comprese",
+    "ignored_one": "{{count}} riga ignorata di proposito",
+    "ignored_other": "{{count}} righe ignorate di proposito",
+    "unknown_one": "{{count}} riga non interpretata",
+    "unknown_other": "{{count}} righe non interpretate",
+    "explain": "Le righe non interpretate sono evidenziate nella scheda Config: non entrano nelle viste, ma restano nel file così come sono.",
+    "sections": "Sezioni non interpretate",
+    "section": "Sezione",
+    "lines": "Righe",
+    "firstLine": "Prima riga",
+    "showAll_one": "Mostra {{count}} sezione",
+    "showAll_other": "Mostra tutte le {{count}} sezioni",
+    "showFewer": "Mostra meno sezioni"
+  },
+  "ports": {
+    "member": "Membro {{member}}",
+    "state": {
+      "up": "attiva",
+      "down": "spenta"
+    },
+    "mode": {
+      "access": "access",
+      "trunk": "trunk",
+      "dynamic-auto": "dynamic auto (DTP)",
+      "dynamic-desirable": "dynamic desirable (DTP)",
+      "general": "general",
+      "routed": "L3"
+    },
+    "kind": {
+      "physical": "porta",
+      "lag": "port-channel",
+      "svi": "interfaccia VLAN",
+      "loopback": "loopback",
+      "tunnel": "tunnel",
+      "subinterface": "sottointerfaccia",
+      "hard-switch": "switch hardware",
+      "vdom-link": "VDOM link",
+      "management": "gestione",
+      "virtual": "virtuale",
+      "other": "altro"
+    },
+    "vlanShort": "VLAN {{vlan}}",
+    "voiceShort": "voce {{vlan}}",
+    "trunkVlans": "{{vlans}} (nativa {{native}})",
+    "untaggedShort": "untagged {{vlans}}",
+    "taggedShort": "tagged {{vlans}}",
+    "filterVlan": "Evidenzia una VLAN",
+    "allVlans": "Tutte le VLAN",
+    "noPanel": "Nessuna porta con una posizione riconosciuta: il pannello non si può disegnare.",
+    "table": "Tutte le interfacce",
+    "col": {
+      "port": "Porta",
+      "description": "Descrizione",
+      "state": "Stato",
+      "mode": "Modalità",
+      "vlan": "VLAN",
+      "voice": "Voce",
+      "lag": "Port-channel",
+      "poe": "PoE",
+      "dot1x": "802.1X",
+      "ip": "IP"
+    },
+    "legend": {
+      "trunk": "trunk",
+      "l3": "L3",
+      "down": "spenta",
+      "poe": "PoE",
+      "dot1x": "802.1X / MAB",
+      "voice": "VLAN voce",
+      "lag": "port-channel"
+    },
+    "detail": {
+      "accessVlan": "VLAN access",
+      "nativeVlan": "VLAN nativa",
+      "allowed": "VLAN permesse",
+      "untagged": "VLAN untagged",
+      "none": "nessuna",
+      "dtp": "DTP",
+      "nonegotiate": "negoziazione disattivata",
+      "members": "Membri",
+      "portSecurity": "Port security",
+      "portSecurityMax_one": "massimo {{count}} MAC",
+      "portSecurityMax_other": "massimo {{count}} MAC",
+      "sticky": "MAC sticky",
+      "stp": "Spanning tree",
+      "speed": "Velocità / duplex",
+      "aclIn": "ACL in ingresso",
+      "aclOut": "ACL in uscita",
+      "helper": "Inoltro DHCP",
+      "pbr": "Policy route",
+      "secondary": "{{ip}} (secondario)"
+    }
+  },
+  "vlans": {
+    "col": {
+      "id": "ID",
+      "name": "Nome",
+      "gateway": "Gateway qui"
+    },
+    "implicit": "non nella config",
+    "voice": "voce",
+    "role": {
+      "access": "Porte access",
+      "voice": "Porte voce",
+      "untagged": "Untagged",
+      "tagged": "Tagged sui trunk"
+    },
+    "title": "VLAN {{id}}",
+    "titleNamed": "VLAN {{id}} · {{name}}"
+  },
+  "acls": {
+    "col": {
+      "name": "Nome",
+      "type": "Tipo",
+      "entries": "Voci",
+      "applied": "Applicata a",
+      "matches": "Voci con l'IP",
+      "seq": "N.",
+      "action": "Azione",
+      "protocol": "Protocollo",
+      "source": "Sorgente",
+      "sourcePort": "Porta sorg.",
+      "destination": "Destinazione",
+      "destinationPort": "Porta dest.",
+      "options": "Opzioni",
+      "groupEntries": "Contenuto",
+      "expanded": "Indirizzi espansi",
+      "usedBy": "Usato da"
+    },
+    "type": {
+      "standard": "standard",
+      "extended": "estesa",
+      "mac": "MAC",
+      "ipv6": "IPv6",
+      "management": "gestione"
+    },
+    "notApplied": "non applicata",
+    "searchIp": "Cerca un IP nelle ACL",
+    "searchIpHelp": "Trova le voci che contengono l'IP, anche tramite subnet e object-group. Quelle che lo contengono solo tramite any restano in secondo piano.",
+    "searchIpPlaceholder": "es. 10.10.70.25",
+    "notAnIp": "Non è un indirizzo IPv4",
+    "none": "Nessuna ACL in questa config.",
+    "binding": {
+      "interface": "{{name}} {{direction}}",
+      "line": "linea {{line}}",
+      "snmp": "SNMP",
+      "routeMap": "route-map {{name}}",
+      "management": "accesso di gestione"
+    },
+    "direction": {
+      "in": "in ingresso",
+      "out": "in uscita"
+    },
+    "match": {
+      "any": "tramite any",
+      "host": "esatto",
+      "subnet": "nella subnet",
+      "group": "nel gruppo"
+    },
+    "objectGroups": "Object-group",
+    "groupType": {
+      "network": "rete",
+      "service": "servizio"
+    }
+  },
+  "routing": {
+    "col": {
+      "prefix": "Destinazione",
+      "type": "Origine",
+      "gateway": "Gateway",
+      "interface": "Interfaccia",
+      "distance": "Distanza",
+      "name": "Nome",
+      "routeMap": "Route-map",
+      "rules": "Regole",
+      "area": "Area",
+      "passive": "Passiva",
+      "cost": "Costo",
+      "description": "Descrizione",
+      "state": "Stato",
+      "seq": "N.",
+      "action": "Azione",
+      "match": "Condizioni (match)",
+      "set": "Azioni (set)"
+    },
+    "type": {
+      "connected": "connessa",
+      "static": "statica",
+      "default-gateway": "default gateway"
+    },
+    "inactive": "non attiva",
+    "configRoutes": "Rotte ricavate dalla config",
+    "configRoutesHelp": "Reti delle interfacce e rotte statiche. Le rotte imparate con OSPF e BGP si vedono caricando la tabella di routing dagli show.",
+    "lookup": "Trova la rotta per un IP",
+    "noRoute": "Nessuna rotta della config porta a {{ip}}.",
+    "policyRoutes": "Policy route",
+    "ospf": {
+      "title": "OSPF {{process}}",
+      "process": "processo {{process}}",
+      "area": "area {{area}}",
+      "cost": "costo {{cost}}",
+      "passiveDefault": "Interfacce passive di default",
+      "networks": "Reti"
+    },
+    "routerId": "Router ID",
+    "redistribute": "Ridistribuzione",
+    "yes": "sì",
+    "no": "no",
+    "bgp": {
+      "title": "BGP AS {{asn}}",
+      "neighbor": "Vicino o gruppo",
+      "remoteAs": "AS remoto",
+      "group": "Gruppo",
+      "in": "Filtri in ingresso",
+      "out": "Filtri in uscita",
+      "shutdown": "disattivato",
+      "networks": "Reti annunciate",
+      "groups": "Gruppi"
+    },
+    "routeMaps": "Route-map",
+    "prefixLists": "Prefix-list"
+  },
+  "config": {
+    "followLink": "Vai alla definizione (riga {{line}})",
+    "back": "Torna indietro",
+    "highlightUnknown_one": "Evidenzia la riga non interpretata ({{count}})",
+    "highlightUnknown_other": "Evidenzia le righe non interpretate ({{count}})"
+  },
   "codemirror": {
     "Find": "Trova",
     "Replace": "Sostituisci",

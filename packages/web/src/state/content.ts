@@ -1,4 +1,4 @@
-import type { Outline } from '@ncv/core';
+import type { DeviceModel, Outline } from '@ncv/core';
 
 /** The heavy data of a file, kept outside React state to avoid copying it around. */
 export interface FileContent {
@@ -6,6 +6,8 @@ export interface FileContent {
   bytes: Uint8Array;
   folds: Int32Array;
   outline: Outline;
+  /** Neutral model of the device, when its operating system has a driver. */
+  model: DeviceModel | null;
 }
 
 const contents = new Map<string, FileContent>();

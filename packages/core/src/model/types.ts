@@ -543,6 +543,8 @@ export interface Coverage {
   unknown: number;
   /** Sections with lines not interpreted, largest first. */
   sections: CoverageSection[];
+  /** 1-based numbers of the lines not interpreted, highlighted in the config view. */
+  unknownLines: number[];
 }
 
 export type FeatureCode =

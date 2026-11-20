@@ -1,7 +1,9 @@
 import type {
   Detection,
+  DeviceModel,
   Eol,
   LoadIssueCode,
+  ModelHints,
   OsId,
   Outline,
   SyntaxDiagnostic,
@@ -12,7 +14,7 @@ import type {
 /** Messages from the page to the worker. */
 export type WorkerRequest =
   | { type: 'load'; batch: number; files: { name: string; buffer: ArrayBuffer }[] }
-  | { type: 'structure'; id: string; family: SyntaxFamily; os?: OsId }
+  | { type: 'structure'; id: string; family: SyntaxFamily; os?: OsId; hints: ModelHints }
   | { type: 'forget'; ids: string[] };
 
 export interface StructureData {
@@ -21,6 +23,8 @@ export interface StructureData {
   folds: Int32Array;
   outline: Outline;
   diagnostics: SyntaxDiagnostic[];
+  /** Neutral model, when the operating system has a driver. */
+  model: DeviceModel | null;
 }
 
 export interface TextFileMessage {

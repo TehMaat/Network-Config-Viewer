@@ -49,3 +49,10 @@ export async function selectFile(page: Page, name: string) {
 }
 
 export const field = (page: Page, name: string) => page.getByTestId(`field-${name}`);
+
+/** Devices read by a driver open on their summary: the text is in the "Config" tab. */
+export async function openConfigTab(page: Page) {
+  const tab = page.getByTestId('tab-config');
+  if ((await tab.count()) > 0) await tab.click();
+  await expect(page.getByTestId('config-editor')).toBeVisible();
+}

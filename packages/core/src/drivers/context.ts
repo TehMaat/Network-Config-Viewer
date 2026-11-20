@@ -155,6 +155,7 @@ export class DriverContext {
     let total = 0;
     let understood = 0;
     let ignored = 0;
+    const unknownLines: number[] = [];
     const sections = new Map<string, CoverageSection>();
     for (let l = 1; l <= this.lines.length; l++) {
       const status = this.lineStatus(l);
@@ -163,6 +164,7 @@ export class DriverContext {
       if (status === 'understood') understood++;
       else if (status === 'ignored') ignored++;
       else {
+        unknownLines.push(l);
         const key = sectionOf(l);
         const section = sections.get(key);
         if (section) section.lines++;
@@ -174,19 +176,11 @@ export class DriverContext {
       understood,
       ignored,
       unknown: total - understood - ignored,
+      unknownLines,
       sections: [...sections.values()].sort(
         (a, b) => b.lines - a.lines || a.firstLine - b.firstLine,
       ),
     };
-  }
-
-  /** 1-based numbers of the lines nobody understood. */
-  unknownLines(): number[] {
-    const out: number[] = [];
-    for (let l = 1; l <= this.lines.length; l++) {
-      if (this.lineStatus(l) === 'unknown') out.push(l);
-    }
-    return out;
   }
 }
 

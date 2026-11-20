@@ -26,6 +26,9 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
   - valori di default per marca indicati come tali, con quelli ancora incerti dei Small Business segnati "da verificare"; avviso quando le VLAN non sono nella config per via del VTP;
   - ogni riga classificata come compresa, ignorata di proposito o sconosciuta, con la copertura e l'elenco delle sezioni non interpretate;
   - nomi nella config collegati alla loro definizione (VLAN, ACL, object-group, interfacce, route-map, prefix-list, peer-group).
+  - viste di ogni switch: riepilogo con la copertura e le sezioni non interpretate; pannello delle porte di ogni membro dello stack, con colori per VLAN, trunk a strisce, porte spente, L3, PoE, 802.1X/MAB, VLAN voce e port-channel, filtro per VLAN e dettaglio della porta; VLAN con porte e gateway; ACL con la ricerca per IP anche tramite subnet, object-group e any; routing con le rotte ricavate dalla config, OSPF, BGP, policy route, route-map e prefix-list;
+  - config collegata: righe non interpretate evidenziate, nomi cliccabili verso la definizione con "Torna indietro", e da ogni elemento delle viste si salta alle sue righe;
+  - tabelle con ordinamento, filtro e righe virtualizzate, con TanStack Table e TanStack Virtual (licenza MIT).
 
 ### Modificato
 

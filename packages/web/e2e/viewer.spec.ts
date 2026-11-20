@@ -6,6 +6,7 @@ import {
   fileItem,
   loadFiles,
   openApp,
+  openConfigTab,
   sampleBytes,
   samplePath,
   selectFile,
@@ -51,6 +52,7 @@ test.describe('the text is the original, byte for byte', () => {
       const original = readFileSync(samplePath(rel), 'utf8');
       await openApp(page);
       await loadFiles(page, [samplePath(rel)], 1);
+      await openConfigTab(page);
 
       await page.getByTestId('btn-copy').click();
       await expect(page.getByTestId('copy-feedback')).toBeVisible();
@@ -70,6 +72,7 @@ test.describe('the text is the original, byte for byte', () => {
     await openApp(page);
     await loadFiles(page, [samplePath(rel)], 1);
     await expect(page.getByTestId('badge-eol')).toHaveAttribute('data-value', 'crlf');
+    await openConfigTab(page);
     const [download] = await Promise.all([
       page.waitForEvent('download'),
       page.getByTestId('btn-download').click(),

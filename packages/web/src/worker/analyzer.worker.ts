@@ -1,6 +1,16 @@
 // Reads, recognises and parses the files away from the page, so that large configurations
 // never freeze the interface. Nothing here talks to the network.
-import { analyzeText, loadFile, structureFor } from '@ncv/core';
+import {
+  analyzeLines,
+  buildModel,
+  loadFile,
+  modelHints,
+  splitLines,
+  structureOfLines,
+  type ModelHints,
+  type OsId,
+  type Structure,
+} from '@ncv/core';
 import type { StructureData, WorkerMessage, WorkerRequest } from './protocol';
 
 interface WorkerScope {
@@ -9,7 +19,8 @@ interface WorkerScope {
 }
 
 const scope = self as unknown as WorkerScope;
-const texts = new Map<string, string>();
+/** The lines of every file, to rebuild structure and model after a manual correction. */
+const texts = new Map<string, string[]>();
 let counter = 0;
 
 const nextId = () => `f${++counter}`;
@@ -21,13 +32,23 @@ scope.onmessage = (event) => {
       load(request.batch, request.files);
       break;
     case 'structure':
-      restructure(request.id, request.family, request.os);
+      restructure(request.id, request.family, request.hints, request.os);
       break;
     case 'forget':
       for (const id of request.ids) texts.delete(id);
       break;
   }
 };
+
+function structureData(lines: string[], structure: Structure, hints: ModelHints): StructureData {
+  return {
+    family: structure.tree.family,
+    folds: structure.folds,
+    outline: structure.outline,
+    diagnostics: structure.tree.diagnostics,
+    model: buildModel(lines, structure.tree, hints),
+  };
+}
 
 function load(batch: number, files: { name: string; buffer: ArrayBuffer }[]) {
   for (const file of files) {
@@ -37,16 +58,11 @@ function load(batch: number, files: { name: string; buffer: ArrayBuffer }[]) {
         {
           text: (loaded) => {
             const id = nextId();
-            const analysis = analyzeText(loaded.decoded.text);
-            texts.set(id, loaded.decoded.text);
+            const lines = splitLines(loaded.decoded.text);
+            const analysis = analyzeLines(lines);
+            texts.set(id, lines);
             // A standalone copy: the bytes may be a view into a larger archive buffer.
             const bytes = loaded.bytes.slice().buffer;
-            const structure: StructureData = {
-              family: analysis.tree.family,
-              folds: analysis.folds,
-              outline: analysis.outline,
-              diagnostics: analysis.tree.diagnostics,
-            };
             scope.postMessage(
               {
                 type: 'text',
@@ -62,7 +78,7 @@ function load(batch: number, files: { name: string; buffer: ArrayBuffer }[]) {
                 eol: loaded.decoded.eol,
                 lineCount: analysis.lineCount,
                 detection: analysis.detection,
-                structure,
+                structure: structureData(lines, analysis, modelHints(analysis.detection)),
               },
               [bytes, analysis.folds.buffer],
             );
@@ -79,26 +95,13 @@ function load(batch: number, files: { name: string; buffer: ArrayBuffer }[]) {
   scope.postMessage({ type: 'done', batch });
 }
 
-function restructure(
-  id: string,
-  family: StructureData['family'],
-  os?: Parameters<typeof structureFor>[2],
-) {
-  const text = texts.get(id);
-  if (text === undefined) return;
+function restructure(id: string, family: StructureData['family'], hints: ModelHints, os?: OsId) {
+  const lines = texts.get(id);
+  if (lines === undefined) return;
   try {
-    const structure = structureFor(text, family, os);
+    const structure = structureOfLines(lines, family, os);
     scope.postMessage(
-      {
-        type: 'structure',
-        id,
-        structure: {
-          family: structure.tree.family,
-          folds: structure.folds,
-          outline: structure.outline,
-          diagnostics: structure.tree.diagnostics,
-        },
-      },
+      { type: 'structure', id, structure: structureData(lines, structure, hints) },
       [structure.folds.buffer],
     );
   } catch (error) {
