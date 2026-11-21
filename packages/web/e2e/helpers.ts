@@ -28,12 +28,19 @@ export const expectedDetections = (): Record<string, Expected> =>
 export type Upload = string[] | { name: string; mimeType: string; buffer: Buffer }[];
 
 /**
- * Loads the app. In Firefox the first page of a new tab changes process, because of the
- * Cross-Origin-Opener-Policy of the app, and Playwright may then miss its "load" event: the
- * tests wait for the navigation to start, and then for what they need to see on the page.
+ * Loads the app. Firefox and WebKit move a page with Cross-Origin-Opener-Policy to another
+ * process, and their automation can lose that first navigation and wait forever (Mozilla bug
+ * 1706353, WebKit bug 233391; Chromium is not affected). The tests wait only for the
+ * navigation to start; if it is lost, the page is loaded again, now without a change of
+ * process. Every check of the tests stays as it is.
  */
-export function gotoApp(page: Page) {
-  return page.goto('/', { waitUntil: 'commit' });
+export async function gotoApp(page: Page) {
+  try {
+    return await page.goto('/', { waitUntil: 'commit', timeout: 15_000 });
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.includes('Timeout')) throw error;
+    return page.goto('/', { waitUntil: 'commit' });
+  }
 }
 
 /** Loads the app and waits until it knows whether the archive of the clients is there. */
