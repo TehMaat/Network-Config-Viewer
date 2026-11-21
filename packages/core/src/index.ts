@@ -1,4 +1,5 @@
 export * from './analyze';
+export * from './correlate';
 export * from './detect';
 export * from './input/decode';
 export * from './input/load';

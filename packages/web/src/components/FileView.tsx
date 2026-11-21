@@ -26,7 +26,7 @@ import {
   IconLock,
   IconSearch,
 } from '@tabler/icons-react';
-import type { AssignReason, DeviceModel, DeviceState, Src } from '@ncv/core';
+import type { AssignReason, DeviceModel, DeviceState, Infrastructure, Src } from '@ncv/core';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { saveBlob, safeFileName } from '../export/download';
@@ -34,6 +34,7 @@ import { baseName, formatBytes, formatOrigin, formatPath } from '../format';
 import { contentStore, type FileContent } from '../state/content';
 import { effectiveDetection } from '../state/effective';
 import type { LinkedShow } from '../state/devices';
+import { peersOf } from '../state/infra';
 import type { FileEntry, Overrides, TextEntry } from '../state/files';
 import { AclsView } from '../views/AclsView';
 import { FirewallVlansView, InterfacesView } from '../views/InterfacesView';
@@ -53,6 +54,8 @@ import { ShowPanel } from './ShowPanel';
 
 interface Props {
   entry: FileEntry;
+  /** The devices of the client put together, for the other side of every link (#15). */
+  infra: Infrastructure;
   onOverride(id: string, overrides: Overrides): void;
   /** Files of shows of this device. */
   shows: LinkedShow[];
@@ -147,6 +150,7 @@ function mainContext(model: DeviceModel): string {
 
 function TextView({
   entry,
+  infra,
   onOverride,
   shows,
   state,
@@ -194,6 +198,8 @@ function TextView({
 
   // The exported files are named after the device, or after the file without its extension.
   const exportName = safeFileName(model?.hostname ?? entry.name.replace(/\.[^.]+$/, ''));
+  const hostname = effective.hostname.value ?? model?.hostname;
+  const peers = useMemo(() => (model ? peersOf(infra, hostname) : []), [infra, hostname, model]);
   const api = useMemo<DeviceViewApi>(
     () => ({
       showSource: (src: Src) => {
@@ -204,8 +210,9 @@ function TextView({
       openFile: onOpenFile,
       fileName,
       exportName,
+      peers,
     }),
-    [showLines, state, onOpenFile, fileName, exportName],
+    [showLines, state, onOpenFile, fileName, exportName, peers],
   );
   const [exporting, setExporting] = useState(false);
   const [exportFailed, setExportFailed] = useState(false);

@@ -279,7 +279,14 @@ describe('FortiOS samples', () => {
       '10.255.1.0/24 SPOKES-WAN1',
       '10.255.2.0/24 SPOKES-WAN2',
     ]);
-    expect(office.ipsec.every((t) => t.advpn === 'sender')).toBe(true);
+    const dialup = office.ipsec.filter((t) => t.type === 'dynamic');
+    expect(dialup.map((t) => t.name)).toEqual(['ADVPN-WAN1', 'ADVPN-WAN2']);
+    expect(dialup.every((t) => t.advpn === 'sender')).toBe(true);
+    // The static tunnel to the datacenter (#15).
+    expect(office.ipsec.find((t) => t.name === 'VPN-DC')).toMatchObject({
+      type: 'static',
+      remoteGw: '203.0.113.130',
+    });
   });
 
   it('finds the mail server through the VIP and says where the objects are used', () => {

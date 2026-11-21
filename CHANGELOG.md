@@ -6,6 +6,32 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
 
 ## [Non rilasciato]
 
+## [0.2.0] - 2026-11-21
+
+### Aggiunto
+
+- Mappa dell'infrastruttura del cliente, prima parte della fase 2 ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)):
+  - correlazione degli apparati in `packages/core`, senza dipendenze dal browser: cavi e LAG dai vicini LLDP e CDP e dalle descrizioni delle porte, subnet condivise e segmenti, uscite Internet, tunnel IPsec (statici, verso hub dial-up e per nome DDNS), overlay SD-WAN, sessioni BGP (anche nei `neighbor-range` dell'hub) con il tunnel che le porta, adiacenze OSPF e scorciatoie ADVPN dagli show; ogni collegamento dice se è verificato da uno show o dedotto dalla config, con le righe dei due lati;
+  - nodi fuori dal cliente: Internet, i provider dei peer BGP esterni, i peer IPsec e i vicini LLDP o CDP non caricati;
+  - siti proposti dalla location SNMP, dal codice nell'hostname e dai cavi;
+  - mappa con siti, livelli che si accendono e si spengono, disposizione automatica e zoom, fatta con React Flow e dagre (MIT), caricati solo quando si apre la mappa;
+  - dettaglio di ogni collegamento con i due lati affiancati, parametro per parametro, la fonte e i pulsanti che aprono la config o lo show alla riga; dettaglio di ogni apparato con l'accesso alle sue viste;
+  - stato reale dagli show sui due lati: porte, tunnel (anche le istanze dial-up dell'hub), sessioni BGP con i prefissi, health check SD-WAN; in rosso i collegamenti giù;
+  - elenco dei collegamenti con filtro ed export Excel;
+  - nell'elenco a sinistra la mappa e gli apparati raggruppati per sito; nelle viste dell'apparato, l'altro estremo di porte, tunnel e sessioni BGP apre l'altro apparato;
+  - lettura della location SNMP (Cisco e FortiOS) e dei nomi DDNS dei FortiGate.
+- Esempi coerenti tra loro per la mappa: tunnel statico tra sede e datacenter, BGP del campus sull'overlay, uplink di SW-HQ-ACC3 verso il centro stella, vicino LLDP in filiale 1, scorciatoia ADVPN tra filiale 1 e filiale 2; collegamenti attesi in `samples/expected-links.json`, verificati dai test ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Test della correlazione sugli esempi e su casi sintetici, con un cliente di 150 apparati; test della mappa nel browser e nel test di riservatezza ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+
+### Modificato
+
+- Cliente di esempio, riassunti attesi dei modelli e screenshot rifatti con gli esempi aggiornati; nuovo screenshot della mappa in chiaro e scuro ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Studio e README: correlazione, siti, mappa e decisioni sul resto della fase 2; roadmap della fase 2 in quattro parti ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+
+### Corretto
+
+- Il server accetta anche `[::1]`: ora lo dicono lo studio, il README e il messaggio d'errore del server ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+
 ## [0.1.0] - 2026-11-21
 
 ### Aggiunto

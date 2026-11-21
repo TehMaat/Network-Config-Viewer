@@ -733,9 +733,9 @@ describe('Cisco coverage', () => {
         'hostname SW-1',
         'aaa new-model',
         'aaa authentication login default local',
-        'snmp-server location Sede',
+        'snmp-server chassis-id SW-1',
         'snmp-server contact noc@esempio.example',
-        'snmp-server location Sede',
+        'snmp-server chassis-id SW-1',
         'banner motd ^C',
         'Solo personale autorizzato',
         '^C',
@@ -753,7 +753,7 @@ describe('Cisco coverage', () => {
     expect(c.unknown).toBe(6);
     expect(c.sections).toEqual([
       { section: 'aaa', lines: 2, firstLine: 7 },
-      { section: 'snmp-server location', lines: 2, firstLine: 9 },
+      { section: 'snmp-server chassis-id', lines: 2, firstLine: 9 },
       { section: 'snmp-server contact', lines: 1, firstLine: 10 },
       { section: 'interface › storm-control', lines: 1, firstLine: 20 },
     ]);

@@ -180,7 +180,13 @@ test('shows tunnels, routes and BGP sessions of a FortiGate with VDOMs', async (
   await expect(page.getByTestId('summary-show')).toContainText('(OFFICE)');
 
   await page.getByTestId('tab-vpn').click();
-  await expect(page.getByTestId('tunnel-live')).toHaveText(['3 su, 0 giù', '1 su, 1 giù']);
+  // The dial-up tunnels of the hub, one instance per spoke, and the static one to the
+  // datacenter (#15).
+  await expect(page.getByTestId('tunnel-live')).toHaveText([
+    '3 su, 0 giù',
+    '1 su, 1 giù',
+    '1 su, 0 giù',
+  ]);
   await page.locator('[data-testid="row-tunnels"][data-id="ADVPN-WAN2"]').click();
   const instances = page.getByTestId('tunnel-instances');
   await expect(instances.locator('tbody tr')).toHaveCount(2);
@@ -210,5 +216,6 @@ test('shows the SD-WAN health checks and the member each rule uses', async ({ pa
     'in uso: wan1',
   ]);
   await page.getByTestId('tab-vpn').click();
-  await expect(page.getByTestId('tunnel-live')).toHaveText(['1 su, 0 giù', '1 su, 0 giù']);
+  // HUB-WAN1 has also the ADVPN shortcut to branch 2 (#15).
+  await expect(page.getByTestId('tunnel-live')).toHaveText(['2 su, 0 giù', '1 su, 0 giù']);
 });

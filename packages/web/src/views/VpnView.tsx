@@ -3,7 +3,9 @@ import { tunnelLive, type IpsecPhase2, type IpsecTunnel, type LogicalContext } f
 import type { ColumnDef } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { Peer } from '../state/infra';
 import { DataTable } from './DataTable';
+import { PeerLinks } from './peers';
 import { ShowSourceButton, SourceButton, useDeviceView, Value } from './source';
 import { FULL_LABEL } from './values';
 
@@ -128,7 +130,7 @@ export function VpnView({ context }: { context: LogicalContext }) {
 
 function TunnelDetail({ tunnel, contextName }: { tunnel: IpsecTunnel; contextName: string }) {
   const { t } = useTranslation();
-  const { state } = useDeviceView();
+  const { state, peers } = useDeviceView();
   const live = tunnelLive(tunnel.name, state, contextName);
   const flag = (value: boolean) => (value ? t('routing.yes') : t('routing.no'));
   const rows: [string, React.ReactNode][] = [
@@ -179,6 +181,12 @@ function TunnelDetail({ tunnel, contextName }: { tunnel: IpsecTunnel; contextNam
     ],
     ['ADVPN', tunnel.advpn ? t(`vpn.advpn.${tunnel.advpn}`) : '—'],
   ];
+  // The other side of the tunnel and its ADVPN shortcuts, from the map of the client (#15).
+  const tunnelled = (p: Peer) =>
+    (p.link.kind === 'ipsec' || p.link.kind === 'shortcut') &&
+    p.here.context === contextName &&
+    (p.here.tunnel === tunnel.name || !!p.here.tunnel?.startsWith(`${tunnel.name}_`));
+  if (peers.some(tunnelled)) rows.push([t('vpn.peer'), <PeerLinks key="peer" match={tunnelled} />]);
   return (
     <Paper withBorder p="sm" data-testid="tunnel-detail" data-name={tunnel.name}>
       <Group justify="space-between" mb="xs">

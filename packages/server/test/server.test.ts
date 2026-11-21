@@ -78,7 +78,7 @@ describe('protections', () => {
     expect(isLocalHost(undefined)).toBe(false);
   });
 
-  it('answers only to localhost and 127.0.0.1, against DNS rebinding', async () => {
+  it('answers only to localhost, 127.0.0.1 and [::1], against DNS rebinding', async () => {
     const { app } = await start();
     for (const host of ['localhost:8080', '127.0.0.1:8080', '[::1]:8080']) {
       const res = await app.inject({ url: '/api/clients', headers: { host } });
@@ -87,6 +87,8 @@ describe('protections', () => {
     for (const host of ['evil.example', 'evil.example:8080', 'localhost.evil.example']) {
       const res = await app.inject({ url: '/api/clients', headers: { host } });
       expect(res.statusCode, host).toBe(403);
+      // The answer says which names are accepted (#15).
+      expect(res.body, host).toContain('[::1]');
     }
   });
 

@@ -32,10 +32,12 @@ import {
   type RouteMapEntry,
   type RouteState,
 } from '@ncv/core';
-import type { ColumnDef } from '@tanstack/react-table';
+import type { CellContext, ColumnDef } from '@tanstack/react-table';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { Peer } from '../state/infra';
 import { DataTable } from './DataTable';
+import { PeerLinks } from './peers';
 import { ShowSourceButton, SourceButton, useDeviceView } from './source';
 import { formatRoutePrefix, FULL_LABEL, shortInterfaceName } from './values';
 
@@ -316,7 +318,14 @@ function OspfView({ ospf }: { ospf: Ospf }) {
 function BgpView({ context }: { context: LogicalContext }) {
   const { t } = useTranslation();
   const bgp = context.routing.bgp!;
-  const { state } = useDeviceView();
+  const { state, peers } = useDeviceView();
+  // The other side of a session, from the map of the client (#15): a neighbour, or the
+  // devices that fall in the neighbour range of a group.
+  const session = (n: BgpNeighbor) => (p: Peer) =>
+    p.link.kind === 'bgp' &&
+    p.here.context === context.name &&
+    (p.here.neighbor === n.address || p.here.range?.group === n.address);
+  const sessionPeers = (n: BgpNeighbor) => peers.filter(session(n));
   const peerText = (p: BgpPeerState | undefined) =>
     p
       ? p.prefixes !== undefined
@@ -348,6 +357,21 @@ function BgpView({ context }: { context: LogicalContext }) {
       accessorFn: (n) => [n.routeMapOut, n.prefixListOut].filter(Boolean).join(' · '),
     },
     { id: 'vrf', header: 'VRF', accessorFn: (n) => n.vrf ?? '' },
+    ...(peers.some((p) => p.link.kind === 'bgp')
+      ? [
+          {
+            id: 'peer',
+            header: t('routing.bgp.peer'),
+            accessorFn: (n: BgpNeighbor) =>
+              sessionPeers(n)
+                .map((p) => p.name)
+                .join(', '),
+            cell: (c: CellContext<BgpNeighbor, unknown>) => (
+              <PeerLinks match={session(c.row.original)} />
+            ),
+          },
+        ]
+      : []),
     {
       id: 'state',
       header: t('routing.col.state'),

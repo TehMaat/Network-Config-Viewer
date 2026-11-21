@@ -379,3 +379,148 @@ body {
 .ncv-client-card:hover {
   border-color: var(--mantine-primary-color-filled);
 }
+
+/* ---- Map of the infrastructure (#15) ------------------------------------------------- */
+
+:root {
+  --ncv-map-cable: #6b7280;
+  --ncv-map-wan: #94a3b8;
+  --ncv-map-subnet: #9ca3af;
+  --ncv-map-vpn: #0d9488;
+  --ncv-map-shortcut: #db2777;
+  --ncv-map-bgp: #7c3aed;
+  --ncv-map-ospf: #2563eb;
+  --ncv-map-down: #dc2626;
+  --ncv-map-partial: #ea580c;
+  --ncv-map-site-bg: rgba(76, 110, 245, 0.035);
+}
+
+[data-mantine-color-scheme='dark'] {
+  --ncv-map-cable: #9ca3af;
+  --ncv-map-wan: #64748b;
+  --ncv-map-subnet: #6b7280;
+  --ncv-map-vpn: #2dd4bf;
+  --ncv-map-shortcut: #f472b6;
+  --ncv-map-bgp: #a78bfa;
+  --ncv-map-ospf: #60a5fa;
+  --ncv-map-down: #f87171;
+  --ncv-map-partial: #fb923c;
+  --ncv-map-site-bg: rgba(145, 167, 255, 0.05);
+}
+
+.ncv-map-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mantine-spacing-sm);
+}
+
+@media (min-width: 62em) {
+  .ncv-map-layout {
+    grid-template-columns: minmax(0, 1fr) 420px;
+  }
+}
+
+.ncv-map-canvas {
+  height: max(420px, calc(100dvh - 230px));
+  overflow: hidden;
+  position: relative;
+}
+
+.ncv-map-panel {
+  max-height: max(420px, calc(100dvh - 230px));
+  overflow-y: auto;
+}
+
+.react-flow__node-site {
+  pointer-events: none;
+}
+
+.ncv-map-site {
+  width: 100%;
+  height: 100%;
+  border: 1.5px dashed var(--mantine-color-default-border);
+  border-radius: 14px;
+  background: var(--ncv-map-site-bg);
+}
+
+.ncv-map-site-label {
+  padding: 8px 14px;
+  letter-spacing: 0.06em;
+}
+
+.ncv-map-device,
+.ncv-map-external {
+  background: var(--mantine-color-body);
+  border: 1px solid var(--mantine-color-default-border);
+  box-shadow: var(--mantine-shadow-xs);
+  cursor: pointer;
+}
+
+.ncv-map-device {
+  width: 196px;
+  height: 60px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.ncv-map-external {
+  width: 156px;
+  height: 44px;
+  padding: 4px 12px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+}
+
+.ncv-map-external-neighbor,
+.ncv-map-external-peer {
+  border-style: dashed;
+}
+
+.ncv-map-external-internet {
+  background: var(--mantine-color-default-hover);
+}
+
+.ncv-map-active {
+  border-color: var(--mantine-color-indigo-6);
+  box-shadow: 0 0 0 2px var(--mantine-color-indigo-light);
+}
+
+.ncv-map-type {
+  flex-shrink: 0;
+}
+
+/* Links leave from the middle of the nodes, drawn over them: the handles are not seen. */
+.react-flow .ncv-map-handle {
+  top: 50%;
+  left: 50%;
+  width: 1px;
+  height: 1px;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.ncv-map-edge-label {
+  position: absolute;
+  font-size: 10px;
+  line-height: 1.2;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--mantine-color-default-border);
+  background: var(--mantine-color-body);
+  color: var(--mantine-color-dimmed);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.ncv-map-edge-label.ncv-map-active {
+  color: var(--mantine-color-text);
+  border-color: var(--mantine-color-indigo-6);
+}

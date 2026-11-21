@@ -82,6 +82,20 @@ for (const [colorScheme, suffix] of [
       await page.screenshot({ path: `${DOCS_IMG}app-config${suffix}.png`, style });
     });
 
+    test('map of the infrastructure', async ({ page, request }) => {
+      await exampleClient(page, request);
+      await page.getByTestId('nav-map').click();
+      await expect(page.getByTestId('map-device')).toHaveCount(12);
+      // The session between branch 1 and the hub, with the tunnel that carries it.
+      await page.getByTestId('filter-links').fill('10.255.1.21');
+      await page.getByTestId('row-links').first().click();
+      await expect(page.getByTestId('map-link-panel')).toHaveAttribute('data-kind', 'bgp');
+      await page.getByTestId('filter-links').fill('');
+      // The layout is fitted to the canvas once the nodes have their size.
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: `${DOCS_IMG}app-mappa${suffix}.png`, style });
+    });
+
     test('start page', async ({ page, request }) => {
       await page.setViewportSize({ width: 1200, height: 760 });
       await exampleClient(page, request);

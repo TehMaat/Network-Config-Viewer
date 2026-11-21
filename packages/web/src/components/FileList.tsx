@@ -20,9 +20,11 @@ import {
   IconPinnedOff,
   IconServer2,
   IconTerminal2,
+  IconTopologyStar3,
   IconTrash,
   IconX,
 } from '@tabler/icons-react';
+import type { Infrastructure } from '@ncv/core';
 import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { baseName, formatOrigin, formatPath } from '../format';
@@ -35,6 +37,11 @@ interface Props {
   files: FileEntry[];
   /** Configurations grouped by device, with the current one and the previous versions. */
   groups: DeviceGroup[];
+  /** The devices put together: their sites order the list (#15). */
+  infra: Infrastructure;
+  /** The map of the client is open. */
+  mapOpen: boolean;
+  onOpenMap(): void;
   deviceOf: ShowLinks['deviceOf'];
   selectedId: string | null;
   processing: boolean;
@@ -55,6 +62,9 @@ const SHOW: Role = 'show';
 export function FileList({
   files,
   groups,
+  infra,
+  mapOpen,
+  onOpenMap,
   deviceOf,
   selectedId,
   processing,
@@ -83,6 +93,24 @@ export function FileList({
     );
     return { devices, rest: files.filter((f) => !placed.has(f.id)) };
   }, [files, groups, deviceOf]);
+  // The devices by site, in the order of the sites of the map; a single unnamed site has no title.
+  const sections = useMemo(() => {
+    const siteOf = new Map(infra.devices.map((d) => [d.key, d.site]));
+    const named = infra.sites.some((s) => s.name);
+    const order = [...infra.sites.map((s) => s.id), ''];
+    const bySite = new Map<string, typeof devices>();
+    for (const d of devices) {
+      const site = siteOf.get(d.group.key) ?? '';
+      bySite.set(site, [...(bySite.get(site) ?? []), d]);
+    }
+    return order
+      .filter((id) => bySite.has(id))
+      .map((id) => ({
+        id,
+        title: named ? (infra.sites.find((s) => s.id === id)?.name ?? '') : null,
+        devices: bySite.get(id)!,
+      }));
+  }, [devices, infra]);
   const item = (file: FileEntry, role?: Role, extra?: { pinned?: boolean; pinnable?: boolean }) => (
     <FileItem
       key={file.id}
@@ -136,28 +164,69 @@ export function FileList({
             {t('files.empty')}
           </Text>
         )}
-        {devices.map(({ group, shows }) => (
+        {groups.length > 0 && (
+          <NavLink
+            component="button"
+            type="button"
+            active={mapOpen}
+            onClick={onOpenMap}
+            label={
+              <Text size="sm" fw={600}>
+                {t('map.nav')}
+              </Text>
+            }
+            description={t('map.navDescription', {
+              devices: t('map.devices', { count: infra.devices.length }),
+              links: t('map.links', { count: infra.links.length }),
+            })}
+            leftSection={<IconTopologyStar3 size={18} />}
+            data-testid="nav-map"
+          />
+        )}
+        {sections.map((section) => (
           <Box
-            key={group.key}
-            className="ncv-device-group"
-            data-testid="device-group"
-            data-device={group.hostname}
+            key={section.id || 'none'}
+            data-testid="site-section"
+            data-site={section.title ?? ''}
           >
-            <UnstyledButton
-              className="ncv-device-header"
-              onClick={() => onSelect(group.current.id)}
-              data-testid="device-header"
-            >
-              <Group gap={6} wrap="nowrap" px="sm" py={4}>
-                <IconServer2 size={14} aria-hidden />
-                <Text size="xs" fw={700} truncate="end">
-                  {group.hostname}
-                </Text>
-              </Group>
-            </UnstyledButton>
-            {item(group.current, CURRENT, { pinned: group.pinned })}
-            {group.versions.map((v) => item(v, VERSION, { pinnable: true }))}
-            {shows.map((s) => item(s, SHOW))}
+            {section.title !== null && (
+              <Text
+                size="xs"
+                fw={700}
+                c="dimmed"
+                tt="uppercase"
+                px="sm"
+                pt="xs"
+                pb={2}
+                data-testid="site-header"
+              >
+                {section.title || t('map.noSite')}
+              </Text>
+            )}
+            {section.devices.map(({ group, shows }) => (
+              <Box
+                key={group.key}
+                className="ncv-device-group"
+                data-testid="device-group"
+                data-device={group.hostname}
+              >
+                <UnstyledButton
+                  className="ncv-device-header"
+                  onClick={() => onSelect(group.current.id)}
+                  data-testid="device-header"
+                >
+                  <Group gap={6} wrap="nowrap" px="sm" py={4}>
+                    <IconServer2 size={14} aria-hidden />
+                    <Text size="xs" fw={700} truncate="end">
+                      {group.hostname}
+                    </Text>
+                  </Group>
+                </UnstyledButton>
+                {item(group.current, CURRENT, { pinned: group.pinned })}
+                {group.versions.map((v) => item(v, VERSION, { pinnable: true }))}
+                {shows.map((s) => item(s, SHOW))}
+              </Box>
+            ))}
           </Box>
         ))}
         {devices.length > 0 && rest.length > 0 && (
