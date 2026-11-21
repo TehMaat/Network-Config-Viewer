@@ -65,8 +65,8 @@
 | Licenza | Open source, MIT |
 | Codice | Scritto da Claude: lo stack si sceglie per semplicità d'uso, non per familiarità |
 | Strumenti | TypeScript, npm workspaces, React + Vite, Mantine, i18next, CodeMirror 6, TanStack Table e TanStack Virtual, fflate, ExcelJS, Fastify, Vitest, Playwright (vedi [capitolo 8](#8-scelte-tecniche)) |
-| Test automatici | Su GitHub Actions a ogni pull request: lint, tipi, test, build, immagine Docker e test nel browser sul container, su Chromium, Firefox e WebKit, anche dopo il riavvio del container. Non si pubblica niente |
-| Metodo di lavoro | Ogni proposta viene analizzata e diventa un'issue; si lavora solo dopo l'okay. Registro delle modifiche in `CHANGELOG.md`, documentazione sempre aggiornata, Semantic Versioning. Regole complete in [`CLAUDE.md`](../CLAUDE.md) |
+| Test automatici | Su GitHub Actions a ogni pull request: lint, tipi, test, build, immagine Docker e test nel browser sul container, su Chromium, Firefox e WebKit, anche dopo il riavvio del container. Su `main`, con tutto verde, la CI crea il tag e la release della versione con le note del registro; non si pubblicano pacchetti, immagini o pagine |
+| Metodo di lavoro | Ogni proposta viene analizzata e diventa un'issue; si lavora solo dopo l'okay. Registro delle modifiche in `CHANGELOG.md`, documentazione sempre aggiornata, Semantic Versioning: ogni pull request unita è una versione, rilasciata dalla CI con tag e note del registro. Regole complete in [`CLAUDE.md`](../CLAUDE.md) |
 
 ## 3. Architettura
 
@@ -550,7 +550,7 @@ Docker Desktop è gratuito per uso personale e per le aziende con meno di 250 di
 - **Andata e ritorno** per i generatori: modello → config → rilettura → stesso modello.
 - **Test differenziali** per le migrazioni: stessi flussi di prova, stesso esito su sorgente e destinazione.
 - **Test automatici dell'interfaccia** con screenshot.
-- **CI su GitHub Actions**: a ogni pull request lint, controllo dei tipi, formattazione, test unitari, build, costruzione dell'immagine Docker, controllo delle protezioni del container e test nel browser sull'app servita dal container, su Chromium, Firefox e WebKit. Non si pubblica niente.
+- **CI su GitHub Actions**: a ogni pull request lint, controllo dei tipi, formattazione, test unitari, build, costruzione dell'immagine Docker, controllo delle protezioni del container e test nel browser sull'app servita dal container, su Chromium, Firefox e WebKit. Su `main`, con tutto verde, crea il tag e la release della versione con le note del registro; non pubblica pacchetti, immagini o pagine.
 
 ## 11. Roadmap
 

@@ -31,9 +31,15 @@ Queste regole valgono in ogni sessione su questo progetto. Lo studio di riferime
 
 ## Versioning
 
-- Le versioni seguono il [Semantic Versioning](https://semver.org/lang/it/): MAGGIORE.MINORE.CORREZIONE. Durante lo sviluppo si resta su 0.y.z: si alza MINORE per le nuove funzioni e CORREZIONE per correzioni e sola documentazione.
-- La versione corrente è la più recente in `CHANGELOG.md`. La stessa versione sta anche nel `package.json` alla radice: un test lo verifica.
-- Il rilascio lo decide l'utente. Al rilascio la sezione "Non rilasciato" diventa la nuova versione con la data, si crea il tag `vX.Y.Z` su `main` e la release su GitHub con le note del registro. Tag e release si fanno solo con l'okay dell'utente.
+- Le versioni seguono il [Semantic Versioning](https://semver.org/lang/it/): MAGGIORE.MINORE.CORREZIONE. Durante lo sviluppo si resta su 0.y.z.
+- Ogni pull request è una versione, e la sceglie Claude:
+  - MINORE se aggiunge o cambia funzioni che si vedono nell'app;
+  - CORREZIONE se porta solo correzioni, documentazione, test o CI;
+  - MAGGIORE mai da sola: l'uscita dalla 0.y.z la decide l'utente.
+- Nella pull request le voci vanno sotto `## [X.Y.Z] - data` in `CHANGELOG.md`, con la data dell'ultimo aggiornamento prima dell'unione, e la stessa versione va nel `package.json` alla radice (un test lo verifica). La sezione "Non rilasciato" resta in cima al registro.
+- Unire la pull request su `main` è l'okay al rilascio: quando i test sono verdi, la CI crea da sola il tag `vX.Y.Z` e la release su GitHub con le note di quella versione. Se il tag esiste già, non fa niente.
+- Se l'utente scrive "non rilasciare" su una pull request, le sue voci vanno in "Non rilasciato" e la versione non cambia: entrano nella versione della pull request successiva.
+- Con due pull request aperte insieme, quella unita per seconda prende la versione successiva.
 
 ## Riservatezza dei dati
 

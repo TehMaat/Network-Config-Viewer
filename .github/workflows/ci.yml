@@ -1,5 +1,6 @@
-# Automated checks on every pull request and on main.
-# Only code and synthetic sample configurations are used; nothing is published.
+# Automated checks on every pull request and on main, and the release of every version
+# merged on main (#13): a tag and a release with the notes of CHANGELOG.md, nothing else.
+# Only code and synthetic sample configurations are used; no package, image or page is published.
 name: CI
 
 on:
@@ -12,7 +13,9 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # A new push to a pull request replaces the run in progress; on main every run goes to the
+  # end, so that every merged version is released.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   checks:
@@ -78,3 +81,32 @@ jobs:
           retention-days: 7
       - if: always()
         run: docker compose down
+
+  release:
+    name: Rilascio della versione
+    # Only for what is merged on main, and only when every check has passed.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [checks, docker-e2e]
+    runs-on: ubuntu-latest
+    permissions:
+      # The only job that writes: the tag and the release of the version.
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+      - name: Tag and release the version of package.json, once
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "v$version is already released: nothing to do."
+            exit 0
+          fi
+          node scripts/release-notes.mjs "$version" > "$RUNNER_TEMP/notes.md"
+          gh release create "v$version" --target "$GITHUB_SHA" --title "v$version" \
+            --notes-file "$RUNNER_TEMP/notes.md"

@@ -6,7 +6,7 @@ Strumento per vedere l'infrastruttura di rete di un cliente partendo dai backup 
 
 ## Stato del progetto
 
-Versione 0.0.1, con le fasi 0 e 1 della roadmap: trascini un backup FortiGate o Cisco e l'app lo legge e lo mostra in forma grafica, apparato per apparato, sempre collegato alla config originale, identica al file. Se aggiungi gli output dei comandi show, le viste mostrano anche lo stato reale. I file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato, e ogni apparato si esporta in Excel.
+Le fasi 0 e 1 della roadmap sono realizzate: trascini un backup FortiGate o Cisco e l'app lo legge e lo mostra in forma grafica, apparato per apparato, sempre collegato alla config originale, identica al file. Se aggiungi gli output dei comandi show, le viste mostrano anche lo stato reale. I file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato, e ogni apparato si esporta in Excel.
 
 Le fasi successive (mappa dell'infrastruttura, analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
 
@@ -105,7 +105,7 @@ Gli screenshot in `docs/img/app-*.png`, in tema chiaro e in tema scuro (`-scuro`
 ## Come si lavora
 
 - Ogni proposta viene analizzata e diventa un'issue; il lavoro parte solo dopo l'okay. Le regole complete sono in [CLAUDE.md](CLAUDE.md).
-- Tutte le modifiche sono annotate nel [registro delle modifiche](CHANGELOG.md), con le versioni secondo il Semantic Versioning.
+- Tutte le modifiche sono annotate nel [registro delle modifiche](CHANGELOG.md), con le versioni secondo il Semantic Versioning. Ogni pull request unita è una versione: la CI crea da sola il tag e la [release](https://github.com/TehMaat/Network-Config-Viewer/releases) con le note del registro.
 - A ogni pull request GitHub Actions esegue lint, controllo dei tipi, test, build, immagine Docker e test nel browser sul container, con Chromium, Firefox e WebKit, compreso l'archivio che resta dopo il riavvio e l'aggiornamento del container. Non si pubblica niente.
 
 ## Licenza
