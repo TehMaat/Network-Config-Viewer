@@ -14,6 +14,7 @@ import {
   type LinkEnd,
   type LinkKind,
   type LogicalContext,
+  type ProblemCode,
 } from '@ncv/core';
 import type { TFunction } from 'i18next';
 import { vlanText } from '../views/values';
@@ -57,8 +58,29 @@ export function linkTitle(link: Link, infra: Infrastructure, modelOf: ModelOf): 
   return `${part(a)} ↔ ${part(b)}`;
 }
 
+/**
+ * The interface of a side. A port of a FortiGate hardware switch that the configuration does not
+ * list on its own (internal1 of internal) is the switch.
+ */
 function iface(s: Side, name = s.end.interface): Interface | undefined {
-  return s.model?.interfaces.find((i) => i.name === name);
+  const list = s.model?.interfaces;
+  return (
+    list?.find((i) => i.name === name) ??
+    (name ? list?.find((i) => i.kind === 'hard-switch' && i.members?.includes(name)) : undefined)
+  );
+}
+
+/** A value that is not written in the configuration: the default of the device, and maybe uncertain. */
+function withDefault(
+  element: { defaults?: string[]; unverified?: string[] } | undefined,
+  field: string,
+  text: string,
+  t: TFunction,
+): string {
+  if (!element || !text || !element.defaults?.includes(field)) return text;
+  return element.unverified?.includes(field)
+    ? t('problems.withDefaultToCheck', { value: text })
+    : t('problems.withDefault', { value: text });
 }
 
 function context(s: Side): LogicalContext | undefined {
@@ -134,7 +156,10 @@ function cableRows(link: Link, a: Side, b: Side, t: TFunction): Rows {
       (link.cables ?? []).map((c) => short(c.b) || '?').join(', '),
     ]);
   }
-  rows.push(['mtu', ia?.mtu ? String(ia.mtu) : '', ib?.mtu ? String(ib.mtu) : '']);
+  // With an MTU on one side only, the other has the default one.
+  const mtu = (i: Interface | undefined, other: Interface | undefined) =>
+    i?.mtu ? String(i.mtu) : i && other?.mtu ? t('problems.withDefault', { value: '1500' }) : '';
+  rows.push(['mtu', mtu(ia, ib), mtu(ib, ia)]);
   return rows;
 }
 
@@ -202,13 +227,45 @@ function ipsecRows(link: Link, a: Side, b: Side, t: TFunction): Rows {
           ),
         ].join(', ')
       : '';
+  const both = (f: (x: IpsecTunnel) => string): [string, string] => [
+    ta ? f(ta) : '',
+    tb ? f(tb) : '',
+  ];
+  const ike1 = ta?.ikeVersion === 1 || tb?.ikeVersion === 1;
+  const yesNo = (v: string | undefined) =>
+    v === 'enable'
+      ? t('map.value.yes')
+      : v === 'disable'
+        ? t('map.value.no')
+        : v
+          ? t(`map.value.${v}`, { defaultValue: v })
+          : '';
   return [
     ['tunnel', a.end.tunnel ?? '', b.end.tunnel ?? ''],
     ['type', kind(ta), kind(tb)],
     ['interface', where(a), where(b)],
-    ['ike', ta ? `v${ta.ikeVersion}` : '', tb ? `v${tb.ikeVersion}` : ''],
-    ['proposals', ta?.proposals.join(' ') ?? '', tb?.proposals.join(' ') ?? ''],
-    ['dhgrp', ta?.dhgrp.join(' ') ?? '', tb?.dhgrp.join(' ') ?? ''],
+    ['ike', ...both((x) => withDefault(x, 'ikeVersion', `v${x.ikeVersion}`, t))],
+    ...(ike1
+      ? [['mode', ...both((x) => withDefault(x, 'mode', x.mode ?? '', t))] as Rows[number]]
+      : []),
+    [
+      'auth',
+      ...both((x) =>
+        withDefault(
+          x,
+          'authMethod',
+          x.authMethod ? t(`problems.auth.${x.authMethod}`, { defaultValue: x.authMethod }) : '',
+          t,
+        ),
+      ),
+    ],
+    ['localId', ...both((x) => x.localId ?? '')],
+    ['peerId', ...both((x) => x.peerId ?? '')],
+    ['networkId', ...both((x) => (x.networkId !== undefined ? String(x.networkId) : ''))],
+    ['proposals', ...both((x) => withDefault(x, 'proposals', x.proposals.join(' '), t))],
+    ['dhgrp', ...both((x) => withDefault(x, 'dhgrp', x.dhgrp.join(' '), t))],
+    ['nat', ...both((x) => withDefault(x, 'natTraversal', yesNo(x.natTraversal), t))],
+    ['keylife', ...both((x) => withDefault(x, 'keylife', x.keylife ? String(x.keylife) : '', t))],
     ['phase2', phase2(ta), phase2(tb)],
     [
       'advpn',
@@ -341,4 +398,57 @@ export function linkRows(
 /** The words of a kind of link, for titles, tables and exports. */
 export function kindLabel(kind: LinkKind, t: TFunction): string {
   return t(`map.kind.${kind}`);
+}
+
+/** The row of the detail of a link that shows the values a problem is about. */
+export const PROBLEM_ROW: Partial<Record<ProblemCode, string>> = {
+  'ipsec-no-tunnel': 'tunnel',
+  'ipsec-ike': 'ike',
+  'ipsec-mode': 'mode',
+  'ipsec-auth': 'auth',
+  'ipsec-proposals': 'proposals',
+  'ipsec-dhgrp': 'dhgrp',
+  'ipsec-selectors': 'phase2',
+  'ipsec-p2-proposals': 'phase2',
+  'ipsec-pfs': 'phase2',
+  'ipsec-p2-dhgrp': 'phase2',
+  'ipsec-advpn': 'advpn',
+  'bgp-down': 'state',
+  'bgp-as': 'as',
+  'bgp-no-neighbor': 'peer',
+  'trunk-mode': 'mode',
+  'trunk-native': 'vlans',
+  'trunk-allowed': 'vlans',
+  'lag-one-side': 'members',
+  'lag-mode': 'lacp',
+  'lag-cables': 'cables',
+  mtu: 'mtu',
+  'ospf-area': 'area',
+  'ospf-passive': 'passive',
+  'discovery-off': 'interface',
+};
+
+/**
+ * How the two sides of a tunnel compare: "10 parameters agree", "2 do not agree", or a tunnel
+ * with one side only. Null for the other links.
+ */
+export function comparisonText(
+  link: Link,
+  infra: Infrastructure,
+  t: TFunction,
+): { text: string; compared: number; issues: number } | null {
+  if (link.kind !== 'ipsec') return null;
+  if (!infra.devices.some((d) => d.key === link.b.node)) {
+    return { text: t('vpnClient.compare.oneSide'), compared: 0, issues: 0 };
+  }
+  const c = link.comparison;
+  if (!c) return null;
+  if (c.compared === 0) return { text: t('vpnClient.compare.noTunnel'), ...c };
+  return {
+    text:
+      c.issues === 0
+        ? t('vpnClient.compare.agree', { count: c.compared })
+        : t('vpnClient.compare.issues', { count: c.issues }),
+    ...c,
+  };
 }

@@ -425,7 +425,7 @@
     "col": {
       "id": "ID",
       "name": "Name",
-      "gateway": "Gateway here",
+      "gateway": "Gateway",
       "interface": "Interface"
     },
     "implicit": "not in the config",
@@ -438,7 +438,11 @@
     },
     "title": "VLAN {{id}}",
     "titleNamed": "VLAN {{id}} · {{name}}",
-    "fromShow": "name from the show"
+    "fromShow": "name from the show",
+    "remoteGateway": "{{ip}} on {{device}} ({{interface}})",
+    "onDevice": "on {{device}}",
+    "gatewayPath": "Gateway: {{gateway}}, through {{path}}.",
+    "openDevice": "Open {{device}}"
   },
   "acls": {
     "col": {
@@ -957,7 +961,8 @@
       "a": "Side A",
       "b": "Side B",
       "source": "Source",
-      "state": "Real state (A / B)"
+      "state": "Real state (A / B)",
+      "problems": "Problems"
     },
     "evidence": {
       "config": "config of {{device}}, line {{line}}",
@@ -1034,7 +1039,13 @@
       "location": "SNMP location",
       "management": "Management IP",
       "ha": "HA",
-      "detail": "Detail"
+      "detail": "Detail",
+      "auth": "Authentication",
+      "localId": "Local ID",
+      "peerId": "Peer ID",
+      "networkId": "Network ID",
+      "nat": "NAT traversal",
+      "keylife": "Phase 1 key life (s)"
     },
     "value": {
       "yes": "yes",
@@ -1048,7 +1059,8 @@
       "range": "range {{prefix}} ({{group}})",
       "staticTo": "static → {{peer}}",
       "ddnsTo": "DDNS → {{peer}}",
-      "slaMissed": "SLA missed"
+      "slaMissed": "SLA missed",
+      "forced": "forced"
     },
     "legend": {
       "title": "How to read the map",
@@ -1056,7 +1068,278 @@
       "verified": "the shows confirm it (LLDP, CDP, tunnels, BGP)",
       "inferred": "the config says it (descriptions, addresses, peers)",
       "state": "In red the links down in the shows, in orange those partly down.",
-      "click": "Click a link to see its two sides together, a device to open its views."
+      "click": "Click a link to see its two sides together, a device to open its views.",
+      "problems": "Problems found by the checks between the devices: red errors, orange warnings, blue notes."
+    }
+  },
+  "problems": {
+    "title": "Problems",
+    "listTitle": "Problems between the devices",
+    "none": "No problems: the consistency checks between the devices found nothing.",
+    "count_one": "{{count}} problem",
+    "count_other": "{{count}} problems",
+    "countOf": {
+      "error_one": "{{count}} error",
+      "error_other": "{{count}} errors",
+      "warning_one": "{{count}} warning",
+      "warning_other": "{{count}} warnings",
+      "info_one": "{{count}} note",
+      "info_other": "{{count}} notes"
+    },
+    "mark_one": "{{count}} problem, the most serious: {{severity}}",
+    "mark_other": "{{count}} problems, the most serious: {{severity}}",
+    "severity": {
+      "error": "Error",
+      "warning": "Warning",
+      "info": "Note"
+    },
+    "fixLabel": "How to fix it:",
+    "withDefault": "{{value}} (default)",
+    "withDefaultToCheck": "{{value}} (default, to be checked)",
+    "unverifiedNote": "One of the values is the default of this version, not confirmed yet on real devices: check it on the device.",
+    "showOnMap": "Show on the map",
+    "deviceTitle": "Problems with the other devices",
+    "deviceIntro_one": "The consistency checks between the devices of the client found {{count}} problem about this device.",
+    "deviceIntro_other": "The consistency checks between the devices of the client found {{count}} problems about this device.",
+    "col": {
+      "severity": "Severity",
+      "problem": "Problem",
+      "devices": "Devices",
+      "link": "Link",
+      "why": "Why",
+      "fix": "How to fix it"
+    },
+    "lagProtocol": {
+      "static": "static (on)",
+      "lacp-active": "LACP active",
+      "lacp-passive": "LACP passive",
+      "pagp-active": "PAgP desirable",
+      "pagp-passive": "PAgP auto"
+    },
+    "auth": {
+      "psk": "pre-shared key",
+      "signature": "certificate"
+    },
+    "code": {
+      "ipsec-no-tunnel": {
+        "title": "{{a}} {{tunnelA}}: no tunnel on {{b}} accepts the peer",
+        "why": "The tunnel {{tunnelA}} of {{a}} points to {{peer}}, the interface {{interface}} of {{b}}, but no phase 1 on that interface of {{b}} accepts {{a}}: the tunnel does not come up.",
+        "fix": "On {{b}} create the tunnel to {{a}} on {{interface}}, or correct the remote gateway of {{tunnelA}} on {{a}}."
+      },
+      "ipsec-ike": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: different IKE version",
+        "why": "{{a}} uses {{valueA}}, {{b}} uses {{valueB}}: with different versions phase 1 cannot be negotiated.",
+        "fix": "Set the same IKE version (ike-version) on both sides."
+      },
+      "ipsec-mode": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: different IKEv1 mode",
+        "why": "{{a}} is in {{valueA}} mode, {{b}} in {{valueB}}: with IKEv1 both sides must use the same mode.",
+        "fix": "Set the same mode (main or aggressive) on both sides."
+      },
+      "ipsec-auth": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: different authentication",
+        "why": "{{a}} authenticates with {{valueA}}, {{b}} with {{valueB}}: phase 1 does not complete.",
+        "fix": "Use the same method (authmethod) on both sides: pre-shared key or certificates."
+      },
+      "ipsec-proposals": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: no phase 1 proposal in common",
+        "why": "{{a}} proposes {{valueA}}, {{b}} proposes {{valueB}}: without at least one encryption and integrity pair in common phase 1 cannot be negotiated.",
+        "fix": "Add on one side one of the proposals of the other (set proposal), the strongest one if possible."
+      },
+      "ipsec-dhgrp": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: no phase 1 DH group in common",
+        "why": "{{a}} uses the groups {{valueA}}, {{b}} the groups {{valueB}}: without a Diffie-Hellman group in common phase 1 cannot be negotiated.",
+        "fix": "Put at least one DH group in common on both sides (set dhgrp), for example 14, 19 or 20."
+      },
+      "ipsec-selectors": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: phase 2 selectors do not mirror each other",
+        "why": "The phases 2 of {{a}} ({{valueA}}) find on {{b}} ({{valueB}}) no phase 2 with source and destination swapped: that traffic does not go into the tunnel.",
+        "fix": "The source of a phase 2 must be the destination on the other side: correct src-subnet and dst-subnet."
+      },
+      "ipsec-p2-proposals": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: no phase 2 proposal in common",
+        "why": "A phase 2 of {{a}} proposes {{valueA}}, the mirror one of {{b}} proposes {{valueB}}: phase 2 cannot be negotiated.",
+        "fix": "Put at least one phase 2 proposal in common on both sides."
+      },
+      "ipsec-pfs": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: PFS on one side only",
+        "why": "PFS is on one side only ({{a}}: {{valueA}}, {{b}}: {{valueB}}): phase 2 cannot be negotiated.",
+        "fix": "Turn PFS (set pfs) on or off on both sides, with the same DH groups."
+      },
+      "ipsec-p2-dhgrp": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: no phase 2 DH group in common",
+        "why": "With PFS on, {{a}} uses the groups {{valueA}} and {{b}} the groups {{valueB}}: phase 2 cannot be negotiated.",
+        "fix": "Put at least one phase 2 DH group in common on both sides."
+      },
+      "ipsec-advpn": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: wrong ADVPN roles",
+        "why": "{{a}} is {{valueA}}, {{b}} is {{valueB}}: shortcuts start only with the dial-up hub as sender and the branch as receiver.",
+        "fix": "Set auto-discovery-sender on the hub and auto-discovery-receiver on the branch."
+      },
+      "bgp-down": {
+        "title": "BGP session {{a}} ↔ {{b}} not established",
+        "why": "In the shows the session to {{ip}} is in the state \"{{state}}\": no routes pass between the two devices.",
+        "viaDown": "The session goes through the tunnel {{via}}, which is down in the shows: look at the tunnel first.",
+        "viaProblem": "The session goes through the tunnel {{via}}, which has configuration problems: look at them first.",
+        "viaUp": "The session goes through the tunnel {{via}}, which is up in the shows: check the neighbors, the AS numbers and the policies of the session.",
+        "fix": "Check that neighbors and AS numbers match on both sides and that BGP traffic (TCP 179) passes between {{a}} and {{b}}."
+      },
+      "bgp-no-neighbor": {
+        "title": "{{b}} has no BGP neighbor {{ip}} of {{a}}",
+        "why": "{{a}} opens a BGP session to {{b}} from the address {{ip}}, but {{b}} has no neighbor nor neighbor-range that covers it: the session does not come up.",
+        "fix": "On {{b}} add the neighbor {{ip}} with the AS of {{a}}, or a neighbor-range that covers it."
+      },
+      "bgp-as": {
+        "title": "{{device}} expects AS {{expected}} from {{peer}}, which has AS {{actual}}",
+        "why": "The remote-as of the neighbor is not the AS of {{peer}}: the session closes as soon as it opens.",
+        "fix": "Correct the remote-as on {{device}}, or the AS of {{peer}}."
+      },
+      "trunk-mode": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: trunk modes do not match",
+        "why": "{{portA}} is {{valueA}}, {{portB}} is {{valueB}}: one side sends the VLANs tagged and the other does not, or both wait for the other to propose the trunk. The VLANs do not pass.",
+        "fix": "Put both sides in trunk mode (switchport mode trunk), or both in access mode on the same VLAN."
+      },
+      "trunk-native": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: different native VLAN",
+        "why": "The native VLAN is {{valueA}} on {{a}} and {{valueB}} on {{b}}: untagged traffic ends up in different VLANs on the two sides.",
+        "fix": "Set the same native VLAN (switchport trunk native vlan) on both sides."
+      },
+      "trunk-allowed": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: different allowed VLANs",
+        "why": "Only on {{a}}: {{onlyA}}. Only on {{b}}: {{onlyB}}. VLANs allowed on one side only do not pass on the link.",
+        "fix": "Align the allowed VLANs (switchport trunk allowed vlan) on both sides, or remove the ones that are not needed."
+      },
+      "lag-one-side": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: aggregate on one side only",
+        "why": "On {{lag}} the ports are in an aggregate, on {{single}} they are not: the cables work as separate links and can create loops or lose traffic.",
+        "fix": "Configure the aggregate on {{single}} too, with the same ports and the same protocol."
+      },
+      "lag-mode": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: LAG protocols do not match",
+        "why": "{{a}} uses {{valueA}}, {{b}} uses {{valueB}}: with these modes the port-channel does not form and the ports stay suspended.",
+        "fix": "Use the same protocol on both sides: LACP (active on at least one side) or static (on) on both."
+      },
+      "lag-cables": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: different number of ports in the LAG",
+        "why": "The aggregate has {{valueA}} ports on {{a}} and {{valueB}} on {{b}}: a cable is not in the aggregate on one of the two sides.",
+        "fix": "Put the same ports in the aggregate on both sides, or check the cables."
+      },
+      "mtu": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: different MTU",
+        "why": "The MTU is {{valueA}} on {{a}} and {{valueB}} on {{b}}: packets bigger than the smaller side are dropped or fragmented.",
+        "fix": "Set the same MTU on both sides."
+      },
+      "ospf-area": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: different OSPF area",
+        "why": "{{portA}} is in area {{valueA}}, {{portB}} in area {{valueB}}: the OSPF adjacency does not form.",
+        "fix": "Put the two interfaces in the same area."
+      },
+      "ospf-passive": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: OSPF interface passive on one side",
+        "why": "On {{passive}} the interface is passive: it sends no hello and the adjacency on this network does not form.",
+        "fix": "If the adjacency is needed, remove the passive interface (no passive-interface); if not, make the other interface passive too."
+      },
+      "ip-duplicate": {
+        "title": "Duplicate address {{ip}}",
+        "why": "The same address is on {{where}}: traffic to {{ip}} reaches only one of them, and the routes to that network become ambiguous.",
+        "fix": "Change the address on one of the two devices; if the interface is not used, remove its address."
+      },
+      "subnet-overlap": {
+        "title": "Subnet {{subnet}} in more than one site",
+        "why": "The same network is in different sites: {{where}}. If the sites talk through VPN or routing, traffic to that network takes one way only.",
+        "fix": "Renumber one of the networks, or keep it local without announcing it to the other sites."
+      },
+      "route-missing": {
+        "title": "{{device}} has no route to {{prefix}}",
+        "why": "{{from}} announces {{prefix}} in BGP, but the routing table of {{device}} (in the shows) does not have that network: traffic to {{prefix}} does not arrive.",
+        "fix": "Check the BGP session, the filters (route-map, prefix-list) and that the hub reflects the network to the branches."
+      },
+      "description-mismatch": {
+        "title": "{{device}} {{port}}: the description says {{described}}, {{protocol}} sees {{seen}}",
+        "why": "The description of the port (\"{{description}}\") names {{described}}, but {{protocol}} sees {{seen}} on this port: the description is old or the cable is in the wrong port.",
+        "fix": "Correct the description, or move the cable to the right port."
+      },
+      "discovery-off": {
+        "title": "{{device}} {{port}}: LLDP and CDP off",
+        "why": "The cable comes from the description of the port, but on {{device}} LLDP and CDP are off on this port: a show cannot confirm it.",
+        "fix": "If the client's rules allow it, turn LLDP or CDP on and load the show of the neighbors."
+      },
+      "advpn-hub-policy": {
+        "title": "{{hub}}: no policy between the overlays",
+        "why": "Two branches talk through the hub until the shortcut is up, but on {{hub}} ({{vdom}}) no policy, and no zone with intra-zone traffic allowed, lets traffic pass from an overlay to another.",
+        "fix": "On {{hub}} add a policy from the overlays to the overlays, or allow the traffic inside the zone (intrazone allow)."
+      },
+      "advpn-spoke-policy": {
+        "title": "{{device}}: no policy to the other branches",
+        "why": "The policies of {{device}} to the tunnels of {{hub}} do not cover the networks of the other branches: the first traffic to them is blocked and the shortcut does not start.",
+        "fix": "Add the networks of the other branches to the policy to the overlay, for example with an address group."
+      },
+      "advpn-next-hop": {
+        "title": "{{hub}}: BGP changes the next hop to the branches",
+        "why": "The BGP group {{group}} of {{hub}} has next-hop-self: the branches get the networks of the others with the hub as next hop and traffic does not use the shortcut.",
+        "fix": "Remove next-hop-self from the group of the branches on the hub."
+      },
+      "advpn-no-rr": {
+        "title": "{{hub}}: the networks of the branches are not reflected",
+        "why": "The branches are iBGP neighbors of {{hub}}, but none of their groups is a route reflector client: a branch does not learn the networks of the others.",
+        "fix": "On the hub set route-reflector-client in the groups of the branches."
+      }
+    }
+  },
+  "vpnClient": {
+    "nav": "VPN of the client",
+    "navDescription": "{{tunnels}}, {{shortcuts}}",
+    "title": "VPN of the client",
+    "summary": "{{tunnels}} between the devices, {{shortcuts}} in the shows",
+    "tunnels_one": "{{count}} IPsec tunnel",
+    "tunnels_other": "{{count}} IPsec tunnels",
+    "shortcuts_one": "{{count}} ADVPN shortcut",
+    "shortcuts_other": "{{count}} ADVPN shortcuts",
+    "none": "No IPsec tunnel between the loaded devices.",
+    "hint": "Click a tunnel to see its two sides next to each other, parameter by parameter, with the problems and the lines they come from.",
+    "exportName": "vpn",
+    "type": {
+      "static": "Static",
+      "dialup": "Dial-up",
+      "ddns": "DDNS",
+      "shortcut": "ADVPN shortcut"
+    },
+    "col": {
+      "type": "Type",
+      "comparison": "The two sides",
+      "branchA": "Branch A",
+      "branchB": "Branch B",
+      "hub": "Hub",
+      "shortcut": "Shortcut",
+      "why": "Why",
+      "device": "Device",
+      "role": "Role",
+      "tunnels": "Tunnels"
+    },
+    "compare": {
+      "agree_one": "{{count}} parameter agrees",
+      "agree_other": "{{count}} parameters agree",
+      "issues_one": "{{count}} does not agree",
+      "issues_other": "{{count}} do not agree",
+      "oneSide": "one side only",
+      "noTunnel": "no tunnel on the other side"
+    },
+    "advpn": {
+      "title": "ADVPN",
+      "intro": "The hub (sender) tells the branches (receivers) how to reach each other: traffic between two branches starts through the hub and then moves to a direct shortcut between them.",
+      "roles": "Roles",
+      "checks": "Checks",
+      "checksOk": "No problems: roles, policies and the BGP of the hub allow the shortcuts.",
+      "pairs": "Pairs of branches",
+      "noPairs": "No pair of branches on the same hub."
+    },
+    "pair": {
+      "active": "active",
+      "possible": "possible",
+      "impossible": "not possible",
+      "activeWhy": "Seen in the shows: the two branches already talk directly.",
+      "possibleWhy": "Nothing blocks it in the configurations: it starts with the first traffic between the two branches.",
+      "down": "The tunnels to the hub are down in the shows."
     }
   }
 }

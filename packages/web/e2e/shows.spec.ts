@@ -93,10 +93,11 @@ test('shows the real state of the ports and the MACs of every configured port (#
   page,
 }) => {
   await openWithShows(page, CORE, [CORE_SESSION, CORE_NEIGHBORS]);
-  // A single warning for the device, with the number of ports.
+  // A single warning for the device, with the number of ports. One of them is Po12, the
+  // port-channel down of the LAG problem of the samples (#15): the panel shows only ports.
   await expect(
     page.getByTestId('warnings').locator('[data-warning="ports-without-mac"]'),
-  ).toHaveAttribute('data-count', '20');
+  ).toHaveAttribute('data-count', '21');
 
   await page.getByTestId('tab-ports').click();
   await expect(page.getByTestId('mark-nomac')).toHaveCount(20);

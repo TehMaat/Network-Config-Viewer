@@ -1177,6 +1177,7 @@ class FortiosReader {
         d.natTraversal,
         'natTraversal',
       );
+      tunnel.keylife = value(() => num(this.one(e, 'keylife')), d.keylife, 'keylife');
       const localId = this.one(e, 'localid');
       if (localId) tunnel.localId = localId;
       const peerId = this.one(e, 'peerid');

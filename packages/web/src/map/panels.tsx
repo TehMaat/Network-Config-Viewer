@@ -2,12 +2,21 @@
 // external node, with the lines of the configurations and of the shows they come from.
 
 import { Badge, Box, Button, Group, Stack, Table, Text, Title, Tooltip } from '@mantine/core';
-import { IconArrowRight, IconCode, IconTerminal2 } from '@tabler/icons-react';
-import type { Infrastructure, Link, LinkEvidence, LinkSource } from '@ncv/core';
+import { IconArrowRight } from '@tabler/icons-react';
+import type { Infrastructure, Link, LinkSource, Problem } from '@ncv/core';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { sourceRange } from '../views/source';
-import { endLabel, kindLabel, linkRows, side, type ModelOf } from './details';
+import { worstSeverity } from '../state/infra';
+import { EvidenceButton, ProblemItem, SEVERITY_COLOR } from '../views/problems';
+import {
+  comparisonText,
+  endLabel,
+  kindLabel,
+  linkRows,
+  PROBLEM_ROW,
+  side,
+  type ModelOf,
+} from './details';
 
 export interface PanelProps {
   infra: Infrastructure;
@@ -16,42 +25,27 @@ export interface PanelProps {
   onSelectLink(id: string): void;
 }
 
-/** Opens the configuration of a device, or a file of shows, at the first line of a source. */
-function EvidenceButton({
-  evidence,
-  infra,
-  onOpenFile,
-}: {
-  evidence: LinkEvidence;
-  infra: Infrastructure;
-  onOpenFile: PanelProps['onOpenFile'];
-}) {
-  const { t } = useTranslation();
-  const device = infra.devices.find((d) => d.key === evidence.device);
-  const range = sourceRange(evidence.src);
-  const file = evidence.file ?? device?.file;
-  if (!file || !range) return null;
-  const label = evidence.file
-    ? t('map.evidence.show', { device: device?.hostname ?? evidence.device, line: range[0] })
-    : t('map.evidence.config', { device: device?.hostname ?? evidence.device, line: range[0] });
-  return (
-    <Button
-      size="compact-xs"
-      variant="subtle"
-      leftSection={evidence.file ? <IconTerminal2 size={14} /> : <IconCode size={14} />}
-      onClick={() => onOpenFile(file, range[0])}
-      data-testid="map-evidence"
-      data-file={file}
-      data-line={range[0]}
-    >
-      {label}
-    </Button>
-  );
-}
-
 function sourceText(source: LinkSource, infra: Infrastructure, t: TFunction) {
   const device = infra.devices.find((d) => d.key === source.device)?.hostname ?? source.device;
   return t(`map.source.${source.kind}`, { device, text: source.text ?? '' });
+}
+
+/** The problems of a link or a device, most serious first. */
+function ProblemsSection({ problems, testId }: { problems: Problem[]; testId: string }) {
+  const { t } = useTranslation();
+  if (problems.length === 0) return null;
+  return (
+    <Box data-testid={testId}>
+      <Text size="xs" fw={700} c="dimmed" tt="uppercase" mb={4}>
+        {t('problems.title')} ({problems.length})
+      </Text>
+      <Stack gap={6}>
+        {problems.map((p) => (
+          <ProblemItem key={p.id} problem={p} />
+        ))}
+      </Stack>
+    </Box>
+  );
 }
 
 export function LinkPanel({ link, ...props }: PanelProps & { link: Link }) {
@@ -60,6 +54,15 @@ export function LinkPanel({ link, ...props }: PanelProps & { link: Link }) {
   const a = side(infra, link.a, modelOf);
   const b = side(infra, link.b, modelOf);
   const rows = linkRows(link, infra, modelOf, t);
+  const problems = infra.problems.filter((p) => p.link === link.id);
+  // The rows of the parameters that do not agree, coloured by their most serious problem: the
+  // problems come most serious first.
+  const flagged = new Map<string, Problem['severity']>();
+  for (const p of problems) {
+    const row = PROBLEM_ROW[p.code];
+    if (row && !flagged.has(row)) flagged.set(row, p.severity);
+  }
+  const comparison = comparisonText(link, infra, t);
   const head = (s: typeof a) => (
     <Stack gap={2}>
       <Text size="sm" fw={700}>
@@ -104,6 +107,27 @@ export function LinkPanel({ link, ...props }: PanelProps & { link: Link }) {
               {t('map.dialup')}
             </Badge>
           )}
+          {comparison && (
+            <Badge
+              variant="light"
+              color={comparison.issues ? 'red' : comparison.compared ? 'teal' : 'gray'}
+              tt="none"
+              data-testid="map-link-comparison"
+            >
+              {comparison.text}
+            </Badge>
+          )}
+          {problems.length > 0 && (
+            <Badge
+              variant="filled"
+              color={SEVERITY_COLOR[worstSeverity(problems)!]}
+              tt="none"
+              data-testid="map-link-problems"
+              data-count={problems.length}
+            >
+              {t('problems.count', { count: problems.length })}
+            </Badge>
+          )}
         </Group>
         <Title order={4} style={{ overflowWrap: 'anywhere' }}>
           {a.name} ↔ {b.name}
@@ -119,7 +143,13 @@ export function LinkPanel({ link, ...props }: PanelProps & { link: Link }) {
         </Table.Thead>
         <Table.Tbody>
           {rows.map((r) => (
-            <Table.Tr key={r.key} data-testid="map-link-row" data-row={r.key}>
+            <Table.Tr
+              key={r.key}
+              data-testid="map-link-row"
+              data-row={r.key}
+              data-problem={flagged.get(r.key)}
+              className={flagged.has(r.key) ? `ncv-compare-${flagged.get(r.key)}` : undefined}
+            >
               <Table.Td fw={600}>{r.label}</Table.Td>
               <Table.Td style={{ overflowWrap: 'anywhere' }}>{r.a || '—'}</Table.Td>
               <Table.Td style={{ overflowWrap: 'anywhere' }}>{r.b || '—'}</Table.Td>
@@ -127,6 +157,7 @@ export function LinkPanel({ link, ...props }: PanelProps & { link: Link }) {
           ))}
         </Table.Tbody>
       </Table>
+      <ProblemsSection problems={problems} testId="map-link-problem-list" />
       <Box>
         <Text size="xs" fw={700} c="dimmed" tt="uppercase" mb={4}>
           {t('map.sources')}
@@ -137,7 +168,7 @@ export function LinkPanel({ link, ...props }: PanelProps & { link: Link }) {
               <Text size="xs">{sourceText(s, infra, t)}</Text>
               <Group gap={4}>
                 {s.evidence.map((e, j) => (
-                  <EvidenceButton key={j} evidence={e} infra={infra} onOpenFile={onOpenFile} />
+                  <EvidenceButton key={j} evidence={e} />
                 ))}
               </Group>
             </Box>
@@ -167,6 +198,7 @@ export function NodePanel({ node, ...props }: PanelProps & { node: string }) {
   const counts = new Map<string, number>();
   for (const l of links) counts.set(l.kind, (counts.get(l.kind) ?? 0) + 1);
   const site = device ? infra.sites.find((s) => s.id === device.site) : undefined;
+  const problems = infra.problems.filter((p) => p.devices.includes(node));
   const rows: [string, string][] = device
     ? [
         [t('map.row.type'), t(`map.typeName.${device.type}`)],
@@ -219,6 +251,7 @@ export function NodePanel({ node, ...props }: PanelProps & { node: string }) {
           {t('map.openViews')}
         </Button>
       )}
+      <ProblemsSection problems={problems} testId="map-node-problem-list" />
       {links.length > 0 && (
         <Stack gap={2}>
           {links.map((l) => (

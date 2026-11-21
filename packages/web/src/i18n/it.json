@@ -425,7 +425,7 @@
     "col": {
       "id": "ID",
       "name": "Nome",
-      "gateway": "Gateway qui",
+      "gateway": "Gateway",
       "interface": "Interfaccia"
     },
     "implicit": "non nella config",
@@ -438,7 +438,11 @@
     },
     "title": "VLAN {{id}}",
     "titleNamed": "VLAN {{id}} · {{name}}",
-    "fromShow": "nome dallo show"
+    "fromShow": "nome dallo show",
+    "remoteGateway": "{{ip}} su {{device}} ({{interface}})",
+    "onDevice": "su {{device}}",
+    "gatewayPath": "Gateway: {{gateway}}, attraverso {{path}}.",
+    "openDevice": "Apri {{device}}"
   },
   "acls": {
     "col": {
@@ -957,7 +961,8 @@
       "a": "Lato A",
       "b": "Lato B",
       "source": "Fonte",
-      "state": "Stato reale (A / B)"
+      "state": "Stato reale (A / B)",
+      "problems": "Problemi"
     },
     "evidence": {
       "config": "config di {{device}}, riga {{line}}",
@@ -1034,7 +1039,13 @@
       "location": "Location SNMP",
       "management": "IP di gestione",
       "ha": "HA",
-      "detail": "Dettaglio"
+      "detail": "Dettaglio",
+      "auth": "Autenticazione",
+      "localId": "Local ID",
+      "peerId": "Peer ID",
+      "networkId": "Network ID",
+      "nat": "NAT traversal",
+      "keylife": "Durata chiave di fase 1 (s)"
     },
     "value": {
       "yes": "sì",
@@ -1048,7 +1059,8 @@
       "range": "range {{prefix}} ({{group}})",
       "staticTo": "statico → {{peer}}",
       "ddnsTo": "DDNS → {{peer}}",
-      "slaMissed": "SLA non rispettato"
+      "slaMissed": "SLA non rispettato",
+      "forced": "forzato"
     },
     "legend": {
       "title": "Come leggere la mappa",
@@ -1056,7 +1068,278 @@
       "verified": "lo confermano gli show (LLDP, CDP, tunnel, BGP)",
       "inferred": "lo dice la config (descrizioni, indirizzi, peer)",
       "state": "In rosso i collegamenti giù negli show, in arancione quelli in parte giù.",
-      "click": "Clicca un collegamento per vedere i due lati affiancati, un apparato per aprirne le viste."
+      "click": "Clicca un collegamento per vedere i due lati affiancati, un apparato per aprirne le viste.",
+      "problems": "Problemi trovati dai controlli tra gli apparati: rosso gli errori, arancione gli avvisi, blu le informazioni."
+    }
+  },
+  "problems": {
+    "title": "Problemi",
+    "listTitle": "Problemi tra gli apparati",
+    "none": "Nessun problema: i controlli di coerenza tra gli apparati non hanno trovato niente.",
+    "count_one": "{{count}} problema",
+    "count_other": "{{count}} problemi",
+    "countOf": {
+      "error_one": "{{count}} errore",
+      "error_other": "{{count}} errori",
+      "warning_one": "{{count}} avviso",
+      "warning_other": "{{count}} avvisi",
+      "info_one": "{{count}} informazione",
+      "info_other": "{{count}} informazioni"
+    },
+    "mark_one": "{{count}} problema, il più grave: {{severity}}",
+    "mark_other": "{{count}} problemi, il più grave: {{severity}}",
+    "severity": {
+      "error": "Errore",
+      "warning": "Avviso",
+      "info": "Informazione"
+    },
+    "fixLabel": "Come sistemare:",
+    "withDefault": "{{value}} (predefinito)",
+    "withDefaultToCheck": "{{value}} (predefinito, da verificare)",
+    "unverifiedNote": "Uno dei valori è il default di questa versione, non ancora confermato su apparati reali: controllalo sull'apparato.",
+    "showOnMap": "Vedi sulla mappa",
+    "deviceTitle": "Problemi con gli altri apparati",
+    "deviceIntro_one": "I controlli di coerenza tra gli apparati del cliente hanno trovato {{count}} problema che riguarda questo apparato.",
+    "deviceIntro_other": "I controlli di coerenza tra gli apparati del cliente hanno trovato {{count}} problemi che riguardano questo apparato.",
+    "col": {
+      "severity": "Gravità",
+      "problem": "Problema",
+      "devices": "Apparati",
+      "link": "Collegamento",
+      "why": "Perché",
+      "fix": "Come sistemare"
+    },
+    "lagProtocol": {
+      "static": "statico (on)",
+      "lacp-active": "LACP active",
+      "lacp-passive": "LACP passive",
+      "pagp-active": "PAgP desirable",
+      "pagp-passive": "PAgP auto"
+    },
+    "auth": {
+      "psk": "chiave condivisa",
+      "signature": "certificato"
+    },
+    "code": {
+      "ipsec-no-tunnel": {
+        "title": "{{a}} {{tunnelA}}: su {{b}} nessun tunnel accetta il peer",
+        "why": "Il tunnel {{tunnelA}} di {{a}} punta a {{peer}}, l'interfaccia {{interface}} di {{b}}, ma su {{b}} nessuna fase 1 su quell'interfaccia accetta {{a}}: il tunnel non sale.",
+        "fix": "Su {{b}} crea il tunnel verso {{a}} su {{interface}}, oppure correggi il gateway remoto di {{tunnelA}} su {{a}}."
+      },
+      "ipsec-ike": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: versione IKE diversa",
+        "why": "{{a}} usa {{valueA}}, {{b}} usa {{valueB}}: con versioni diverse la fase 1 non si negozia.",
+        "fix": "Imposta la stessa versione IKE (ike-version) sui due lati."
+      },
+      "ipsec-mode": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: modalità IKEv1 diversa",
+        "why": "{{a}} è in modalità {{valueA}}, {{b}} in {{valueB}}: in IKEv1 i due lati devono usare la stessa modalità.",
+        "fix": "Imposta la stessa modalità (mode main o aggressive) sui due lati."
+      },
+      "ipsec-auth": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: autenticazione diversa",
+        "why": "{{a}} si autentica con {{valueA}}, {{b}} con {{valueB}}: la fase 1 non si completa.",
+        "fix": "Usa lo stesso metodo (authmethod) sui due lati: chiave condivisa o certificati."
+      },
+      "ipsec-proposals": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: nessuna proposta di fase 1 in comune",
+        "why": "{{a}} propone {{valueA}}, {{b}} propone {{valueB}}: senza almeno una combinazione di cifratura e integrità in comune la fase 1 non si negozia.",
+        "fix": "Aggiungi su un lato una delle proposte dell'altro (set proposal), meglio la più robusta."
+      },
+      "ipsec-dhgrp": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: nessun gruppo DH di fase 1 in comune",
+        "why": "{{a}} usa i gruppi {{valueA}}, {{b}} i gruppi {{valueB}}: senza un gruppo Diffie-Hellman in comune la fase 1 non si negozia.",
+        "fix": "Metti almeno un gruppo DH in comune sui due lati (set dhgrp), per esempio 14, 19 o 20."
+      },
+      "ipsec-selectors": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: selettori di fase 2 non speculari",
+        "why": "Le fasi 2 di {{a}} ({{valueA}}) non trovano su {{b}} ({{valueB}}) una fase 2 con sorgente e destinazione scambiate: quel traffico non entra nel tunnel.",
+        "fix": "La sorgente di una fase 2 deve essere la destinazione dell'altro lato: correggi src-subnet e dst-subnet."
+      },
+      "ipsec-p2-proposals": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: nessuna proposta di fase 2 in comune",
+        "why": "Una fase 2 di {{a}} propone {{valueA}}, quella speculare di {{b}} propone {{valueB}}: la fase 2 non si negozia.",
+        "fix": "Metti almeno una proposta di fase 2 in comune sui due lati."
+      },
+      "ipsec-pfs": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: PFS da un lato solo",
+        "why": "Il PFS è acceso da un lato solo ({{a}}: {{valueA}}, {{b}}: {{valueB}}): la fase 2 non si negozia.",
+        "fix": "Accendi o spegni il PFS (set pfs) su tutti e due i lati, con gli stessi gruppi DH."
+      },
+      "ipsec-p2-dhgrp": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: nessun gruppo DH di fase 2 in comune",
+        "why": "Con il PFS acceso, {{a}} usa i gruppi {{valueA}} e {{b}} i gruppi {{valueB}}: la fase 2 non si negozia.",
+        "fix": "Metti almeno un gruppo DH di fase 2 in comune sui due lati."
+      },
+      "ipsec-advpn": {
+        "title": "{{a}} {{tunnelA}} ↔ {{b}} {{tunnelB}}: ruoli ADVPN non corretti",
+        "why": "{{a}} è {{valueA}}, {{b}} è {{valueB}}: le scorciatoie partono solo con l'hub dial-up che fa da sender e la filiale da receiver.",
+        "fix": "Sull'hub imposta auto-discovery-sender, sulla filiale auto-discovery-receiver."
+      },
+      "bgp-down": {
+        "title": "Sessione BGP {{a}} ↔ {{b}} non stabilita",
+        "why": "Negli show la sessione verso {{ip}} è nello stato «{{state}}»: le rotte tra i due apparati non passano.",
+        "viaDown": "La sessione passa nel tunnel {{via}}, che negli show è giù: guarda prima il tunnel.",
+        "viaProblem": "La sessione passa nel tunnel {{via}}, che ha problemi di configurazione: guarda prima quelli.",
+        "viaUp": "La sessione passa nel tunnel {{via}}, che negli show è su: controlla neighbor, AS e policy della sessione.",
+        "fix": "Controlla che neighbor e AS corrispondano sui due lati e che il traffico BGP (TCP 179) passi tra {{a}} e {{b}}."
+      },
+      "bgp-no-neighbor": {
+        "title": "{{b}} non ha il neighbor BGP {{ip}} di {{a}}",
+        "why": "{{a}} apre una sessione BGP verso {{b}} dall'indirizzo {{ip}}, ma su {{b}} non c'è un neighbor né un neighbor-range che lo comprenda: la sessione non sale.",
+        "fix": "Su {{b}} aggiungi il neighbor {{ip}} con l'AS di {{a}}, o un neighbor-range che lo comprenda."
+      },
+      "bgp-as": {
+        "title": "{{device}} si aspetta l'AS {{expected}} da {{peer}}, che ha l'AS {{actual}}",
+        "why": "Il remote-as del neighbor non è l'AS di {{peer}}: la sessione si chiude appena aperta.",
+        "fix": "Correggi il remote-as su {{device}}, o l'AS di {{peer}}."
+      },
+      "trunk-mode": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: modalità del trunk incompatibili",
+        "why": "{{portA}} è {{valueA}}, {{portB}} è {{valueB}}: un lato manda le VLAN con il tag e l'altro no, o tutti e due aspettano che sia l'altro a proporre il trunk. Le VLAN non passano.",
+        "fix": "Metti tutti e due i lati in trunk (switchport mode trunk), oppure tutti e due in access sulla stessa VLAN."
+      },
+      "trunk-native": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: VLAN nativa diversa",
+        "why": "La VLAN nativa è {{valueA}} su {{a}} e {{valueB}} su {{b}}: il traffico senza tag finisce in VLAN diverse ai due lati.",
+        "fix": "Imposta la stessa VLAN nativa (switchport trunk native vlan) sui due lati."
+      },
+      "trunk-allowed": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: VLAN permesse diverse",
+        "why": "Solo su {{a}}: {{onlyA}}. Solo su {{b}}: {{onlyB}}. Le VLAN permesse da un lato solo non passano sul collegamento.",
+        "fix": "Allinea le VLAN permesse (switchport trunk allowed vlan) sui due lati, o togli quelle che non servono."
+      },
+      "lag-one-side": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: aggregato da un lato solo",
+        "why": "Su {{lag}} le porte sono in un aggregato, su {{single}} no: i cavi lavorano come collegamenti separati e possono creare loop o perdere traffico.",
+        "fix": "Configura l'aggregato anche su {{single}}, con le stesse porte e lo stesso protocollo."
+      },
+      "lag-mode": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: protocollo del LAG incompatibile",
+        "why": "{{a}} usa {{valueA}}, {{b}} usa {{valueB}}: con questi modi il port-channel non si forma e le porte restano sospese.",
+        "fix": "Usa lo stesso protocollo sui due lati: LACP (active almeno da un lato) oppure statico (on) da tutti e due."
+      },
+      "lag-cables": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: numero di porte diverso nel LAG",
+        "why": "L'aggregato ha {{valueA}} porte su {{a}} e {{valueB}} su {{b}}: un cavo non è nell'aggregato da uno dei due lati.",
+        "fix": "Metti le stesse porte nell'aggregato sui due lati, o controlla i cavi."
+      },
+      "mtu": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: MTU diversa",
+        "why": "L'MTU è {{valueA}} su {{a}} e {{valueB}} su {{b}}: i pacchetti più grandi del lato minore vengono scartati o frammentati.",
+        "fix": "Imposta la stessa MTU sui due lati."
+      },
+      "ospf-area": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: area OSPF diversa",
+        "why": "{{portA}} è nell'area {{valueA}}, {{portB}} nell'area {{valueB}}: l'adiacenza OSPF non si forma.",
+        "fix": "Metti le due interfacce nella stessa area."
+      },
+      "ospf-passive": {
+        "title": "{{a}} {{portA}} ↔ {{b}} {{portB}}: interfaccia OSPF passiva da un lato",
+        "why": "Su {{passive}} l'interfaccia è passiva: non manda hello e l'adiacenza su questa rete non si forma.",
+        "fix": "Se l'adiacenza serve, togli la passiva (no passive-interface); se non serve, rendi passiva anche l'altra interfaccia."
+      },
+      "ip-duplicate": {
+        "title": "Indirizzo {{ip}} duplicato",
+        "why": "Lo stesso indirizzo è su {{where}}: il traffico verso {{ip}} raggiunge uno solo dei due, e le rotte verso quella rete diventano ambigue.",
+        "fix": "Cambia l'indirizzo su uno dei due apparati; se l'interfaccia non si usa, togli l'indirizzo."
+      },
+      "subnet-overlap": {
+        "title": "Subnet {{subnet}} in più siti",
+        "why": "La stessa rete è in siti diversi: {{where}}. Se i siti si parlano attraverso VPN o routing, il traffico verso quella rete prende una strada sola.",
+        "fix": "Rinumera una delle reti, oppure tienila locale senza annunciarla agli altri siti."
+      },
+      "route-missing": {
+        "title": "{{device}} non ha la rotta per {{prefix}}",
+        "why": "{{from}} annuncia {{prefix}} in BGP, ma nella tabella di routing di {{device}} (negli show) quella rete non c'è: il traffico verso {{prefix}} non arriva.",
+        "fix": "Controlla la sessione BGP, i filtri (route-map, prefix-list) e che l'hub rifletta la rete alle filiali."
+      },
+      "description-mismatch": {
+        "title": "{{device}} {{port}}: la descrizione dice {{described}}, {{protocol}} vede {{seen}}",
+        "why": "La descrizione della porta («{{description}}») nomina {{described}}, ma {{protocol}} vede {{seen}} su questa porta: la descrizione è vecchia o il cavo è nella porta sbagliata.",
+        "fix": "Correggi la descrizione, o sposta il cavo nella porta giusta."
+      },
+      "discovery-off": {
+        "title": "{{device}} {{port}}: LLDP e CDP spenti",
+        "why": "Il cavo viene dalla descrizione della porta, ma su {{device}} LLDP e CDP sono spenti su questa porta: non si può verificare con uno show.",
+        "fix": "Se le regole del cliente lo permettono, accendi LLDP o CDP e carica lo show dei vicini."
+      },
+      "advpn-hub-policy": {
+        "title": "{{hub}}: nessuna policy tra gli overlay",
+        "why": "Due filiali si parlano attraverso l'hub finché la scorciatoia non sale, ma su {{hub}} ({{vdom}}) nessuna policy, e nessuna zona con il traffico interno permesso, fa passare il traffico da un overlay all'altro.",
+        "fix": "Su {{hub}} aggiungi una policy dagli overlay agli overlay, oppure permetti il traffico interno alla zona (intrazone allow)."
+      },
+      "advpn-spoke-policy": {
+        "title": "{{device}}: nessuna policy verso le altre filiali",
+        "why": "Le policy di {{device}} verso i tunnel di {{hub}} non comprendono le reti delle altre filiali: il primo traffico verso di loro viene bloccato e la scorciatoia non parte.",
+        "fix": "Aggiungi le reti delle altre filiali alla policy verso l'overlay, per esempio con un gruppo di indirizzi."
+      },
+      "advpn-next-hop": {
+        "title": "{{hub}}: il BGP cambia il next hop verso le filiali",
+        "why": "Il gruppo BGP {{group}} di {{hub}} ha next-hop-self: le filiali ricevono le reti delle altre con l'hub come next hop e il traffico non passa sulla scorciatoia.",
+        "fix": "Togli next-hop-self dal gruppo delle filiali sull'hub."
+      },
+      "advpn-no-rr": {
+        "title": "{{hub}}: le reti delle filiali non vengono riflesse",
+        "why": "Le filiali sono vicini iBGP di {{hub}}, ma nessun loro gruppo è client del route reflector: una filiale non impara le reti delle altre.",
+        "fix": "Sull'hub imposta route-reflector-client nei gruppi delle filiali."
+      }
+    }
+  },
+  "vpnClient": {
+    "nav": "VPN del cliente",
+    "navDescription": "{{tunnels}}, {{shortcuts}}",
+    "title": "VPN del cliente",
+    "summary": "{{tunnels}} tra gli apparati, {{shortcuts}} negli show",
+    "tunnels_one": "{{count}} tunnel IPsec",
+    "tunnels_other": "{{count}} tunnel IPsec",
+    "shortcuts_one": "{{count}} scorciatoia ADVPN",
+    "shortcuts_other": "{{count}} scorciatoie ADVPN",
+    "none": "Nessun tunnel IPsec tra gli apparati caricati.",
+    "hint": "Clicca un tunnel per vedere i due lati affiancati, parametro per parametro, con i problemi e le righe da cui vengono.",
+    "exportName": "vpn",
+    "type": {
+      "static": "Statico",
+      "dialup": "Dial-up",
+      "ddns": "DDNS",
+      "shortcut": "Scorciatoia ADVPN"
+    },
+    "col": {
+      "type": "Tipo",
+      "comparison": "Confronto dei due lati",
+      "branchA": "Filiale A",
+      "branchB": "Filiale B",
+      "hub": "Hub",
+      "shortcut": "Scorciatoia",
+      "why": "Perché",
+      "device": "Apparato",
+      "role": "Ruolo",
+      "tunnels": "Tunnel"
+    },
+    "compare": {
+      "agree_one": "{{count}} parametro coerente",
+      "agree_other": "{{count}} parametri coerenti",
+      "issues_one": "{{count}} incoerenza",
+      "issues_other": "{{count}} incoerenze",
+      "oneSide": "un solo lato",
+      "noTunnel": "nessun tunnel dall'altro lato"
+    },
+    "advpn": {
+      "title": "ADVPN",
+      "intro": "L'hub (sender) dice alle filiali (receiver) come raggiungersi: il traffico tra due filiali parte attraverso l'hub e poi passa su una scorciatoia diretta tra le due.",
+      "roles": "Ruoli",
+      "checks": "Controlli",
+      "checksOk": "Nessun problema: ruoli, policy e BGP dell'hub permettono le scorciatoie.",
+      "pairs": "Coppie di filiali",
+      "noPairs": "Nessuna coppia di filiali sullo stesso hub."
+    },
+    "pair": {
+      "active": "attiva",
+      "possible": "possibile",
+      "impossible": "non possibile",
+      "activeWhy": "Vista negli show: le due filiali si parlano già direttamente.",
+      "possibleWhy": "Niente la blocca nelle config: parte con il primo traffico tra le due filiali.",
+      "down": "I tunnel verso l'hub sono giù negli show."
     }
   }
 }

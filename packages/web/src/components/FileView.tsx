@@ -26,7 +26,15 @@ import {
   IconLock,
   IconSearch,
 } from '@tabler/icons-react';
-import type { AssignReason, DeviceModel, DeviceState, Infrastructure, Src } from '@ncv/core';
+import {
+  hostKey,
+  vlanGateways,
+  type AssignReason,
+  type DeviceModel,
+  type DeviceState,
+  type Infrastructure,
+  type Src,
+} from '@ncv/core';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { saveBlob, safeFileName } from '../export/download';
@@ -34,7 +42,7 @@ import { baseName, formatBytes, formatOrigin, formatPath } from '../format';
 import { contentStore, type FileContent } from '../state/content';
 import { effectiveDetection } from '../state/effective';
 import type { LinkedShow } from '../state/devices';
-import { peersOf } from '../state/infra';
+import { peersOf, type MapFocus } from '../state/infra';
 import type { FileEntry, Overrides, TextEntry } from '../state/files';
 import { AclsView } from '../views/AclsView';
 import { FirewallVlansView, InterfacesView } from '../views/InterfacesView';
@@ -56,6 +64,10 @@ interface Props {
   entry: FileEntry;
   /** The devices of the client put together, for the other side of every link (#15). */
   infra: Infrastructure;
+  /** The model of a device of the client, by its key. */
+  modelOf(key: string): DeviceModel | null;
+  /** Opens the map of the client on a link or a device (#15, part 2). */
+  onOpenMap(focus: MapFocus): void;
   onOverride(id: string, overrides: Overrides): void;
   /** Files of shows of this device. */
   shows: LinkedShow[];
@@ -151,6 +163,8 @@ function mainContext(model: DeviceModel): string {
 function TextView({
   entry,
   infra,
+  modelOf,
+  onOpenMap,
   onOverride,
   shows,
   state,
@@ -200,6 +214,11 @@ function TextView({
   const exportName = safeFileName(model?.hostname ?? entry.name.replace(/\.[^.]+$/, ''));
   const hostname = effective.hostname.value ?? model?.hostname;
   const peers = useMemo(() => (model ? peersOf(infra, hostname) : []), [infra, hostname, model]);
+  // Problems and remote gateways come from the current configuration of the device only.
+  const deviceKey =
+    hostname && infra.devices.some((d) => d.key === hostKey(hostname) && d.file === entry.id)
+      ? hostKey(hostname)
+      : undefined;
   const api = useMemo<DeviceViewApi>(
     () => ({
       showSource: (src: Src) => {
@@ -211,8 +230,24 @@ function TextView({
       fileName,
       exportName,
       peers,
+      infra,
+      ...(deviceKey ? { deviceKey } : {}),
+      gatewaysOf: (vlan: number) =>
+        deviceKey ? vlanGateways(infra, modelOf, deviceKey, vlan) : [],
+      openMap: onOpenMap,
     }),
-    [showLines, state, onOpenFile, fileName, exportName, peers],
+    [
+      showLines,
+      state,
+      onOpenFile,
+      fileName,
+      exportName,
+      peers,
+      infra,
+      deviceKey,
+      modelOf,
+      onOpenMap,
+    ],
   );
   const [exporting, setExporting] = useState(false);
   const [exportFailed, setExportFailed] = useState(false);

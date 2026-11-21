@@ -799,7 +799,7 @@ function checkAdvpn(
           'advpn-hub-policy',
           'warning',
           [hub.device],
-          { hub: host(hub.device), context: hub.context },
+          { hub: host(hub.device), vdom: hub.context },
           [],
           {},
         ),

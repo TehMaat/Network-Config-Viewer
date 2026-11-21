@@ -454,6 +454,8 @@ export interface IpsecTunnel extends Element {
   /** ADVPN and dial-up overlays: tells apart the tunnels on the same interface. */
   networkId?: number;
   natTraversal?: string;
+  /** Phase 1 key life, in seconds. */
+  keylife?: number;
   phase2: IpsecPhase2[];
 }
 

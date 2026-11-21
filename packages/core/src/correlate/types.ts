@@ -191,39 +191,43 @@ export interface Infrastructure {
 /** Error: the link cannot work as it is. Warning: it works, but something is wrong or risky. */
 export type Severity = 'error' | 'warning' | 'info';
 
-export type ProblemCode =
-  | 'ipsec-no-tunnel'
-  | 'ipsec-ike'
-  | 'ipsec-mode'
-  | 'ipsec-auth'
-  | 'ipsec-proposals'
-  | 'ipsec-dhgrp'
-  | 'ipsec-selectors'
-  | 'ipsec-p2-proposals'
-  | 'ipsec-pfs'
-  | 'ipsec-p2-dhgrp'
-  | 'ipsec-advpn'
-  | 'bgp-no-neighbor'
-  | 'bgp-as'
-  | 'bgp-down'
-  | 'trunk-mode'
-  | 'trunk-native'
-  | 'trunk-allowed'
-  | 'lag-one-side'
-  | 'lag-mode'
-  | 'lag-cables'
-  | 'mtu'
-  | 'ospf-area'
-  | 'ospf-passive'
-  | 'ip-duplicate'
-  | 'subnet-overlap'
-  | 'route-missing'
-  | 'description-mismatch'
-  | 'discovery-off'
-  | 'advpn-hub-policy'
-  | 'advpn-spoke-policy'
-  | 'advpn-next-hop'
-  | 'advpn-no-rr';
+/** Every consistency check, by the code of the problem it finds. */
+export const PROBLEM_CODES = [
+  'ipsec-no-tunnel',
+  'ipsec-ike',
+  'ipsec-mode',
+  'ipsec-auth',
+  'ipsec-proposals',
+  'ipsec-dhgrp',
+  'ipsec-selectors',
+  'ipsec-p2-proposals',
+  'ipsec-pfs',
+  'ipsec-p2-dhgrp',
+  'ipsec-advpn',
+  'bgp-no-neighbor',
+  'bgp-as',
+  'bgp-down',
+  'trunk-mode',
+  'trunk-native',
+  'trunk-allowed',
+  'lag-one-side',
+  'lag-mode',
+  'lag-cables',
+  'mtu',
+  'ospf-area',
+  'ospf-passive',
+  'ip-duplicate',
+  'subnet-overlap',
+  'route-missing',
+  'description-mismatch',
+  'discovery-off',
+  'advpn-hub-policy',
+  'advpn-spoke-policy',
+  'advpn-next-hop',
+  'advpn-no-rr',
+] as const;
+
+export type ProblemCode = (typeof PROBLEM_CODES)[number];
 
 export interface Problem {
   /** Stable: code and what it is about. */

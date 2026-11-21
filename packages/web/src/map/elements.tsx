@@ -19,17 +19,52 @@ import {
   type NodeProps,
   useStore,
 } from '@xyflow/react';
-import type { ExternalNode, InfraDevice, Link, LinkKind } from '@ncv/core';
+import type { ExternalNode, InfraDevice, Link, LinkKind, Severity } from '@ncv/core';
 import { useTranslation } from 'react-i18next';
 
+/** The problems of a device or a link on the map: how many, and the most serious. */
+export interface ProblemMark {
+  severity: Severity;
+  count: number;
+}
+
 export type SiteNode = Node<{ label: string }, 'site'>;
-export type DeviceNode = Node<{ device: InfraDevice; active: boolean }, 'device'>;
+export type DeviceNode = Node<
+  { device: InfraDevice; active: boolean; problems?: ProblemMark },
+  'device'
+>;
 export type ExternalMapNode = Node<{ external: ExternalNode; active: boolean }, 'external'>;
 export type MapNode = SiteNode | DeviceNode | ExternalMapNode;
 export type MapEdge = Edge<
-  { link: Link; offset: number; label?: string; active: boolean; dim: boolean },
+  {
+    link: Link;
+    offset: number;
+    label?: string;
+    active: boolean;
+    dim: boolean;
+    problems?: ProblemMark;
+  },
   'link'
 >;
+
+/** A round mark with the number of problems, in the colour of the most serious one. */
+function ProblemDot({ mark, testId }: { mark: ProblemMark; testId: string }) {
+  const { t } = useTranslation();
+  return (
+    <span
+      className={`ncv-map-problem ncv-map-problem-${mark.severity}`}
+      data-testid={testId}
+      data-severity={mark.severity}
+      data-count={mark.count}
+      title={t('problems.mark', {
+        count: mark.count,
+        severity: t(`problems.severity.${mark.severity}`),
+      })}
+    >
+      {mark.count}
+    </span>
+  );
+}
 
 /** Edges start and end in the middle of the nodes, which are drawn over them. */
 function CenterHandles() {
@@ -69,8 +104,10 @@ function DeviceBox({ data }: NodeProps<DeviceNode>) {
       className={`ncv-map-device${data.active ? ' ncv-map-active' : ''}`}
       data-testid="map-device"
       data-device={d.hostname}
+      data-problems={data.problems?.severity}
     >
       <CenterHandles />
+      {data.problems && <ProblemDot mark={data.problems} testId="map-device-problems" />}
       <Group gap={8} wrap="nowrap" align="center">
         <Badge
           variant="light"
@@ -166,7 +203,7 @@ const LABEL_ZOOM = 0.6;
 function LinkEdge({ id, sourceX, sourceY, targetX, targetY, data }: EdgeProps<MapEdge>) {
   const zoom = useStore((s) => s.transform[2]);
   if (!data) return null;
-  const { link, offset, label, active, dim } = data;
+  const { link, offset, label, active, dim, problems } = data;
   const style = STYLE[link.kind];
   const dx = targetX - sourceX;
   const dy = targetY - sourceY;
@@ -192,17 +229,20 @@ function LinkEdge({ id, sourceX, sourceY, targetX, targetY, data }: EdgeProps<Ma
           opacity: dim ? 0.25 : link.verified || link.kind !== 'cable' ? 1 : 0.7,
         }}
       />
-      {label && (zoom >= LABEL_ZOOM || active) && (
+      {/* The problems of a link are always shown; its label only from close enough. */}
+      {((label && (zoom >= LABEL_ZOOM || active)) || problems) && (
         <EdgeLabelRenderer>
           <div
-            className={`ncv-map-edge-label nodrag nopan${active ? ' ncv-map-active' : ''}`}
+            className={`ncv-map-edge-label nodrag nopan${active ? ' ncv-map-active' : ''}${label && (zoom >= LABEL_ZOOM || active) ? '' : ' ncv-map-edge-mark'}`}
             style={{
               transform: `translate(-50%, -50%) translate(${lx}px, ${ly}px)`,
               opacity: dim ? 0.3 : 1,
             }}
             data-testid="map-edge-label"
+            data-link={link.id}
           >
-            {label}
+            {problems && <ProblemDot mark={problems} testId="map-edge-problems" />}
+            {label && (zoom >= LABEL_ZOOM || active) ? label : null}
           </div>
         </EdgeLabelRenderer>
       )}

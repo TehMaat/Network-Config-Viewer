@@ -17,6 +17,8 @@ import { hasMacTable, portsWithoutMac, type DeviceModel } from '@ncv/core';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LinkedShow } from '../state/devices';
+import { problemsOf } from '../state/infra';
+import { DeviceProblems, problemsSummary } from './problems';
 import { useDeviceView } from './source';
 
 interface Props {
@@ -33,7 +35,9 @@ const WARNING_LINKS = 5;
 
 export function SummaryView({ model, detection, shows }: Props) {
   const { t, i18n } = useTranslation();
-  const { showSource, state, openFile } = useDeviceView();
+  const { showSource, state, openFile, infra, deviceKey } = useDeviceView();
+  // What does not agree with the other devices of the client (#15, part 2).
+  const problems = problemsOf(infra, deviceKey);
   const switchDevice = model.vendor === 'cisco';
   const withoutMac = switchDevice ? portsWithoutMac(model, state) : [];
   // Warnings about the real state of a switch (#6): one per device.
@@ -136,6 +140,18 @@ export function SummaryView({ model, detection, shows }: Props) {
           {facts.map(([key, label, value]) => fact(key, label, value))}
         </SimpleGrid>
       </Paper>
+
+      {problems.length > 0 && (
+        <Paper withBorder p="sm" data-testid="summary-problems">
+          <Group justify="space-between" mb="xs" gap="xs">
+            <Title order={5}>{t('problems.deviceTitle')}</Title>
+            <Text size="xs" c="dimmed">
+              {problemsSummary(problems, t)}
+            </Text>
+          </Group>
+          <DeviceProblems problems={problems} />
+        </Paper>
+      )}
 
       <Paper withBorder p="sm">
         <Title order={5} mb="xs">

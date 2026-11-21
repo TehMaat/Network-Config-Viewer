@@ -7,6 +7,8 @@ import {
   type CorrelationInput,
   type Infrastructure,
   type Link,
+  type Problem,
+  type Severity,
 } from '@ncv/core';
 import { contentStore } from './content';
 import { deviceState, type ShowLinks } from './devices';
@@ -15,6 +17,14 @@ import type { DeviceGroup } from './groups';
 
 /** Selection of the map in the list of the files. */
 export const MAP_ID = '#map';
+/** Selection of the VPN of the client in the list of the files (#15, part 2). */
+export const VPN_ID = '#vpn';
+
+/** What the map shows when it opens from elsewhere: a link or a node. */
+export interface MapFocus {
+  kind: 'link' | 'node';
+  id: string;
+}
 
 export const EMPTY_INFRASTRUCTURE: Infrastructure = {
   devices: [],
@@ -83,4 +93,25 @@ export function peersOf(infra: Infrastructure, hostname: string | undefined): Pe
     }
   }
   return out;
+}
+
+/** The problems a device is part of, from the consistency checks. */
+export function problemsOf(infra: Infrastructure, key: string | undefined): Problem[] {
+  return key ? infra.problems.filter((p) => p.devices.includes(key)) : [];
+}
+
+const RANK: Record<Severity, number> = { error: 0, warning: 1, info: 2 };
+
+/** The most serious severity of some problems, or null when there are none. */
+export function worstSeverity(problems: readonly Problem[]): Severity | null {
+  let worst: Severity | null = null;
+  for (const p of problems) if (!worst || RANK[p.severity] < RANK[worst]) worst = p.severity;
+  return worst;
+}
+
+/** How many problems of each severity. */
+export function severityCounts(problems: readonly Problem[]): Record<Severity, number> {
+  const counts = { error: 0, warning: 0, info: 0 };
+  for (const p of problems) counts[p.severity]++;
+  return counts;
 }
