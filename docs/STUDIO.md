@@ -1,10 +1,10 @@
 # Studio preliminare: Network Config Viewer
 
-> **Stato:** novembre 2026. La [fase 0](#fase-0-fondamenta-realizzata) è realizzata: l'app si avvia in locale con Docker, riconosce le config FortiGate e Cisco e le mostra navigabili (vedi il [README](../README.md)). Il resto del documento raccoglie le decisioni prese e il piano delle fasi successive. Il [mockup](mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scarica il file e aprilo nel browser.
+> **Stato:** novembre 2026. La [fase 0](#fase-0-fondamenta-realizzata) è realizzata: l'app si avvia in locale con Docker, riconosce le config FortiGate e Cisco e le mostra navigabili. La [fase 1](#fase-1-lettura-dei-singoli-apparati-fortigate-cisco-iosios-xe-e-cisco-small-business-mvp) è in corso: i driver FortiOS, Cisco IOS/IOS-XE e Small Business leggono le config e l'app mostra le viste di ogni apparato (vedi il [README](../README.md)); mancano gli show con lo stato reale, l'archivio dei clienti su disco e l'export Excel. Il resto del documento raccoglie le decisioni prese e il piano delle fasi successive. Il [mockup](mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scarica il file e aprilo nel browser.
 
 ## 1. In breve
 
-- **Cosa**: uno strumento per **vedere l'infrastruttura di un cliente** partendo dai backup di configurazione. Ogni cliente ha la sua cartella con config, output di show e versioni precedenti. Si caricano tutti gli apparati (firewall, switch, wireless) e si ottengono:
+- **Cosa**: uno strumento per **vedere l'infrastruttura di un cliente** partendo dai backup di configurazione. Per ogni cliente si caricano nell'app config, output di show e versioni precedenti, e l'app li conserva. Si caricano tutti gli apparati (firewall, switch, wireless) e si ottengono:
   - una mappa grafica con collegamenti fisici, VPN, SD-WAN, scorciatoie ADVPN e routing/BGP;
   - le viste di dettaglio di ogni apparato: policy, porte e VLAN, ACL, regole SD-WAN, routing;
   - la vista dei rack, con patch panel e cavi.
@@ -39,7 +39,11 @@
 | FortiManager | Sia in lettura (template e policy package esistenti) sia in generazione |
 | Input | File caricati a mano e output dei comandi show; lettura live SSH/API in una fase successiva |
 | Analisi | Pulizia policy, policy lookup, topologia, confronto tra versioni, controlli di coerenza tra apparati |
-| Organizzazione | Una cartella per cliente, con config, output di show, versioni precedenti, file delle prese e collegamenti inseriti a mano |
+| Organizzazione | Clienti gestiti dall'app: all'app non si dà mai una cartella, i file si caricano (anche dentro archivi zip e tar) e l'app li conserva per cliente, raggruppati per apparato: config attuale, versioni precedenti, show, e più avanti file delle prese e collegamenti inseriti a mano |
+| Archivio locale | Su disco già nella fase 1: un volume Docker sul PC, gestito da un piccolo programma lato server nel container, che serve l'app al posto di nginx e conserva i file 1:1. Lo stesso archivio si vede da qualsiasi browser e non si perde pulendo il browser. Un cliente si esporta e si reimporta in un file zip |
+| Browser | Chrome, Edge, Firefox e Safari; i test nel browser girano su Chromium, Firefox e WebKit |
+| Copertura della lettura | Ogni riga è compresa, ignorata di proposito (commenti, banner, certificati, messaggi sostitutivi) o sconosciuta. Il riepilogo mostra la percentuale e le sezioni non interpretate; le righe sconosciute sono evidenziate nella config |
+| Valori di default | Tabelle per marca e versione; nelle viste i valori che vengono da un default sono in corsivo, e quelli non ancora confermati su apparati reali sono segnati "da verificare" |
 | Collegamenti tra apparati | Verificati con LLDP/CDP, dedotti da descrizioni e indirizzi, oppure inseriti a mano; le differenze tra le fonti vengono segnalate |
 | Indirizzi MAC sulle porte | Ogni porta configurata degli switch riporta i MAC dei dispositivi collegati, con la VLAN, letti dalla tabella MAC dello switch (`show mac address-table`), non dalla config. Lo strumento li mostra e segnala le porte senza MAC e lo show mancante (vedi [5.5](#55-pannello-porte-dello-switch)) |
 | VPN | Anche ADVPN: ruoli, controlli e scorciatoie tra filiali |
@@ -56,7 +60,7 @@
 | Documentazione e screenshot | Solo con dati sintetici, generati dalle config di esempio in `samples/` |
 | Licenza | Open source, MIT |
 | Codice | Scritto da Claude: lo stack si sceglie per semplicità d'uso, non per familiarità |
-| Strumenti | TypeScript, npm workspaces, React + Vite, Mantine, i18next, CodeMirror 6, fflate, Vitest, Playwright (vedi [capitolo 8](#8-scelte-tecniche)) |
+| Strumenti | TypeScript, npm workspaces, React + Vite, Mantine, i18next, CodeMirror 6, TanStack Table e TanStack Virtual, fflate, Vitest, Playwright (vedi [capitolo 8](#8-scelte-tecniche)) |
 | Test automatici | Su GitHub Actions a ogni pull request: lint, tipi, test, build, immagine Docker e test nel browser sul container. Non si pubblica niente |
 | Metodo di lavoro | Ogni proposta viene analizzata e diventa un'issue; si lavora solo dopo l'okay. Registro delle modifiche in `CHANGELOG.md`, documentazione sempre aggiornata, Semantic Versioning. Regole complete in [`CLAUDE.md`](../CLAUDE.md) |
 
@@ -117,6 +121,13 @@ flowchart LR
 Così il lavoro sulla sintassi si fa una volta per famiglia, e ogni nuova marca costa solo il suo driver.
 
 Nella fase 0 ci sono i parser generici delle due famiglie dell'MVP: indentazione e blocchi `config / edit / set / next / end`. Gestiscono anche i casi che rompono le regole: valori FortiOS tra virgolette su più righe (certificati, chiavi, messaggi), VDOM con i blocchi a colonna 0, banner Cisco con delimitatore (`^C` o il carattere ETX), catene di certificati chiuse da `quit`, intestazione e blocchi `exit` dei Cisco Small Business. Un file da 20 MB si legge in meno di un secondo, fuori dal thread dell'interfaccia.
+
+Nella fase 1 ci sono i driver di marca dell'MVP, in `packages/core/src/drivers`:
+
+- **Cisco IOS, IOS-XE e Small Business**: interfacce e modalità delle porte (con i default di DTP e dei trunk), liste `allowed vlan` con `add`, `remove` ed `except`, modalità `general` dei Small Business, VLAN anche quando le tiene il VTP, port-channel, stack e posizione delle porte, SVI, PoE, 802.1X/MAB, port security, VLAN voce, ACL e object-group con i punti in cui sono applicati, rotte statiche, policy route, OSPF, BGP, route-map e prefix-list.
+- **FortiOS 7.0–8.0**: VDOM come contesti separati, interfacce e zone, indirizzi e gruppi (con le esclusioni), servizi, VIP, IP pool, policy nell'ordine reale, rotte statiche anche verso le zone SD-WAN, policy route, BGP con gruppi e range dinamici, OSPF, route-map, prefix-list, IPsec con fase 1, fase 2 e ruolo ADVPN, SD-WAN. Gli oggetti predefiniti (`all`, `ALL`, `HTTP`, `HTTPS`, `DNS`…) si aggiungono quando le policy li usano senza definirli.
+
+Ogni driver classifica le righe (copertura), collega i nomi alla loro definizione e segna i valori di default. Il modello si costruisce nel Web Worker: un FortiGate con 10.000 policy si legge in meno di mezzo secondo.
 
 ### Come ottenere l'input per ogni marca
 
@@ -183,7 +194,7 @@ Per FortiSwitch gestiti dal FortiGate la tabella MAC si legge dal FortiGate con 
 | `get router info bgp summary` | Sessioni BGP stabilite e prefissi ricevuti |
 | `diagnose sys sdwan health-check`, `diagnose sys sdwan service` | Stato degli SLA e membro scelto da ogni regola SD-WAN (i nomi dei comandi cambiano leggermente tra le versioni) |
 
-## 4. Modello dati neutro (prima bozza)
+## 4. Modello dati neutro
 
 ```
 Cliente (una cartella sul PC)
@@ -220,6 +231,16 @@ Cliente (una cartella sul PC)
 - Ogni elemento porta con sé i riferimenti alle righe sorgente.
 - I contesti logici vanno previsti da subito: policy e oggetti appartengono a un contesto (per esempio una VDOM), non direttamente all'apparato.
 
+**Cosa c'è già (fase 1).** La prima versione del modello, in `packages/core/src/model/types.ts`, copre un apparato alla volta:
+
+- l'apparato, con hostname, marca, sistema e versione, modello, membri dello stack, IP di gestione e funzioni in uso;
+- le interfacce, con modalità L2, VLAN, port-channel, posizione sul frontale, PoE, 802.1X/MAB, port security, indirizzi IP, VRF, ACL applicate, OSPF, e per FortiOS alias, ruolo, accesso amministrativo e VDOM;
+- le VLAN, anche quelle implicite (VLAN 1, VLAN usate dalle porte ma non scritte per via del VTP);
+- i contesti logici (le VDOM, oppure un solo contesto per gli switch), con zone, indirizzi, gruppi, servizi, policy, VIP, IP pool, ACL, object-group, routing (statiche, policy route, BGP, OSPF, route-map, prefix-list), IPsec e SD-WAN;
+- i riferimenti dai nomi alle definizioni, la copertura riga per riga e gli avvisi (per esempio VLAN fuori dalla config per via del VTP, policy disattivate, senza log, che permettono tutto o che aprono servizi di gestione a tutti).
+
+Ogni elemento ha le righe da cui proviene e l'elenco dei campi che vengono da un default, con quelli ancora da verificare. Rack, collegamenti tra apparati, servizi di gestione, apparati gestiti, wireless e stato dagli show arrivano nelle fasi successive.
+
 ## 5. Le viste grafiche
 
 Il [mockup](mockup/index.html) contiene le viste 5.1–5.7, 5.9 e 5.11, con un cliente di esempio: una sede con FortiGate hub e tre Catalyst, tre filiali con FortiGate in SD-WAN e ADVPN.
@@ -241,6 +262,8 @@ Il [mockup](mockup/index.html) contiene le viste 5.1–5.7, 5.9 e 5.11, con un c
 - **Esportazione in draw.io e immagine**, per la documentazione da consegnare al cliente.
 
 ### 5.2 VPN
+
+**Nella fase 1**, per ogni FortiGate e per ogni VDOM: elenco dei tunnel con tipo, interfaccia, gateway remoto, versione IKE, proposte, ruolo ADVPN e fasi 2 (selettori, proposte, PFS, gruppi DH, negoziazione automatica, durata della chiave), con i valori di default indicati come tali. L'abbinamento dei due estremi arriva con la mappa (fase 2).
 
 Elenco dei tunnel di tutto il progetto con i due estremi abbinati, e per ciascuno:
 
@@ -278,11 +301,15 @@ Per ogni FortiGate:
 
 Sulla mappa, gli overlay SD-WAN collegano filiali e hub. Le stesse viste valgono per il multi-WAN degli altri vendor, per esempio i gateway group di pfSense e OPNsense.
 
+**Nella fase 1** ci sono zone, membri, health check con SLA e regole in ordine con la regola implicita; il membro in uso arriva con gli show.
+
 ### 5.4 Routing e BGP
 
 - **Per apparato**: rotte statiche, policy route, BGP (neighbor, gruppi, range dinamici dell'hub, reti annunciate, redistribuzioni, route-map e prefix-list espanse), OSPF.
 - **Sulla mappa**: sessioni BGP abbinate tra apparati, con AS, iBGP o eBGP e route reflector.
 - **Tabella di routing reale**, se caricata da show, con evidenziate le rotte attese che mancano (per esempio la LAN di una filiale la cui sessione BGP non è su). Senza show, la tabella mostra le rotte che derivano dalla config: connesse, statiche, reti annunciate.
+
+**Nella fase 1**, per ogni apparato e per ogni VDOM: rotte ricavate dalla config (connesse e statiche, anche verso le zone SD-WAN) con la ricerca della rotta per un IP, policy route, OSPF con le interfacce, l'area e quelle passive, BGP con neighbor, gruppi, range dinamici, reti annunciate e redistribuzioni, route-map e prefix-list.
 
 ### 5.5 Pannello porte dello switch
 
@@ -306,9 +333,13 @@ Disegno del frontale, con un riquadro per ogni membro dello stack:
   - il modello si ricava dalla config stessa (per esempio `switch 1 provision c9300-48p` su Cisco, l'intestazione `#config-version=FGT60F-…` su FortiGate) oppure da `show inventory`.
 - Lo stesso pannello serve per le **interfacce del FortiGate** (port1…, wan, x1/x2 SFP+) e per i **FortiSwitch** gestiti dal FortiGate, comprese le coppie MCLAG.
 
+**Nella fase 1** il pannello degli switch è quello generico: un riquadro per ogni membro dello stack, porte dispari sopra e pari sotto, uplink a parte, colore per VLAN access (lo stesso su un apparato), trunk a strisce, porte spente e L3, segni per PoE, 802.1X/MAB, VLAN voce e port-channel, filtro per VLAN e dettaglio della porta con i valori di default indicati come tali. Sotto il pannello c'è la tabella di tutte le interfacce. Per il FortiGate le interfacce sono in una tabella, con tipo, VDOM, zona, interfaccia padre o membri e accesso amministrativo. Stato reale e indirizzi MAC arrivano con gli show.
+
 ### 5.6 VLAN
 
 Per ogni VLAN: nome, **gateway** (anche se si trova su un altro apparato del progetto, per esempio la sotto-interfaccia del FortiGate), numero di porte access, voce e trunk, e una striscia con tutte le porte nell'ordine del frontale. È il riferimento principale nelle migrazioni switch.
+
+**Nella fase 1**: nome, gateway se sta sullo stesso apparato, porte access, voce, untagged e tagged (i membri dei port-channel contano nel `Po`); per il FortiGate, le interfacce VLAN con ID, interfaccia padre, indirizzo e VDOM.
 
 ### 5.7 Policy firewall
 
@@ -323,21 +354,29 @@ Tabella in stile GUI FortiGate:
 - **Viste collegate**: VIP/NAT, IP pool, interfacce e zone, rotte statiche.
 - **Altri vendor**: la vista segue il modello di ognuno. Per esempio pfSense e OPNsense hanno regole per interfaccia d'ingresso, con le regole floating valutate per prime.
 
+**Nella fase 1**: ordine reale, lista unica o per coppia di interfacce, VDOM, ricerca testuale e per IP (tramite indirizzi, subnet, gruppi con le esclusioni, VIP e `all`; le regole che contengono l'IP solo tramite `all` restano in secondo piano), dettaglio della regola con gli oggetti espansi fino agli IP e i servizi fino alle porte, avvisi (disabilitate, senza log, any-any, sorgente `all` su servizi di gestione). Gli oggetti hanno una vista propria con "dove è usato". Le regole oscurate arrivano con la pulizia policy (fase 3).
+
 ### 5.8 ACL degli switch
 
 Elenco delle ACL con le voci, gli object-group espansi e i **punti in cui sono applicate** (interfaccia e direzione, VTY, SNMP, NAT, route-map…). Usa lo stesso motore di ricerca e di lookup delle policy firewall.
+
+**Nella fase 1**: voci, punti di applicazione (interfacce, VTY, SNMP, route-map, accesso di gestione dei Small Business), object-group espansi e ricerca per IP tramite host, subnet, gruppi e `any`. Il lookup di un flusso arriva nella fase 3.
 
 ### 5.9 Config originale collegata
 
 Testo originale con evidenziazione della sintassi, blocchi piegabili e numeri di riga. I nomi degli oggetti sono cliccabili (portano alla definizione) e le righe non comprese dal parser sono evidenziate. Ogni dettaglio (porta, policy, tunnel) indica le righe da cui proviene.
 
-Nella fase 0 ci sono già evidenziazione, blocchi piegabili, numeri di riga, ricerca e una struttura navigabile (blocchi `config`, VDOM, interfacce, banner…). Il testo resta identico al file: si copia o si scarica byte per byte, anche con i fine riga di Windows. Nomi cliccabili e righe non comprese arrivano con i driver di marca della fase 1.
+Nella fase 0 ci sono evidenziazione, blocchi piegabili, numeri di riga, ricerca e una struttura navigabile (blocchi `config`, VDOM, interfacce, banner…). Il testo resta identico al file: si copia o si scarica byte per byte, anche con i fine riga di Windows.
 
-![La vista della config nella fase 0: elenco dei file, riconoscimento con la riga da cui viene ogni dato, struttura navigabile e testo originale](img/app-fortigate.png)
+Nella fase 1, per gli apparati letti da un driver, la config è l'ultima scheda delle viste: i nomi sono cliccabili verso la definizione, con "Torna indietro"; le righe non interpretate sono evidenziate (si possono nascondere); ogni elemento delle viste apre la config sulle sue righe.
+
+![La config collegata di uno stack Catalyst: righe non interpretate evidenziate e nomi cliccabili verso la loro definizione](img/app-config.png)
 
 ### 5.10 Riepilogo dell'apparato
 
 Hostname, modello, versione, IP di gestione, conteggi (interfacce, VLAN, policy, oggetti), funzioni in uso (stack, vPC, VSX, 802.1X, OSPF, SD-WAN…), show caricati e percentuale di copertura del parser.
+
+**Nella fase 1** il riepilogo è la prima scheda di ogni apparato letto da un driver: riconoscimento (correggibile a mano), IP di gestione, stack o VDOM, conteggi, funzioni in uso, avvisi raggruppati per tipo con il salto alle righe, copertura con l'elenco delle sezioni non interpretate. Gli show caricati arrivano con la loro lettura.
 
 ### 5.11 Rack e patch panel
 
@@ -448,16 +487,16 @@ Il punto forte di Python (librerie SSH come Netmiko) serve solo per la lettura l
 | Interfaccia | React + Vite, con Mantine come libreria di componenti (tema chiaro, scuro o come il sistema, a scelta) |
 | Traduzioni | i18next, un file JSON per lingua; un test verifica che italiano e inglese abbiano le stesse chiavi, e il lint segnala i testi scritti direttamente nel codice |
 | Gestore pacchetti | npm workspaces: nessuno strumento in più da installare |
-| Tabelle grandi (migliaia di policy) | TanStack Table con virtualizzazione |
+| Tabelle grandi (migliaia di policy) | TanStack Table e TanStack Virtual (MIT): ordinamento, filtro e righe virtualizzate. Un test verifica che la tabella di 10.000 policy resti fluida |
 | Pannelli porte | SVG disegnato da codice |
 | Mappa e schemi LAG/vPC | React Flow con layout automatico, esportazione in draw.io |
 | Config originale | CodeMirror 6 (evidenziazione, piegatura, salto alla riga) |
 | Elaborazione | Web Worker, così l'interfaccia non si blocca sui file grandi |
 | Archivi zip, tar, tar.gz e gz | fflate per zip e gzip, lettore tar scritto nel progetto; archivi annidati, con limiti di profondità e dimensione |
-| Cartelle dei clienti | Una cartella per cliente sul PC, letta e aggiornata direttamente dal browser (Chrome ed Edge lo permettono); negli altri browser, salvataggio interno al browser con import/export in zip |
+| Clienti e archivio | Archivio locale su disco, in un volume Docker, gestito da un piccolo programma lato server nel container (in arrivo nella fase 1); la lettura delle config resta nel browser |
 | Export | Excel (ExcelJS), report HTML stampabile in PDF |
 | Test | Vitest (parser e logica), Playwright (interfaccia) |
-| Struttura del codice | Monorepo: `core` (modello, parser, correlazione, generatori, analisi, senza dipendenze dal browser), `web` (interfaccia), in futuro `server` |
+| Struttura del codice | Monorepo: `core` (modello, parser, driver di marca, funzioni di ricerca sul modello, poi correlazione, generatori e analisi, senza dipendenze dal browser), `web` (interfaccia), `server` in arrivo con l'archivio locale |
 | Avvio | Docker: build in due passaggi (Node.js per la build, poi solo nginx senza privilegi con i file statici) e `compose.yaml` con la porta aperta solo su `127.0.0.1` |
 
 La licenza di ogni libreria va verificata prima di adottarla: deve essere compatibile con la licenza MIT del progetto.
@@ -485,9 +524,10 @@ Docker Desktop è gratuito per uso personale e per le aziende con meno di 250 di
 
 ## 10. Qualità e test
 
-- **Raccolta di config di esempio** per ogni marca e versione, solo sintetiche, in [`samples/`](../samples/README.md), con il risultato atteso salvato accanto (`expected.json`): ogni modifica ai parser viene verificata su tutta la raccolta.
+- **Raccolta di config di esempio** per ogni marca e versione, solo sintetiche, in [`samples/`](../samples/README.md), con il risultato atteso salvato accanto: il riconoscimento in `expected.json` e il riassunto del modello di ogni config in `expected-models.json`. Ogni modifica ai parser e ai driver viene verificata su tutta la raccolta.
 - **Progetti di esempio multi-apparato** (sede e filiali con VPN, SD-WAN e BGP) per verificare la correlazione e i controlli di coerenza.
-- **Copertura** misurata per ogni file: percentuale di righe comprese.
+- **Copertura** misurata per ogni file: percentuale di righe comprese, verificata dai riassunti attesi.
+- **Prestazioni**: una config da 20 MB si apre senza bloccare l'interfaccia e la tabella di 10.000 policy resta fluida durante lo scorrimento (test nel browser).
 - **Andata e ritorno** per i generatori: modello → config → rilettura → stesso modello.
 - **Test differenziali** per le migrazioni: stessi flussi di prova, stesso esito su sorgente e destinazione.
 - **Test automatici dell'interfaccia** con screenshot.
@@ -507,12 +547,18 @@ Issue [#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4).
 - **Risultato**: avvii l'app con Docker, trascini un backup FortiGate o Cisco e l'app lo riconosce e mostra la config navigabile, identica all'originale.
 
 ### Fase 1: lettura dei singoli apparati FortiGate, Cisco IOS/IOS-XE e Cisco Small Business (MVP)
-- FortiGate: interfacce e zone, oggetti, policy (con VDOM), VIP e IP pool, routing (statiche, BGP, OSPF), VPN IPsec, SD-WAN.
-- Cisco IOS/IOS-XE e Cisco Small Business: interfacce, VLAN, trunk, port-channel, stack, SVI, ACL, routing.
-- Output dei comandi show di entrambi, compresa la tabella MAC (`show mac address-table`) di Cisco IOS/IOS-XE e Cisco Small Business, con i MAC su ogni porta configurata.
-- Cartella per cliente: si apre una cartella con config, show e versioni precedenti, e lo strumento la legge tutta.
-- Viste per apparato (5.3–5.10) ed export Excel.
-- **Risultato**: ogni FortiGate e ogni Catalyst leggibile in forma grafica.
+Issue [#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10), in corso.
+- **Realizzato** ([#11](https://github.com/TehMaat/Network-Config-Viewer/pull/11)):
+  - modello neutro, con le righe d'origine di ogni elemento, i default indicati e la copertura riga per riga;
+  - FortiGate: interfacce e zone, oggetti, policy (con VDOM), VIP e IP pool, routing (statiche, policy route, BGP, OSPF), VPN IPsec, SD-WAN;
+  - Cisco IOS/IOS-XE e Cisco Small Business: interfacce, VLAN, trunk, port-channel, stack, SVI, PoE, 802.1X/MAB, ACL, routing;
+  - viste per apparato (5.2–5.10, per il singolo apparato) e config collegata.
+- **Da completare**:
+  - output dei comandi show di entrambi, da file singoli e da log di sessione, con lo stato reale nelle viste e la tabella MAC (`show mac address-table`) con i MAC su ogni porta configurata;
+  - clienti nell'archivio locale su disco (volume Docker e programma lato server nel container): file caricati e conservati per cliente, raggruppati per apparato con versioni precedenti e show, esportazione e importazione in zip;
+  - export Excel;
+  - test nel browser anche su Firefox e WebKit.
+- **Risultato**: ogni FortiGate e ogni Catalyst leggibile in forma grafica, con i file di ogni cliente conservati sul PC.
 
 ### Fase 2: mappa dell'infrastruttura
 - Progetto con più apparati e siti; correlazione (cavi, LAG, subnet, IPsec, overlay SD-WAN, BGP).
@@ -550,7 +596,7 @@ Issue [#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4).
 
 Nessuna domanda aperta. Durante la fase 1, quando un parser sbaglia su una config reale, serviranno le righe che danno problemi, passate in chat con i valori sensibili cambiati a mano.
 
-Da valutare nella fase 1, con un'issue separata: con Docker la cartella dei clienti si potrebbe collegare al container, così si leggerebbe da qualsiasi browser, compreso Firefox; servirebbe però un componente lato server.
+Deciso nella fase 1 ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)): l'archivio dei clienti sta su disco, in un volume Docker gestito da un programma lato server nel container, e si vede da qualsiasi browser.
 
 ## Riferimenti
 

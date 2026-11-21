@@ -40,6 +40,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
 
 ### Modificato
 
+- Studio, README e screenshot aggiornati con i driver e le viste della fase 1 già unite: decisioni sull'archivio dei clienti, i browser, la copertura e i default; modello neutro realizzato; viste per apparato; roadmap della fase 1 con le parti fatte e quelle che mancano ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
 - Config di esempio FortiGate arricchite con servizi personalizzati e gruppi di servizi, OSPF verso il centro stella, policy route, prefix-list e route-map per BGP, la VPN del campus e policy che fanno scattare gli avvisi ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
 - Config di esempio Cisco arricchite con OSPF, policy route, ACL applicate a interfacce, VTY e SNMP, object-group, 802.1X e MAB, PoE, port security con MAC sticky, VTP in modalità server con le VLAN solo nello show e modalità `general` dei Small Business; per ogni config c'è il riassunto atteso del modello in `samples/expected-models.json`, verificato dai test ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
 - Screenshot della documentazione rifatti con il nuovo selettore del tema, in tema chiaro e in tema scuro; il README mostra entrambi ([#7](https://github.com/TehMaat/Network-Config-Viewer/issues/7)).
