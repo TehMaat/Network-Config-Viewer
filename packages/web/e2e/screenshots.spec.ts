@@ -49,6 +49,22 @@ for (const [colorScheme, suffix] of [
       await page.screenshot({ path: `${DOCS_IMG}app-cisco${suffix}.png` });
     });
 
+    test('real state of a switch', async ({ page }) => {
+      const withShows = [
+        'cisco-ios/sw-hq-core-c9300-iosxe-17.12-stack.txt',
+        'show/sw-hq-core_sessione.txt',
+        'show/sw-hq-core_show-cdp-lldp-neighbors.txt',
+      ];
+      await openApp(page);
+      await loadFiles(page, withShows.map(samplePath), withShows.length);
+      await selectFile(page, 'sw-hq-core-c9300-iosxe-17.12-stack.txt');
+      await page.getByTestId('tab-ports').click();
+      await page.locator('[data-testid="port"][data-name="GigabitEthernet1/0/25"]').click();
+      await expect(page.getByTestId('port-macs')).toBeVisible();
+      await page.getByTestId('port-detail').scrollIntoViewIfNeeded();
+      await page.screenshot({ path: `${DOCS_IMG}app-stato${suffix}.png` });
+    });
+
     test('linked config', async ({ page }) => {
       await openApp(page);
       await loadFiles(page, files.map(samplePath), files.length);

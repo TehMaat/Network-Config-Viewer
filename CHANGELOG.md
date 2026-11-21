@@ -37,6 +37,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
   - certificati e messaggi sostitutivi ignorati di proposito nella copertura;
   - viste di ogni FortiGate, con la scelta della VDOM: riepilogo, interfacce e zone, VLAN, policy (lista unica o per coppia di interfacce, ricerca per IP tramite indirizzi, subnet, gruppi, VIP e all, oggetti espansi fino agli IP, avvisi), oggetti con "dove è usato", routing, VPN IPsec, SD-WAN con la regola implicita;
   - test con una config da 10.000 policy: la tabella resta fluida durante lo scorrimento.
+- Fase 1, comandi show e stato reale ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)):
+  - lettura degli output da file singoli e da log di sessione, divisi per prompt (anche dentro le VDOM del FortiGate) o, senza prompt, dalla forma dell'output; comandi riconosciuti anche abbreviati, come `sh int status`;
+  - lettori per Cisco IOS e IOS-XE (`show version`, `show inventory`, `show interfaces status`, `show vlan brief`, `show etherchannel summary`, `show cdp neighbors detail`, `show lldp neighbors detail`, `show mac address-table`, `show ip arp`, `show power inline`), per i formati dei Cisco Small Business (`show interfaces status`, `show vlan`, `show lldp neighbors`, `show mac address-table`, `show power inline`) e per FortiOS (`get system status`, `get system interface physical`, `get vpn ipsec tunnel summary`, `diagnose vpn ike gateway list`, `get router info routing-table all`, `get router info bgp summary`, `diagnose sys sdwan health-check` e `service`);
+  - ogni file di show va con il suo apparato: per hostname, poi per numero di serie, poi per nome del file; l'hostname corretto a mano sposta il file su un altro apparato;
+  - stato reale nelle viste, con ogni dato che rimanda alla sua riga dello show: stato, velocità, vicini CDP e LLDP e PoE delle porte; tunnel IPsec con le istanze dei dial-up; tabella di routing reale con la ricerca per IP; sessioni BGP; health check SD-WAN e membro in uso per ogni regola; nomi delle VLAN tenute dal VTP;
+  - MAC su ogni porta configurata, secondo la [#6](https://github.com/TehMaat/Network-Config-Viewer/issues/6): indirizzi con VLAN e tipo (dinamico, statico, sticky dalla port security), MAC dei port-channel attribuiti al port-channel e non ai membri, elenco a richiesta sui trunk con molti MAC, segno sul frontale e un solo avviso per apparato per le porte configurate senza MAC e per la tabella MAC non caricata;
+  - log di sessione di esempio, sintetici e coerenti con le config: SW-HQ-CORE, SW-BR1-ACC (con fine riga Windows), SW-BR3-ACC (Small Business), FGT-HQ (con le VDOM) e FGT-BR1.
 
 ### Modificato
 

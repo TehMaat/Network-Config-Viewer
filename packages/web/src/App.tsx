@@ -3,7 +3,7 @@ import { Dropzone } from '@mantine/dropzone';
 import { useDisclosure } from '@mantine/hooks';
 import { IconUpload } from '@tabler/icons-react';
 import { DEFAULT_LIMITS, type ModelHints } from '@ncv/core';
-import { useCallback, useEffect, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from './components/AppHeader';
 import { EmptyState } from './components/EmptyState';
@@ -11,6 +11,7 @@ import { FileList } from './components/FileList';
 import { FileView } from './components/FileView';
 import { normalizeDroppedPath } from './format';
 import { contentStore } from './state/content';
+import { deviceState, linkShows } from './state/devices';
 import { effectiveDetection, effectiveFamily } from './state/effective';
 import { filesReducer, initialFilesState, type Overrides, type TextEntry } from './state/files';
 import { AnalyzerClient } from './worker/client';
@@ -34,6 +35,7 @@ export function App() {
           folds: message.structure.folds,
           outline: message.structure.outline,
           model: message.structure.model,
+          show: message.structure.show,
         });
         const entry: TextEntry = {
           type: 'text',
@@ -71,6 +73,7 @@ export function App() {
           folds: message.structure.folds,
           outline: message.structure.outline,
           model: message.structure.model,
+          show: message.structure.show,
         });
         dispatch({
           type: 'structure',
@@ -175,6 +178,25 @@ export function App() {
   const selected = state.files.find((f) => f.id === state.selectedId) ?? null;
   const hasFiles = state.files.length > 0 || state.pendingBatches.length > 0;
 
+  // Files of shows go with the device they describe: its views show the real state.
+  const links = useMemo(() => linkShows(state.files), [state.files]);
+  const { linkedShows, selectedState } = useMemo(() => {
+    const shows = state.selectedId ? links.showsOf.get(state.selectedId) : undefined;
+    return { linkedShows: shows, selectedState: deviceState(shows) };
+  }, [links, state.selectedId]);
+  const [goTo, setGoTo] = useState<{ id: string; line: number } | null>(null);
+  const openFile = useCallback((id: string, line?: number) => {
+    dispatch({ type: 'select', id });
+    setGoTo(line === undefined ? null : { id, line });
+  }, []);
+  const fileName = useCallback(
+    (id: string) => {
+      const f = state.files.find((x) => x.id === id);
+      return f?.type === 'text' ? f.name : id;
+    },
+    [state.files],
+  );
+
   return (
     <>
       <input
@@ -218,7 +240,18 @@ export function App() {
         )}
         <AppShell.Main>
           {selected ? (
-            <FileView key={selected.id} entry={selected} onOverride={override} />
+            <FileView
+              key={selected.id}
+              entry={selected}
+              onOverride={override}
+              shows={linkedShows ?? []}
+              state={selectedState}
+              device={links.deviceOf.get(selected.id) ?? null}
+              onOpenFile={openFile}
+              fileName={fileName}
+              goTo={goTo?.id === selected.id ? goTo.line : null}
+              onGoToDone={() => setGoTo(null)}
+            />
           ) : (
             !hasFiles && <EmptyState onChoose={openPicker} />
           )}

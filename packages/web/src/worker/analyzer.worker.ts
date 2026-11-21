@@ -5,6 +5,7 @@ import {
   buildModel,
   loadFile,
   modelHints,
+  readShowFile,
   splitLines,
   structureOfLines,
   type ModelHints,
@@ -47,6 +48,7 @@ function structureData(lines: string[], structure: Structure, hints: ModelHints)
     outline: structure.outline,
     diagnostics: structure.tree.diagnostics,
     model: buildModel(lines, structure.tree, hints),
+    show: hints.kind === 'show' ? readShowFile(lines) : null,
   };
 }
 

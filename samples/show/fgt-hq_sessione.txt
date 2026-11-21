@@ -1,0 +1,152 @@
+FGT-HQ (global) # get system interface physical
+== [onboard]
+        ==[mgmt]
+                mode: static
+                ip: 10.10.99.249 255.255.255.0
+                status: up
+                speed: 1000Mbps (Duplex: full)
+        ==[wan1]
+                mode: static
+                ip: 203.0.113.2 255.255.255.248
+                status: up
+                speed: 1000Mbps (Duplex: full)
+        ==[wan2]
+                mode: static
+                ip: 198.51.100.10 255.255.255.248
+                status: up
+                speed: 1000Mbps (Duplex: full)
+        ==[x1]
+                mode: static
+                ip: 0.0.0.0 0.0.0.0
+                status: up
+                speed: 10000Mbps (Duplex: full)
+        ==[x2]
+                mode: static
+                ip: 0.0.0.0 0.0.0.0
+                status: up
+                speed: 10000Mbps (Duplex: full)
+        ==[port10]
+                mode: static
+                ip: 172.16.10.1 255.255.255.0
+                status: up
+                speed: 1000Mbps (Duplex: full)
+        ==[ha1]
+                mode: static
+                ip: 0.0.0.0 0.0.0.0
+                status: up
+                speed: 1000Mbps (Duplex: full)
+        ==[ha2]
+                mode: static
+                ip: 0.0.0.0 0.0.0.0
+                status: down
+                speed: n/a
+
+FGT-HQ (global) # config vdom
+
+FGT-HQ (vdom) # edit OFFICE
+current vf=OFFICE:1
+
+FGT-HQ (OFFICE) # get vpn ipsec tunnel summary
+'ADVPN-WAN1_0' 192.0.2.34:0  selectors(total,up): 1/1  rx(pkt,err): 1532077/0  tx(pkt,err): 1490112/0
+'ADVPN-WAN1_1' 192.0.2.38:0  selectors(total,up): 1/1  rx(pkt,err): 987311/0  tx(pkt,err): 1002430/0
+'ADVPN-WAN1_2' 192.0.2.42:0  selectors(total,up): 1/1  rx(pkt,err): 455920/0  tx(pkt,err): 431877/0
+'ADVPN-WAN2_0' 198.51.100.66:0  selectors(total,up): 1/1  rx(pkt,err): 120044/0  tx(pkt,err): 118230/0
+'ADVPN-WAN2_1' 198.51.100.70:0  selectors(total,up): 1/0  rx(pkt,err): 0/0  tx(pkt,err): 12/12
+
+FGT-HQ (OFFICE) # diagnose vpn ike gateway list
+
+vd: OFFICE/1
+name: ADVPN-WAN1_0
+version: 2
+interface: wan1 6
+addr: 203.0.113.2:500 -> 192.0.2.34:500
+created: 211745s ago
+IKE SA: created 1/1  established 1/1  time 10/10/10 ms
+IPsec SA: created 1/1  established 1/1  time 0/0/0 ms
+
+vd: OFFICE/1
+name: ADVPN-WAN1_1
+version: 2
+interface: wan1 6
+addr: 203.0.113.2:500 -> 192.0.2.38:500
+created: 211745s ago
+IKE SA: created 1/1  established 1/1  time 10/10/10 ms
+IPsec SA: created 1/1  established 1/1  time 0/0/0 ms
+
+vd: OFFICE/1
+name: ADVPN-WAN1_2
+version: 2
+interface: wan1 6
+addr: 203.0.113.2:500 -> 192.0.2.42:500
+created: 211745s ago
+IKE SA: created 1/1  established 1/1  time 10/10/10 ms
+IPsec SA: created 1/1  established 1/1  time 0/0/0 ms
+
+vd: OFFICE/1
+name: ADVPN-WAN2_0
+version: 2
+interface: wan2 7
+addr: 198.51.100.10:500 -> 198.51.100.66:500
+created: 211745s ago
+IKE SA: created 1/1  established 1/1  time 10/10/10 ms
+IPsec SA: created 1/1  established 1/1  time 0/0/0 ms
+
+vd: OFFICE/1
+name: ADVPN-WAN2_1
+version: 2
+interface: wan2 7
+addr: 198.51.100.10:500 -> 198.51.100.70:500
+created: 211745s ago
+IKE SA: created 1/1  established 0/1  time 10/10/10 ms
+IPsec SA: created 1/1  established 0/1  time 0/0/0 ms
+
+FGT-HQ (OFFICE) # get router info routing-table all
+Codes: K - kernel, C - connected, S - static, R - RIP, B - BGP
+       O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, L1 - IS-IS level-1, L2 - IS-IS level-2, ia - IS-IS inter area
+       V - BGP VPNv4
+       * - candidate default
+
+Routing table for VRF=0
+S*      0.0.0.0/0 [10/0] via 203.0.113.1, wan1, [1/0]
+C       10.10.10.0/24 is directly connected, VL10-DATA
+C       10.10.20.0/24 is directly connected, VL20-VOICE
+C       10.10.50.0/24 is directly connected, VL50-GUEST
+O       10.10.60.0/24 [110/20] via 10.10.254.2, VL900-CORE, 2d01h33m, [1/0]
+O       10.10.70.0/24 [110/20] via 10.10.254.2, VL900-CORE, 2d01h33m, [1/0]
+C       10.10.99.0/24 is directly connected, VL99-MGMT
+C       10.10.100.0/24 is directly connected, VL100-SRV
+C       10.10.254.0/29 is directly connected, VL900-CORE
+O       10.10.255.2/32 [110/2] via 10.10.254.2, VL900-CORE, 2d01h33m, [1/0]
+B       10.21.0.0/16 [200/0] via 10.255.1.21 (recursive is directly connected, ADVPN-WAN1), 2d03h12m, [1/0]
+                     [200/0] via 10.255.2.21 (recursive is directly connected, ADVPN-WAN2), 2d03h10m, [1/0]
+B       10.22.0.0/16 [200/0] via 10.255.1.22 (recursive is directly connected, ADVPN-WAN1), 2d03h12m, [1/0]
+B       10.30.0.0/16 [200/0] via 10.255.1.30 (recursive is directly connected, ADVPN-WAN1), 1d22h41m, [1/0]
+O E2    10.99.0.0/16 [110/20] via 10.10.254.2, VL900-CORE, 2d01h33m, [1/0]
+C       10.254.0.0/30 is directly connected, vlod0
+C       10.255.1.0/24 is directly connected, ADVPN-WAN1
+C       10.255.1.254/32 is directly connected, ADVPN-WAN1
+C       10.255.2.0/24 is directly connected, ADVPN-WAN2
+C       10.255.2.254/32 is directly connected, ADVPN-WAN2
+S       172.16.10.0/24 [10/0] via 10.254.0.2, vlod0, [1/0]
+C       198.51.100.8/29 is directly connected, wan2
+C       203.0.113.0/29 is directly connected, wan1
+
+FGT-HQ (OFFICE) # get router info bgp summary
+VRF 0 BGP router identifier 10.10.99.250, local AS number 65000
+BGP table version is 14
+3 BGP AS-PATH entries
+0 BGP community entries
+
+Neighbor        V         AS   MsgRcvd   MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.255.1.21     4      65000      6211      6245       14    0    0 2d03h12m        1
+10.255.1.22     4      65000      6209      6243       14    0    0 2d03h12m        1
+10.255.1.30     4      65000      5312      5340       14    0    0 1d22h41m        1
+10.255.2.21     4      65000      6198      6230       14    0    0 2d03h10m        1
+10.255.2.22     4      65000         0         0        0    0    0 never    Active
+
+Total number of neighbors 5
+
+FGT-HQ (OFFICE) # 

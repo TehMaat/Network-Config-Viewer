@@ -88,3 +88,9 @@ export function addressText(a: AddressObject, t: TFunction): string {
   if (a.interface) return t('objects.interfaceSubnet', { name: a.interface });
   return a.type;
 }
+
+/**
+ * Styles of a badge whose text must never be cut: in a table, the column grows to fit it
+ * instead of hiding the end of the text.
+ */
+export const FULL_LABEL = { label: { overflow: 'visible' } } as const;

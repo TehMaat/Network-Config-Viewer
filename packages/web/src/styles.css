@@ -319,3 +319,22 @@ body {
 .ncv-row[data-group-start] td {
   border-top: 2px solid var(--mantine-color-default-border);
 }
+
+/* Real state from the shows, on the port panel. */
+.ncv-live-up {
+  fill: #2fe08f;
+}
+
+.ncv-live-down {
+  fill: rgba(255, 255, 255, 0.55);
+}
+
+.ncv-live-error {
+  fill: #ff3b3b;
+}
+
+.ncv-mark-nomac {
+  fill: #ff922b;
+  stroke: #ffffff;
+  stroke-width: 0.7;
+}

@@ -12,10 +12,15 @@ import {
 } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 import {
+  bgpPeerLive,
   configRoutes,
+  ipToInt,
   isIpv4,
   lookupRoute,
+  parsePrefix,
+  prefixContains,
   type BgpNeighbor,
+  type BgpPeerState,
   type ConfigRoute,
   type DeviceModel,
   type LogicalContext,
@@ -25,13 +30,14 @@ import {
   type PrefixListEntry,
   type RouteMap,
   type RouteMapEntry,
+  type RouteState,
 } from '@ncv/core';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from './DataTable';
-import { SourceButton } from './source';
-import { formatRoutePrefix, shortInterfaceName } from './values';
+import { ShowSourceButton, SourceButton, useDeviceView } from './source';
+import { formatRoutePrefix, FULL_LABEL, shortInterfaceName } from './values';
 
 export function RoutingView({ model, context }: { model: DeviceModel; context: LogicalContext }) {
   const { t } = useTranslation();
@@ -141,6 +147,7 @@ export function RoutingView({ model, context }: { model: DeviceModel; context: L
         )}
       </Box>
 
+      <LiveRoutes context={context} />
       {routing.policyRoutes.length > 0 && (
         <PolicyRoutes routes={routing.policyRoutes} routeMaps={routing.routeMaps} />
       )}
@@ -309,6 +316,13 @@ function OspfView({ ospf }: { ospf: Ospf }) {
 function BgpView({ context }: { context: LogicalContext }) {
   const { t } = useTranslation();
   const bgp = context.routing.bgp!;
+  const { state } = useDeviceView();
+  const peerText = (p: BgpPeerState | undefined) =>
+    p
+      ? p.prefixes !== undefined
+        ? t('routing.bgp.established', { count: p.prefixes })
+        : p.state
+      : '';
   const columns: ColumnDef<BgpNeighbor, unknown>[] = [
     { id: 'address', header: t('routing.bgp.neighbor'), accessorFn: (n) => n.address },
     {
@@ -337,7 +351,10 @@ function BgpView({ context }: { context: LogicalContext }) {
     {
       id: 'state',
       header: t('routing.col.state'),
-      accessorFn: (n) => (n.shutdown ? t('routing.bgp.shutdown') : ''),
+      accessorFn: (n) =>
+        n.shutdown
+          ? t('routing.bgp.shutdown')
+          : peerText(bgpPeerLive(n.address, state, context.name)),
     },
     {
       id: 'src',
@@ -368,6 +385,7 @@ function BgpView({ context }: { context: LogicalContext }) {
         getRowId={(n) => `${n.vrf ?? ''}|${n.address}`}
         height={280}
       />
+      {state && <BgpPeers context={context} groups={bgp.ranges} />}
     </Section>
   );
 }
@@ -430,5 +448,168 @@ function PrefixLists({ lists }: { lists: PrefixList[] }) {
         height={260}
       />
     </Section>
+  );
+}
+
+/** BGP sessions in the shows: also the dynamic neighbours of the ranges of a hub. */
+function BgpPeers({
+  context,
+  groups,
+}: {
+  context: LogicalContext;
+  groups: { prefix: string; group: string }[];
+}) {
+  const { t } = useTranslation();
+  const { state } = useDeviceView();
+  const peers = (state?.bgp ?? []).filter((p) => !p.context || p.context === context.name);
+  if (peers.length === 0) return null;
+  const groupOf = (ip: string) => {
+    const value = ipToInt(ip);
+    return groups.find((g) => {
+      const p = parsePrefix(g.prefix);
+      return p && value !== null && prefixContains(p, value);
+    })?.group;
+  };
+  const columns: ColumnDef<BgpPeerState, unknown>[] = [
+    { id: 'neighbor', header: t('routing.bgp.neighbor'), accessorFn: (p) => p.neighbor },
+    { id: 'as', header: t('routing.bgp.remoteAs'), accessorFn: (p) => p.remoteAs ?? '' },
+    { id: 'group', header: t('routing.bgp.group'), accessorFn: (p) => groupOf(p.neighbor) ?? '' },
+    {
+      id: 'state',
+      header: t('routing.col.state'),
+      accessorFn: (p) => p.state,
+      cell: (c) => {
+        const p = c.row.original;
+        return (
+          <Badge
+            size="sm"
+            variant="dot"
+            color={p.prefixes !== undefined ? 'teal' : 'red'}
+            tt="none"
+            styles={FULL_LABEL}
+            data-testid="bgp-peer-state"
+          >
+            {p.prefixes !== undefined
+              ? t('routing.bgp.established', { count: p.prefixes })
+              : p.state}
+          </Badge>
+        );
+      },
+    },
+    { id: 'upDown', header: t('routing.bgp.upDown'), accessorFn: (p) => p.upDown ?? '' },
+    {
+      id: 'src',
+      header: '',
+      enableSorting: false,
+      cell: (c) => <ShowSourceButton item={c.row.original} />,
+    },
+  ];
+  return (
+    <Box mt="sm" data-testid="bgp-peers">
+      <Text size="sm" fw={600} mb={4}>
+        {t('routing.bgp.sessions')}
+      </Text>
+      <DataTable
+        name="bgp-peers"
+        data={peers}
+        columns={columns}
+        getRowId={(p) => p.neighbor}
+        filter={false}
+        height={240}
+      />
+    </Box>
+  );
+}
+
+/** The routing table in the shows, with the route used for an IP. */
+function LiveRoutes({ context }: { context: LogicalContext }) {
+  const { t } = useTranslation();
+  const { state } = useDeviceView();
+  const [query, setQuery] = useState('');
+  const routes = useMemo(
+    () => (state?.routes ?? []).filter((r) => !r.context || r.context === context.name),
+    [state, context],
+  );
+  const ip = isIpv4(query.trim()) ? ipToInt(query.trim()) : null;
+  const best = useMemo(() => {
+    if (ip === null) return new Set<RouteState>();
+    let length = -1;
+    let found: RouteState[] = [];
+    for (const r of routes) {
+      const p = parsePrefix(r.prefix);
+      if (!p || !prefixContains(p, ip)) continue;
+      if (p.prefix > length) {
+        length = p.prefix;
+        found = [r];
+      } else if (p.prefix === length) found.push(r);
+    }
+    return new Set(found);
+  }, [ip, routes]);
+  if (routes.length === 0) return null;
+  const columns: ColumnDef<RouteState, unknown>[] = [
+    { id: 'code', header: t('routing.col.code'), accessorFn: (r) => r.code },
+    {
+      id: 'prefix',
+      header: t('routing.col.prefix'),
+      accessorFn: (r) => r.prefix,
+      cell: (c) => (
+        <Text span size="sm" ff="monospace">
+          {c.getValue<string>()}
+        </Text>
+      ),
+    },
+    { id: 'gateway', header: t('routing.col.gateway'), accessorFn: (r) => r.gateway ?? '' },
+    { id: 'interface', header: t('routing.col.interface'), accessorFn: (r) => r.interface ?? '' },
+    {
+      id: 'distance',
+      header: t('routing.col.distanceMetric'),
+      accessorFn: (r) => (r.distance !== undefined ? `${r.distance}/${r.metric ?? 0}` : ''),
+    },
+    { id: 'age', header: t('routing.col.age'), accessorFn: (r) => r.age ?? '' },
+    {
+      id: 'src',
+      header: '',
+      enableSorting: false,
+      cell: (c) => <ShowSourceButton item={c.row.original} />,
+    },
+  ];
+  return (
+    <Box data-testid="live-routes">
+      <Title order={5} mb={4}>
+        {t('routing.liveRoutes')}
+      </Title>
+      <Text size="xs" c="dimmed" mb="xs">
+        {t('routing.liveRoutesHelp')}
+      </Text>
+      <DataTable
+        name="live-routes"
+        data={routes}
+        columns={columns}
+        getRowId={(r) => `${r.prefix}|${r.gateway ?? ''}|${r.interface ?? ''}|${r.src[0]?.[0]}`}
+        rowState={(r) => (ip !== null ? (best.has(r) ? 'match' : 'dim') : null)}
+        height={320}
+        toolbar={
+          <TextInput
+            size="xs"
+            w={220}
+            leftSection={<IconSearch size={14} />}
+            placeholder={t('routing.lookup')}
+            aria-label={t('routing.lookup')}
+            value={query}
+            onChange={(e) => setQuery(e.currentTarget.value)}
+            rightSection={
+              query ? (
+                <CloseButton
+                  size="xs"
+                  aria-label={t('viewer.clearFilter')}
+                  onClick={() => setQuery('')}
+                />
+              ) : null
+            }
+            data-testid="live-route-lookup"
+          />
+        }
+      />
+    </Box>
   );
 }

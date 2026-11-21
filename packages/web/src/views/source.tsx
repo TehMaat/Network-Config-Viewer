@@ -1,15 +1,25 @@
 import { ActionIcon, Badge, Text, Tooltip } from '@mantine/core';
-import { IconCode } from '@tabler/icons-react';
-import type { Element, Src } from '@ncv/core';
+import { IconCode, IconTerminal2 } from '@tabler/icons-react';
+import type { DeviceState, Element, Src, StateItem } from '@ncv/core';
 import { createContext, useContext, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /** What every view can ask the device page: show some lines of the original config. */
 export interface DeviceViewApi {
   showSource(src: Src): void;
+  /** Real state from the shows of the device, or null when none is loaded. */
+  state: DeviceState | null;
+  /** Opens another file (a file of shows) at a line. */
+  openFile(id: string, line?: number): void;
+  fileName(id: string): string;
 }
 
-export const DeviceViewContext = createContext<DeviceViewApi>({ showSource: () => undefined });
+export const DeviceViewContext = createContext<DeviceViewApi>({
+  showSource: () => undefined,
+  state: null,
+  openFile: () => undefined,
+  fileName: (id) => id,
+});
 
 export const useDeviceView = () => useContext(DeviceViewContext);
 
@@ -92,6 +102,32 @@ export function Value({
           </Badge>
         )}
       </Text>
+    </Tooltip>
+  );
+}
+
+/** Button that opens the file of shows at the lines a value of the real state comes from. */
+export function ShowSourceButton({ item }: { item: StateItem }) {
+  const { t } = useTranslation();
+  const { openFile, fileName } = useDeviceView();
+  const range = sourceRange(item.src);
+  if (!range || !item.file) return null;
+  const label = t('source.showLine', { file: fileName(item.file), line: range[0] });
+  return (
+    <Tooltip label={label}>
+      <ActionIcon
+        variant="subtle"
+        size="sm"
+        color="teal"
+        aria-label={label}
+        onClick={(event) => {
+          event.stopPropagation();
+          openFile(item.file!, range[0]);
+        }}
+        data-testid="btn-show-source"
+      >
+        <IconTerminal2 size={16} />
+      </ActionIcon>
     </Tooltip>
   );
 }

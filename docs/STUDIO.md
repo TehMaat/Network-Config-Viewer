@@ -1,6 +1,6 @@
 # Studio preliminare: Network Config Viewer
 
-> **Stato:** novembre 2026. La [fase 0](#fase-0-fondamenta-realizzata) è realizzata: l'app si avvia in locale con Docker, riconosce le config FortiGate e Cisco e le mostra navigabili. La [fase 1](#fase-1-lettura-dei-singoli-apparati-fortigate-cisco-iosios-xe-e-cisco-small-business-mvp) è in corso: i driver FortiOS, Cisco IOS/IOS-XE e Small Business leggono le config e l'app mostra le viste di ogni apparato (vedi il [README](../README.md)); mancano gli show con lo stato reale, l'archivio dei clienti su disco e l'export Excel. Il resto del documento raccoglie le decisioni prese e il piano delle fasi successive. Il [mockup](mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scarica il file e aprilo nel browser.
+> **Stato:** novembre 2026. La [fase 0](#fase-0-fondamenta-realizzata) è realizzata: l'app si avvia in locale con Docker, riconosce le config FortiGate e Cisco e le mostra navigabili. La [fase 1](#fase-1-lettura-dei-singoli-apparati-fortigate-cisco-iosios-xe-e-cisco-small-business-mvp) è in corso: i driver FortiOS, Cisco IOS/IOS-XE e Small Business leggono le config e l'app mostra le viste di ogni apparato (vedi il [README](../README.md)); gli output dei comandi show vanno con il loro apparato e aggiungono lo stato reale alle viste. Mancano l'archivio dei clienti su disco e l'export Excel. Il resto del documento raccoglie le decisioni prese e il piano delle fasi successive. Il [mockup](mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scarica il file e aprilo nel browser.
 
 ## 1. In breve
 
@@ -46,6 +46,7 @@
 | Valori di default | Tabelle per marca e versione; nelle viste i valori che vengono da un default sono in corsivo, e quelli non ancora confermati su apparati reali sono segnati "da verificare" |
 | Collegamenti tra apparati | Verificati con LLDP/CDP, dedotti da descrizioni e indirizzi, oppure inseriti a mano; le differenze tra le fonti vengono segnalate |
 | Indirizzi MAC sulle porte | Ogni porta configurata degli switch riporta i MAC dei dispositivi collegati, con la VLAN, letti dalla tabella MAC dello switch (`show mac address-table`), non dalla config. Lo strumento li mostra e segnala le porte senza MAC e lo show mancante (vedi [5.5](#55-pannello-porte-dello-switch)) |
+| Show e apparati | Ogni file di show va con il suo apparato: per hostname (dal prompt o dall'output), poi per numero di serie, poi per nome del file; se serve, si corregge a mano l'hostname del file di show. Un log di sessione si divide per prompt, anche dentro le VDOM del FortiGate, oppure dalla forma degli output. Lo stato reale si mostra accanto alla config, mai al suo posto, e ogni dato rimanda alla sua riga dello show |
 | VPN | Anche ADVPN: ruoli, controlli e scorciatoie tra filiali |
 | Migrazioni switch | Pianificate sul rack con i patch panel, per gestire i cablaggi da remoto; arrivano dopo la visualizzazione |
 | Prese e patch panel | Oggi i clienti non li documentano: si parte da un rilievo in sede guidato dallo strumento, che poi resta come documentazione |
@@ -192,7 +193,9 @@ Per FortiSwitch gestiti dal FortiGate la tabella MAC si legge dal FortiGate con 
 | `get vpn ipsec tunnel summary`, `diagnose vpn ike gateway list` | Tunnel su o giù, peer collegati (anche dial-up) |
 | `get router info routing-table all` | Tabella di routing reale |
 | `get router info bgp summary` | Sessioni BGP stabilite e prefissi ricevuti |
-| `diagnose sys sdwan health-check`, `diagnose sys sdwan service` | Stato degli SLA e membro scelto da ogni regola SD-WAN (i nomi dei comandi cambiano leggermente tra le versioni) |
+| `diagnose sys sdwan health-check`, `diagnose sys sdwan service` | Stato degli SLA e membro scelto da ogni regola SD-WAN (i nomi dei comandi cambiano leggermente tra le versioni: da FortiOS 7.4 le regole IPv4 sono in `diagnose sys sdwan service4`) |
+
+**Nella fase 1** l'app legge tutti i comandi delle due tabelle: per Cisco IOS e IOS-XE, per Cisco Small Business con i suoi formati (`show interfaces status`, `show vlan`, `show lldp neighbors`, `show mac address-table`, `show power inline`) e per FortiOS. I comandi si riconoscono anche abbreviati, come `sh int status`. Un file può contenere un solo output o un'intera sessione con più comandi; senza prompt, l'app riconosce il comando dalla forma dell'output e lo dice. Per ogni file di show si vedono l'apparato a cui va, con il motivo, e i comandi letti, che aprono il file alla riga del loro output.
 
 ## 4. Modello dati neutro
 
@@ -237,9 +240,10 @@ Cliente (una cartella sul PC)
 - le interfacce, con modalità L2, VLAN, port-channel, posizione sul frontale, PoE, 802.1X/MAB, port security, indirizzi IP, VRF, ACL applicate, OSPF, e per FortiOS alias, ruolo, accesso amministrativo e VDOM;
 - le VLAN, anche quelle implicite (VLAN 1, VLAN usate dalle porte ma non scritte per via del VTP);
 - i contesti logici (le VDOM, oppure un solo contesto per gli switch), con zone, indirizzi, gruppi, servizi, policy, VIP, IP pool, ACL, object-group, routing (statiche, policy route, BGP, OSPF, route-map, prefix-list), IPsec e SD-WAN;
-- i riferimenti dai nomi alle definizioni, la copertura riga per riga e gli avvisi (per esempio VLAN fuori dalla config per via del VTP, policy disattivate, senza log, che permettono tutto o che aprono servizi di gestione a tutti).
+- i riferimenti dai nomi alle definizioni, la copertura riga per riga e gli avvisi (per esempio VLAN fuori dalla config per via del VTP, policy disattivate, senza log, che permettono tutto o che aprono servizi di gestione a tutti);
+- lo stato dagli show, in `packages/core/src/show/`, tenuto separato dal modello della config: porte, VLAN, port-channel, vicini CDP e LLDP, tabella MAC, ARP, PoE, membri dello stack e numeri di serie, tunnel IPsec, rotte, sessioni BGP, health check e regole SD-WAN, ognuno con il file e la riga da cui viene. Più file di show dello stesso apparato si sommano.
 
-Ogni elemento ha le righe da cui proviene e l'elenco dei campi che vengono da un default, con quelli ancora da verificare. Rack, collegamenti tra apparati, servizi di gestione, apparati gestiti, wireless e stato dagli show arrivano nelle fasi successive.
+Ogni elemento ha le righe da cui proviene e l'elenco dei campi che vengono da un default, con quelli ancora da verificare. Rack, collegamenti tra apparati, servizi di gestione, apparati gestiti e wireless arrivano nelle fasi successive.
 
 ## 5. Le viste grafiche
 
@@ -263,7 +267,7 @@ Il [mockup](mockup/index.html) contiene le viste 5.1–5.7, 5.9 e 5.11, con un c
 
 ### 5.2 VPN
 
-**Nella fase 1**, per ogni FortiGate e per ogni VDOM: elenco dei tunnel con tipo, interfaccia, gateway remoto, versione IKE, proposte, ruolo ADVPN e fasi 2 (selettori, proposte, PFS, gruppi DH, negoziazione automatica, durata della chiave), con i valori di default indicati come tali. L'abbinamento dei due estremi arriva con la mappa (fase 2).
+**Nella fase 1**, per ogni FortiGate e per ogni VDOM: elenco dei tunnel con tipo, interfaccia, gateway remoto, versione IKE, proposte, ruolo ADVPN e fasi 2 (selettori, proposte, PFS, gruppi DH, negoziazione automatica, durata della chiave), con i valori di default indicati come tali. Con gli show, lo stato di ogni tunnel: quante istanze sono su e quante giù (i dial-up ne hanno una per peer), con i selettori attivi e lo stato di IKE. L'abbinamento dei due estremi arriva con la mappa (fase 2).
 
 Elenco dei tunnel di tutto il progetto con i due estremi abbinati, e per ciascuno:
 
@@ -301,7 +305,7 @@ Per ogni FortiGate:
 
 Sulla mappa, gli overlay SD-WAN collegano filiali e hub. Le stesse viste valgono per il multi-WAN degli altri vendor, per esempio i gateway group di pfSense e OPNsense.
 
-**Nella fase 1** ci sono zone, membri, health check con SLA e regole in ordine con la regola implicita; il membro in uso arriva con gli show.
+**Nella fase 1** ci sono zone, membri, health check con SLA e regole in ordine con la regola implicita. Con gli show si vedono lo stato di ogni membro negli health check (attivo o no, latenza, jitter, perdita, SLA rispettato o no) e il membro in uso da ogni regola.
 
 ### 5.4 Routing e BGP
 
@@ -309,7 +313,7 @@ Sulla mappa, gli overlay SD-WAN collegano filiali e hub. Le stesse viste valgono
 - **Sulla mappa**: sessioni BGP abbinate tra apparati, con AS, iBGP o eBGP e route reflector.
 - **Tabella di routing reale**, se caricata da show, con evidenziate le rotte attese che mancano (per esempio la LAN di una filiale la cui sessione BGP non è su). Senza show, la tabella mostra le rotte che derivano dalla config: connesse, statiche, reti annunciate.
 
-**Nella fase 1**, per ogni apparato e per ogni VDOM: rotte ricavate dalla config (connesse e statiche, anche verso le zone SD-WAN) con la ricerca della rotta per un IP, policy route, OSPF con le interfacce, l'area e quelle passive, BGP con neighbor, gruppi, range dinamici, reti annunciate e redistribuzioni, route-map e prefix-list.
+**Nella fase 1**, per ogni apparato e per ogni VDOM: rotte ricavate dalla config (connesse e statiche, anche verso le zone SD-WAN) con la ricerca della rotta per un IP, policy route, OSPF con le interfacce, l'area e quelle passive, BGP con neighbor, gruppi, range dinamici, reti annunciate e redistribuzioni, route-map e prefix-list. Con gli show: la tabella di routing reale, con le rotte apprese con OSPF e BGP e la ricerca della rotta per un IP, e le sessioni BGP con lo stato e i prefissi ricevuti, anche accanto ai neighbor della config.
 
 ### 5.5 Pannello porte dello switch
 
@@ -333,13 +337,22 @@ Disegno del frontale, con un riquadro per ogni membro dello stack:
   - il modello si ricava dalla config stessa (per esempio `switch 1 provision c9300-48p` su Cisco, l'intestazione `#config-version=FGT60F-…` su FortiGate) oppure da `show inventory`.
 - Lo stesso pannello serve per le **interfacce del FortiGate** (port1…, wan, x1/x2 SFP+) e per i **FortiSwitch** gestiti dal FortiGate, comprese le coppie MCLAG.
 
-**Nella fase 1** il pannello degli switch è quello generico: un riquadro per ogni membro dello stack, porte dispari sopra e pari sotto, uplink a parte, colore per VLAN access (lo stesso su un apparato), trunk a strisce, porte spente e L3, segni per PoE, 802.1X/MAB, VLAN voce e port-channel, filtro per VLAN e dettaglio della porta con i valori di default indicati come tali. Sotto il pannello c'è la tabella di tutte le interfacce. Per il FortiGate le interfacce sono in una tabella, con tipo, VDOM, zona, interfaccia padre o membri e accesso amministrativo. Stato reale e indirizzi MAC arrivano con gli show.
+**Nella fase 1** il pannello degli switch è quello generico: un riquadro per ogni membro dello stack, porte dispari sopra e pari sotto, uplink a parte, colore per VLAN access (lo stesso su un apparato), trunk a strisce, porte spente e L3, segni per PoE, 802.1X/MAB, VLAN voce e port-channel, filtro per VLAN e dettaglio della porta con i valori di default indicati come tali. Sotto il pannello c'è la tabella di tutte le interfacce. Per il FortiGate le interfacce sono in una tabella, con tipo, VDOM, zona, interfaccia padre o membri e accesso amministrativo.
+
+Con gli show, sempre nella fase 1:
+
+- una barra sulla porta per lo stato reale (attiva, non collegata, in errore) e le colonne dello stato e dei MAC nella tabella; per il FortiGate lo stato e la velocità da `get system interface physical`;
+- nel dettaglio della porta: stato, velocità e duplex, flag del port-channel, vicini CDP e LLDP, PoE e MAC con VLAN e tipo (quelli della port security sono segnati sticky). Sui trunk con più di 4 MAC si vede il numero e l'elenco si apre a richiesta; sui membri di un port-channel c'è il rimando al `Po`;
+- il segno per le porte configurate senza MAC vale per tutte le porte configurate e non spente, collegate o no. Riguarda solo porte fisiche e port-channel: SVI, loopback e porte L3 non imparano MAC e non hanno il segno;
+- senza `show mac address-table` ogni porta configurata dice "tabella MAC non caricata", e il riepilogo ha un solo avviso per tutto lo switch.
+
+![Lo stack Catalyst 9300 degli esempi con gli show caricati: barra dello stato reale sulle porte, segno sulle porte configurate senza MAC e dettaglio di una porta con telefono e PC](img/app-stato.png)
 
 ### 5.6 VLAN
 
 Per ogni VLAN: nome, **gateway** (anche se si trova su un altro apparato del progetto, per esempio la sotto-interfaccia del FortiGate), numero di porte access, voce e trunk, e una striscia con tutte le porte nell'ordine del frontale. È il riferimento principale nelle migrazioni switch.
 
-**Nella fase 1**: nome, gateway se sta sullo stesso apparato, porte access, voce, untagged e tagged (i membri dei port-channel contano nel `Po`); per il FortiGate, le interfacce VLAN con ID, interfaccia padre, indirizzo e VDOM.
+**Nella fase 1**: nome, gateway se sta sullo stesso apparato, porte access, voce, untagged e tagged (i membri dei port-channel contano nel `Po`); per il FortiGate, le interfacce VLAN con ID, interfaccia padre, indirizzo e VDOM. Con `show vlan brief`, o `show vlan` dei Small Business, compaiono i nomi delle VLAN tenute dal VTP, segnati come presi dallo show.
 
 ### 5.7 Policy firewall
 
@@ -376,7 +389,7 @@ Nella fase 1, per gli apparati letti da un driver, la config è l'ultima scheda 
 
 Hostname, modello, versione, IP di gestione, conteggi (interfacce, VLAN, policy, oggetti), funzioni in uso (stack, vPC, VSX, 802.1X, OSPF, SD-WAN…), show caricati e percentuale di copertura del parser.
 
-**Nella fase 1** il riepilogo è la prima scheda di ogni apparato letto da un driver: riconoscimento (correggibile a mano), IP di gestione, stack o VDOM, conteggi, funzioni in uso, avvisi raggruppati per tipo con il salto alle righe, copertura con l'elenco delle sezioni non interpretate. Gli show caricati arrivano con la loro lettura.
+**Nella fase 1** il riepilogo è la prima scheda di ogni apparato letto da un driver: riconoscimento (correggibile a mano), IP di gestione, stack o VDOM, conteggi, funzioni in uso, avvisi raggruppati per tipo con il salto alle righe, copertura con l'elenco delle sezioni non interpretate, show caricati con il motivo dell'abbinamento e i comandi letti, che aprono il file alla riga. Sugli switch c'è un solo avviso per la tabella MAC non caricata e uno per le porte configurate senza MAC, con il numero di porte e il promemoria che la tabella MAC è una fotografia.
 
 ### 5.11 Rack e patch panel
 
@@ -553,8 +566,10 @@ Issue [#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10), in cors
   - FortiGate: interfacce e zone, oggetti, policy (con VDOM), VIP e IP pool, routing (statiche, policy route, BGP, OSPF), VPN IPsec, SD-WAN;
   - Cisco IOS/IOS-XE e Cisco Small Business: interfacce, VLAN, trunk, port-channel, stack, SVI, PoE, 802.1X/MAB, ACL, routing;
   - viste per apparato (5.2–5.10, per il singolo apparato) e config collegata.
+- **Realizzato** ([#12](https://github.com/TehMaat/Network-Config-Viewer/pull/12)):
+  - output dei comandi show di Cisco IOS/IOS-XE, Cisco Small Business e FortiOS, da file singoli e da log di sessione, ognuno con il suo apparato e la correzione a mano;
+  - stato reale nelle viste: porte, vicini, PoE, tunnel, routing, BGP, SD-WAN, nomi delle VLAN del VTP; MAC su ogni porta configurata con i loro avvisi ([#6](https://github.com/TehMaat/Network-Config-Viewer/issues/6)).
 - **Da completare**:
-  - output dei comandi show di entrambi, da file singoli e da log di sessione, con lo stato reale nelle viste e la tabella MAC (`show mac address-table`) con i MAC su ogni porta configurata;
   - clienti nell'archivio locale su disco (volume Docker e programma lato server nel container): file caricati e conservati per cliente, raggruppati per apparato con versioni precedenti e show, esportazione e importazione in zip;
   - export Excel;
   - test nel browser anche su Firefox e WebKit.

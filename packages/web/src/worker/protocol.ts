@@ -7,6 +7,7 @@ import type {
   OsId,
   Outline,
   SyntaxDiagnostic,
+  ShowFile,
   SyntaxFamily,
   TextEncodingName,
 } from '@ncv/core';
@@ -25,6 +26,8 @@ export interface StructureData {
   diagnostics: SyntaxDiagnostic[];
   /** Neutral model, when the operating system has a driver. */
   model: DeviceModel | null;
+  /** Commands and real state, when the file holds the output of show commands. */
+  show: ShowFile | null;
 }
 
 export interface TextFileMessage {

@@ -25,12 +25,13 @@ import {
   IconLock,
   IconSearch,
 } from '@tabler/icons-react';
-import type { DeviceModel, Src } from '@ncv/core';
+import type { AssignReason, DeviceModel, DeviceState, Src } from '@ncv/core';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { baseName, formatBytes, formatOrigin, formatPath } from '../format';
 import { contentStore, type FileContent } from '../state/content';
 import { effectiveDetection } from '../state/effective';
+import type { LinkedShow } from '../state/devices';
 import type { FileEntry, Overrides, TextEntry } from '../state/files';
 import { AclsView } from '../views/AclsView';
 import { FirewallVlansView, InterfacesView } from '../views/InterfacesView';
@@ -46,15 +47,28 @@ import { VlansView } from '../views/VlansView';
 import { ConfigEditor, type EditorHandle } from './ConfigEditor';
 import { DetectionPanel } from './DetectionPanel';
 import { OutlinePanel } from './OutlinePanel';
+import { ShowPanel } from './ShowPanel';
 
 interface Props {
   entry: FileEntry;
   onOverride(id: string, overrides: Overrides): void;
+  /** Files of shows of this device. */
+  shows: LinkedShow[];
+  /** Real state from those shows. */
+  state: DeviceState | null;
+  /** For a file of shows: the device it belongs to. */
+  device: { device: TextEntry; reason: AssignReason } | null;
+  onOpenFile(id: string, line?: number): void;
+  fileName(id: string): string;
+  /** A line to show as soon as the file is open. */
+  goTo: number | null;
+  onGoToDone(): void;
 }
 
-export function FileView({ entry, onOverride }: Props) {
+export function FileView(props: Props) {
+  const { entry } = props;
   if (entry.type === 'issue') return <IssueView entry={entry} />;
-  return <TextView key={entry.id} entry={entry} onOverride={onOverride} />;
+  return <TextView key={entry.id} {...props} entry={entry} />;
 }
 
 function IssueView({ entry }: { entry: Extract<FileEntry, { type: 'issue' }> }) {
@@ -129,7 +143,17 @@ function mainContext(model: DeviceModel): string {
   );
 }
 
-function TextView({ entry, onOverride }: { entry: TextEntry; onOverride: Props['onOverride'] }) {
+function TextView({
+  entry,
+  onOverride,
+  shows,
+  state,
+  device,
+  onOpenFile,
+  fileName,
+  goTo,
+  onGoToDone,
+}: Props & { entry: TextEntry }) {
   const { t, i18n } = useTranslation();
   const editor = useRef<EditorHandle>(null);
   const effective = useMemo(
@@ -172,9 +196,22 @@ function TextView({ entry, onOverride }: { entry: TextEntry; onOverride: Props['
         const range = sourceRange(src);
         if (range) showLines(range[0], range[1]);
       },
+      state,
+      openFile: onOpenFile,
+      fileName,
     }),
-    [showLines],
+    [showLines, state, onOpenFile, fileName],
   );
+
+  // A line asked by another file (for example a value of the real state of a device).
+  useEffect(() => {
+    if (goTo === null) return;
+    const frame = requestAnimationFrame(() => {
+      showLines(goTo);
+      onGoToDone();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [goTo, showLines, onGoToDone]);
 
   if (!content) return null;
 
@@ -230,6 +267,14 @@ function TextView({ entry, onOverride }: { entry: TextEntry; onOverride: Props['
         </Group>
       </Group>
       {!model && detection}
+      {content.show && (
+        <ShowPanel
+          show={content.show}
+          device={device}
+          onOpenFile={onOpenFile}
+          onGoToLine={(line) => showLines(line)}
+        />
+      )}
       {effective.encrypted && (
         <Alert
           color="orange"
@@ -295,7 +340,7 @@ function TextView({ entry, onOverride }: { entry: TextEntry; onOverride: Props['
   const view = (name: Tab): ReactNode => {
     switch (name) {
       case 'summary':
-        return <SummaryView model={model} detection={detection} />;
+        return <SummaryView model={model} detection={detection} shows={shows} />;
       case 'ports':
         return <PortsView model={model} />;
       case 'interfaces':

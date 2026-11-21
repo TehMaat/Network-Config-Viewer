@@ -207,7 +207,8 @@
     "default": "Valore di default: non è scritto nella config, l'apparato lo usa quando manca.",
     "defaultUnverified": "Valore di default da verificare: per questa marca e versione non è ancora confermato su apparati reali.",
     "toCheck": "da verificare",
-    "lineIn": "riga {{line}} ({{context}})"
+    "lineIn": "riga {{line}} ({{context}})",
+    "showLine": "{{file}}, riga {{line}}"
   },
   "summary": {
     "device": "Apparato",
@@ -268,7 +269,10 @@
     "policy-any-any_one": "{{count}} policy che permette tutto: sorgente all, destinazione all, servizio ALL.",
     "policy-any-any_other": "{{count}} policy che permettono tutto: sorgente all, destinazione all, servizio ALL.",
     "policy-all-management_one": "{{count}} policy che apre un servizio di gestione (SSH, Telnet, SNMP, RDP, VNC) a qualsiasi sorgente.",
-    "policy-all-management_other": "{{count}} policy che aprono un servizio di gestione (SSH, Telnet, SNMP, RDP, VNC) a qualsiasi sorgente."
+    "policy-all-management_other": "{{count}} policy che aprono un servizio di gestione (SSH, Telnet, SNMP, RDP, VNC) a qualsiasi sorgente.",
+    "mac-table-missing": "Tabella MAC non caricata: carica l'output di show mac address-table per vedere i dispositivi collegati a ogni porta.",
+    "ports-without-mac_one": "{{count}} porta configurata, e non spenta, senza nessun MAC appreso: forse non è usata. La tabella MAC è una fotografia: i MAC scadono (di solito dopo 300 secondi) e un dispositivo spento o silenzioso può non comparire.",
+    "ports-without-mac_other": "{{count}} porte configurate, e non spente, senza nessun MAC appreso: forse non sono usate. La tabella MAC è una fotografia: i MAC scadono (di solito dopo 300 secondi) e un dispositivo spento o silenzioso può non comparire."
   },
   "coverage": {
     "title": "Copertura della lettura",
@@ -334,7 +338,9 @@
       "lag": "Port-channel",
       "poe": "PoE",
       "dot1x": "802.1X",
-      "ip": "IP"
+      "ip": "IP",
+      "live": "Stato reale",
+      "macs": "MAC"
     },
     "legend": {
       "trunk": "trunk",
@@ -343,7 +349,11 @@
       "poe": "PoE",
       "dot1x": "802.1X / MAB",
       "voice": "VLAN voce",
-      "lag": "port-channel"
+      "lag": "port-channel",
+      "liveUp": "attiva (show)",
+      "liveDown": "non collegata (show)",
+      "liveError": "in errore (show)",
+      "noMac": "configurata senza MAC"
     },
     "detail": {
       "accessVlan": "VLAN access",
@@ -365,6 +375,29 @@
       "helper": "Inoltro DHCP",
       "pbr": "Policy route",
       "secondary": "{{ip}} (secondario)"
+    },
+    "live": {
+      "title": "Stato reale (dagli show)",
+      "noStatus": "Stato non presente negli show.",
+      "channel": "Port-channel: flag {{flags}}",
+      "neighbor": "Vicino {{protocol}}: {{device}} {{port}}",
+      "poe": "PoE: {{details}}",
+      "watts": "{{watts, number}} W",
+      "macsOn": "I MAC sono sul port-channel {{name}}.",
+      "noMac": "Configurata, ma senza nessun MAC appreso: forse non è usata. Un dispositivo spento o silenzioso può non comparire nella tabella MAC.",
+      "noMacShort": "nessuno",
+      "noMacTable": "Tabella MAC non caricata: carica l'output di show mac address-table per vedere i dispositivi collegati.",
+      "macCount_one": "{{count}} MAC",
+      "macCount_other": "{{count}} MAC",
+      "showMacs": "mostra l'elenco",
+      "macInfo": "VLAN {{vlan}} · {{type}}"
+    },
+    "macType": {
+      "dynamic": "dinamico",
+      "static": "statico",
+      "sticky": "sticky",
+      "secure": "sicuro",
+      "other": "altro"
     }
   },
   "vlans": {
@@ -383,7 +416,8 @@
       "tagged": "Tagged sui trunk"
     },
     "title": "VLAN {{id}}",
-    "titleNamed": "VLAN {{id}} · {{name}}"
+    "titleNamed": "VLAN {{id}} · {{name}}",
+    "fromShow": "nome dallo show"
   },
   "acls": {
     "col": {
@@ -462,7 +496,10 @@
       "match": "Condizioni (match)",
       "set": "Azioni (set)",
       "input": "Ingresso",
-      "output": "Uscita"
+      "output": "Uscita",
+      "code": "Origine",
+      "distanceMetric": "Distanza/metrica",
+      "age": "Da quanto"
     },
     "type": {
       "connected": "connessa",
@@ -496,11 +533,17 @@
       "out": "Filtri in uscita",
       "shutdown": "disattivato",
       "networks": "Reti annunciate",
-      "groups": "Gruppi"
+      "groups": "Gruppi",
+      "established_one": "stabilita, {{count}} prefisso",
+      "established_other": "stabilita, {{count}} prefissi",
+      "sessions": "Sessioni BGP negli show",
+      "upDown": "Su/giù da"
     },
     "routeMaps": "Route-map",
     "prefixLists": "Prefix-list",
-    "sdwan": "SD-WAN: {{zones}}"
+    "sdwan": "SD-WAN: {{zones}}",
+    "liveRoutes": "Tabella di routing reale",
+    "liveRoutesHelp": "Dalla tabella di routing negli show, con le rotte imparate con OSPF e BGP."
   },
   "config": {
     "followLink": "Vai alla definizione (riga {{line}})",
@@ -618,7 +661,8 @@
       "interface": "Interfaccia",
       "remote": "Gateway remoto",
       "proposals": "Proposte",
-      "phase2": "Fasi 2"
+      "phase2": "Fasi 2",
+      "live": "Stato reale"
     },
     "type": {
       "static": "statico",
@@ -642,7 +686,13 @@
     "keylife": "Durata chiave (s)",
     "unverified": "Alcuni default di questa versione sono da verificare",
     "none": "Nessun tunnel IPsec in questa VDOM.",
-    "pfsDh": "PFS / gruppi DH"
+    "pfsDh": "PFS / gruppi DH",
+    "liveCount": "{{up}} su, {{down}} giù",
+    "liveTitle": "Stato reale (dagli show)",
+    "instance": "Istanza",
+    "selectorsUp": "Selettori su",
+    "ikeUp": "stabilito (IKEv{{version}})",
+    "ikeDown": "non stabilito"
   },
   "sdwan": {
     "none": "SD-WAN non configurato in questa VDOM.",
@@ -665,7 +715,8 @@
       "mode": "Strategia",
       "match": "Traffico",
       "quality": "Qualità richiesta",
-      "preferred": "Membri preferiti"
+      "preferred": "Membri preferiti",
+      "measures": "Misure"
     },
     "mode": {
       "manual": "manuale",
@@ -677,7 +728,31 @@
     "from": "da {{names}}",
     "to": "verso {{names}}",
     "implicit": "Regola implicita",
-    "implicitHelp": "Il traffico che non corrisponde a nessuna regola segue la tabella di routing e si distribuisce tra i membri."
+    "implicitHelp": "Il traffico che non corrisponde a nessuna regola segue la tabella di routing e si distribuisce tra i membri.",
+    "live": "Health check negli show",
+    "alive": "attivo",
+    "dead": "non raggiungibile",
+    "measures": "latenza {{latency, number}} ms, jitter {{jitter, number}} ms, perdita {{packetloss, number}}%",
+    "slaMet": "SLA rispettato",
+    "slaMissed": "SLA non rispettato",
+    "used": "in uso: {{name}}"
+  },
+  "shows": {
+    "title": "Comandi show",
+    "device": "Apparato: {{name}}",
+    "reason": {
+      "manual": "indicato a mano",
+      "hostname": "dall'hostname",
+      "serial": "dal numero di serie",
+      "file-name": "dal nome del file"
+    },
+    "openDevice": "Apri l'apparato",
+    "noDevice": "Nessun apparato con questo hostname tra i file caricati: carica la sua config, oppure correggi l'hostname.",
+    "inferred": "riconosciuto dal formato",
+    "read": "letto",
+    "notRead": "non letto",
+    "loaded": "Show caricati",
+    "none": "Nessuno show caricato per questo apparato: carica gli output dei comandi show per vedere lo stato reale."
   },
   "codemirror": {
     "Find": "Trova",

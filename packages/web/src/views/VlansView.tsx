@@ -1,11 +1,17 @@
 import { Badge, Box, Group, Paper, SimpleGrid, Stack, Text, Title } from '@mantine/core';
-import { vlanUsage, type DeviceModel, type VlanRole, type VlanUsage } from '@ncv/core';
+import {
+  vlanNameFromState,
+  vlanUsage,
+  type DeviceModel,
+  type VlanRole,
+  type VlanUsage,
+} from '@ncv/core';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { vlanColors } from './colors';
 import { DataTable } from './DataTable';
-import { SourceButton } from './source';
+import { SourceButton, useDeviceView } from './source';
 import { shortInterfaceName, shortList } from './values';
 
 const ROLES: VlanRole[] = ['access', 'voice', 'untagged', 'tagged'];
@@ -13,6 +19,7 @@ const ROLES: VlanRole[] = ['access', 'voice', 'untagged', 'tagged'];
 export function VlansView({ model }: { model: DeviceModel }) {
   const { t } = useTranslation();
   const usage = useMemo(() => vlanUsage(model), [model]);
+  const { state } = useDeviceView();
   const colors = useMemo(() => vlanColors(model.vlans.map((v) => v.id)), [model]);
   const [selected, setSelected] = useState<number | null>(null);
   const current = usage.find((u) => u.vlan.id === selected) ?? null;
@@ -39,14 +46,27 @@ export function VlansView({ model }: { model: DeviceModel }) {
       {
         id: 'name',
         header: t('vlans.col.name'),
-        accessorFn: (u) => u.vlan.name ?? '',
+        accessorFn: (u) => u.vlan.name ?? vlanNameFromState(u.vlan.id, state) ?? '',
         cell: (c) => {
           const v = c.row.original.vlan;
+          // VLANs kept by VTP have their name only in "show vlan brief".
+          const fromShow = v.name ? undefined : vlanNameFromState(v.id, state);
           return (
             <Group gap={4} wrap="nowrap">
               <Text span size="sm">
-                {v.name}
+                {v.name ?? fromShow}
               </Text>
+              {fromShow && (
+                <Badge
+                  size="xs"
+                  variant="light"
+                  color="teal"
+                  tt="none"
+                  data-testid="vlan-name-show"
+                >
+                  {t('vlans.fromShow')}
+                </Badge>
+              )}
               {v.implicit && (
                 <Badge size="xs" variant="light" color="gray" tt="none">
                   {t('vlans.implicit')}
@@ -90,7 +110,7 @@ export function VlansView({ model }: { model: DeviceModel }) {
         cell: (c) => <SourceButton src={c.row.original.vlan.src} />,
       },
     ],
-    [t, colors],
+    [t, colors, state],
   );
 
   return (

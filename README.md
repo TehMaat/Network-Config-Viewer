@@ -6,9 +6,9 @@ Strumento per vedere l'infrastruttura di rete di un cliente partendo dai backup 
 
 ## Stato del progetto
 
-Versione 0.0.1, con la fase 0 della roadmap e la prima parte della fase 1: trascini un backup FortiGate o Cisco e l'app lo legge e lo mostra in forma grafica, apparato per apparato, sempre collegato alla config originale, identica al file.
+Versione 0.0.1, con la fase 0 della roadmap e buona parte della fase 1: trascini un backup FortiGate o Cisco e l'app lo legge e lo mostra in forma grafica, apparato per apparato, sempre collegato alla config originale, identica al file. Se aggiungi gli output dei comandi show, le viste mostrano anche lo stato reale.
 
-Della fase 1 mancano ancora la lettura degli show con lo stato reale, l'archivio dei clienti sul PC e l'export Excel. Le fasi successive (mappa dell'infrastruttura, analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
+Della fase 1 mancano ancora l'archivio dei clienti sul PC e l'export Excel. Le fasi successive (mappa dell'infrastruttura, analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
 
 ## Cosa fa oggi
 
@@ -20,6 +20,9 @@ Della fase 1 mancano ancora la lettura degli show con lo stato reale, l'archivio
   - **riepilogo**: IP di gestione, stack o VDOM, conteggi, funzioni in uso, avvisi e copertura della lettura, con le sezioni non interpretate;
   - **switch**: pannello delle porte di ogni membro dello stack (colori per VLAN, trunk a strisce, porte spente, L3, PoE, 802.1X/MAB, VLAN voce, port-channel), VLAN con porte e gateway, ACL con la ricerca per IP, routing;
   - **FortiGate**: interfacce e zone, VLAN, policy nell'ordine reale (lista unica o per coppia di interfacce) con la ricerca per IP anche tramite subnet, gruppi, VIP e "all", oggetti con "dove è usato", routing, VPN IPsec, SD-WAN.
+- **Legge gli output dei comandi show** di Cisco IOS e IOS-XE, Cisco Small Business e FortiGate, da file singoli o da log di sessione, e li abbina da solo al loro apparato: per hostname, numero di serie o nome del file, con la correzione a mano. Le viste mostrano lo stato reale accanto alla config, e ogni dato porta alla sua riga dello show:
+  - **switch**: stato delle porte, vicini CDP e LLDP, PoE, nomi delle VLAN tenute dal VTP e i **MAC dei dispositivi collegati** a ogni porta configurata, con un segno sulle porte configurate senza MAC: forse non sono usate;
+  - **FortiGate**: stato delle interfacce e dei tunnel IPsec (anche dial-up), tabella di routing reale, sessioni BGP, health check SD-WAN e membro in uso da ogni regola.
 - **Indica i valori di default**: quello che la config non scrive ma l'apparato usa è in corsivo, e i default ancora da confermare su apparati reali sono segnati "da verificare".
 - **Mostra la config originale** con evidenziazione, blocchi piegabili, numeri di riga, ricerca e una struttura navigabile: blocchi `config`, VDOM, interfacce, banner… Per gli apparati letti, i nomi portano alla loro definizione, le righe non interpretate sono evidenziate e da ogni elemento delle viste si salta alle sue righe.
 - **Non modifica mai le config**: il testo si copia o si scarica identico al file, byte per byte, anche con i fine riga di Windows.
@@ -28,6 +31,8 @@ Della fase 1 mancano ancora la lettura degli show con lo stato reale, l'archivio
 - Tema **chiaro, scuro o come il sistema**, a scelta. La scelta resta salvata nel browser.
 
 ![Il pannello delle porte di uno stack Catalyst 9300 in tema scuro, con il dettaglio di un uplink in port-channel](docs/img/app-cisco-scuro.png)
+
+![Lo stesso stack con gli show caricati: stato reale sulle porte, segno sulle porte configurate senza MAC e dettaglio di una porta con telefono e PC](docs/img/app-stato.png)
 
 ## Come avviarlo
 

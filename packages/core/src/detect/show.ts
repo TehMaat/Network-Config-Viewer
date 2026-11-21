@@ -7,11 +7,13 @@ export interface Prompt {
   vendor: Vendor;
   hostname: string;
   command: string;
+  /** FortiOS: the VDOM, or "global", written in the prompt. */
+  context?: string;
 }
 
 // FGT-HQ # get system status   |   FGT-HQ (global) # show   |   FGT-HQ (root) $ diagnose ...
 const FORTI_PROMPT =
-  /^([A-Za-z0-9][\w.-]*)(?: \(([^)\s]+)\))? [#$] ((?:get|show|diagnose|diag|execute|exec|fnsysctl)\b.*?)\s*$/;
+  /^([A-Za-z0-9][\w.-]*)(?: \(([^)\s]+)\))? [#$] ((?:get|show|diagnose|diag|execute|exec|fnsysctl|config|edit|end|next)\b.*?)\s*$/;
 // SW-CORE#show version   |   SW-CORE>show ip interface brief   |   SW(config)#do show run
 const CISCO_PROMPT =
   /^([A-Za-z0-9][\w.\-/:]*?)(?:\([^)]*\))?[#>]\s?((?:show|sh|sho|terminal|term|more|dir|ping|traceroute|do)\b.*?)\s*$/;
@@ -28,7 +30,13 @@ export function findPrompts(lines: string[]): Prompt[] {
     if (!line.includes('#') && !line.includes('>') && !line.includes('$')) continue;
     let m = FORTI_PROMPT.exec(line);
     if (m) {
-      prompts.push({ index: i, vendor: 'fortinet', hostname: m[1]!, command: normalize(m[3]!) });
+      prompts.push({
+        index: i,
+        vendor: 'fortinet',
+        hostname: m[1]!,
+        command: normalize(m[3]!),
+        ...(m[2] ? { context: m[2] } : {}),
+      });
       continue;
     }
     m = CISCO_PROMPT.exec(line);
@@ -133,7 +141,65 @@ const SIGNATURES: Signature[] = [
   },
   { re: /^NAME: ".*", DESCR: "/, command: 'show inventory', vendor: 'cisco' },
   { re: /^Interface\s+Admin\s+Oper\s+Power/, command: 'show power inline', vendor: 'cisco' },
+  // Cisco Small Business.
+  {
+    re: /^Port\s+Type\s+Duplex\s+Speed\s+Neg\s+ctrl\s+State/,
+    command: 'show interfaces status',
+    vendor: 'cisco',
+  },
+  {
+    re: /^\s+Vlan\s+Mac Address\s+Port\s+Type\s*$/,
+    command: 'show mac address-table',
+    vendor: 'cisco',
+  },
+  {
+    re: /^\s*Port\s+Device ID\s+Port ID\s+System Name\s+Capabilities/,
+    command: 'show lldp neighbors',
+    vendor: 'cisco',
+  },
+  {
+    re: /^\s*Port\s+Powered Device\s+State\s+Status\s+Priority\s+Class/,
+    command: 'show power inline',
+    vendor: 'cisco',
+  },
+  // FortiOS.
+  {
+    re: /^Codes: K - kernel, C - connected, S - static/,
+    command: 'get router info routing-table all',
+    vendor: 'fortinet',
+  },
+  {
+    re: /^'[^']+' \S+:\d+\s+selectors\(total,up\):/,
+    command: 'get vpn ipsec tunnel summary',
+    vendor: 'fortinet',
+  },
+  {
+    re: /^Health Check\(.+\):\s*$/,
+    command: 'diagnose sys sdwan health-check',
+    vendor: 'fortinet',
+  },
+  {
+    re: /^Service\(\d+\): Address Mode/,
+    command: 'diagnose sys sdwan service',
+    vendor: 'fortinet',
+  },
+  { re: /^== \[onboard\]\s*$/, command: 'get system interface physical', vendor: 'fortinet' },
 ];
+
+/** Where each output recognised from its shape begins, in a file without prompts. */
+export function signatureStarts(lines: string[]): { index: number; command: string }[] {
+  const out: { index: number; command: string }[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+    if (line.length === 0 || line.length > 300) continue;
+    const sig = SIGNATURES.find((s) => s.re.test(line));
+    if (!sig) continue;
+    // The same command matches only once in a row (CDP has one block per neighbour).
+    if (out.at(-1)?.command === sig.command) continue;
+    out.push({ index: i, command: sig.command });
+  }
+  return out;
+}
 
 /** Detection for command output without prompts, from the shape of the output. */
 export function detectShowSignature(lines: string[]): Detection | null {

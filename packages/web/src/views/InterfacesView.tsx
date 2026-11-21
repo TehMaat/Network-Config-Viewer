@@ -4,7 +4,8 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from './DataTable';
-import { SourceButton, Value } from './source';
+import { ShowSourceButton, SourceButton, useDeviceView, Value } from './source';
+import { FULL_LABEL } from './values';
 
 /** Interfaces of a firewall: physical ports, aggregates, VLANs, tunnels, zones. */
 export function InterfacesView({
@@ -34,6 +35,7 @@ export function InterfacesView({
     [model, context],
   );
   const iface = model.interfaces.find((i) => i.name === selected) ?? null;
+  const { state } = useDeviceView();
 
   const columns = useMemo<ColumnDef<Interface, unknown>[]>(
     () => [
@@ -104,6 +106,38 @@ export function InterfacesView({
           </Badge>
         ),
       },
+      ...(state && state.ports.length > 0
+        ? [
+            {
+              id: 'live',
+              header: t('ports.col.live'),
+              accessorFn: (i: Interface) =>
+                state.ports.find((p) => p.name === i.name)?.statusText ?? '',
+              cell: (c: { row: { original: Interface } }) => {
+                const live = state.ports.find((p) => p.name === c.row.original.name);
+                return live ? (
+                  <Group gap={4} wrap="nowrap">
+                    <Badge
+                      size="sm"
+                      variant="dot"
+                      color={live.status === 'up' ? 'teal' : 'gray'}
+                      tt="none"
+                      styles={FULL_LABEL}
+                    >
+                      {live.statusText}
+                    </Badge>
+                    {live.speed && (
+                      <Text span size="xs" c="dimmed">
+                        {live.speed}
+                      </Text>
+                    )}
+                    <ShowSourceButton item={live} />
+                  </Group>
+                ) : null;
+              },
+            } as ColumnDef<Interface, unknown>,
+          ]
+        : []),
       {
         id: 'description',
         header: t('ports.col.description'),
@@ -116,7 +150,7 @@ export function InterfacesView({
         cell: (c) => <SourceButton src={c.row.original.src} />,
       },
     ],
-    [t, zoneOf, model],
+    [t, zoneOf, model, state],
   );
 
   return (
