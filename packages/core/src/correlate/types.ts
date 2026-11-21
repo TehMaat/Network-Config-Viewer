@@ -171,6 +171,8 @@ export interface Link {
   /** Internet: the next hop of the side a. */
   gateway?: string;
   state?: { a?: EndState; b?: EndState };
+  /** IPsec: how many parameters were compared, and how many do not agree. */
+  comparison?: { compared: number; issues: number };
 }
 
 export interface Infrastructure {
@@ -178,6 +180,76 @@ export interface Infrastructure {
   sites: Site[];
   externals: ExternalNode[];
   links: Link[];
+  /** What the two sides of the links do not agree on (#15, part 2). */
+  problems: Problem[];
+  /** ADVPN of the client: hubs, checks and pairs of branches. */
+  advpn: Advpn;
+}
+
+// ---- Consistency checks (chapter 6 of the study) --------------------------------------
+
+/** Error: the link cannot work as it is. Warning: it works, but something is wrong or risky. */
+export type Severity = 'error' | 'warning' | 'info';
+
+export type ProblemCode =
+  | 'ipsec-no-tunnel'
+  | 'ipsec-ike'
+  | 'ipsec-mode'
+  | 'ipsec-auth'
+  | 'ipsec-proposals'
+  | 'ipsec-dhgrp'
+  | 'ipsec-selectors'
+  | 'ipsec-p2-proposals'
+  | 'ipsec-pfs'
+  | 'ipsec-p2-dhgrp'
+  | 'ipsec-advpn'
+  | 'bgp-no-neighbor'
+  | 'bgp-as'
+  | 'bgp-down'
+  | 'trunk-mode'
+  | 'trunk-native'
+  | 'trunk-allowed'
+  | 'lag-one-side'
+  | 'lag-mode'
+  | 'lag-cables'
+  | 'mtu'
+  | 'ospf-area'
+  | 'ospf-passive'
+  | 'ip-duplicate'
+  | 'subnet-overlap'
+  | 'route-missing'
+  | 'description-mismatch'
+  | 'discovery-off'
+  | 'advpn-hub-policy'
+  | 'advpn-spoke-policy'
+  | 'advpn-next-hop'
+  | 'advpn-no-rr';
+
+export interface Problem {
+  /** Stable: code and what it is about. */
+  id: string;
+  code: ProblemCode;
+  severity: Severity;
+  /** A value comes from a default not confirmed yet: never an error, "to be checked". */
+  unverified?: boolean;
+  /** The link it is about. */
+  link?: string;
+  /** Devices it is about: the first is the one to look at first. */
+  devices: string[];
+  /** The values for the message: names, interfaces, the two values that differ. */
+  values: Record<string, string>;
+  evidence: LinkEvidence[];
+}
+
+export type AdvpnPairStatus = 'active' | 'possible' | 'impossible';
+
+export interface Advpn {
+  /** Hubs: devices with dial-up tunnels that send ADVPN shortcuts. */
+  hubs: { device: string; context: string; tunnels: string[] }[];
+  /** Branches that receive shortcuts, with the hub they talk to. */
+  spokes: { device: string; hub: string; tunnels: string[] }[];
+  /** Every pair of branches of the same hub: shortcut seen, possible or not, and why. */
+  pairs: { a: string; b: string; hub: string; status: AdvpnPairStatus; reasons: string[] }[];
 }
 
 /** Id of the only Internet node. */

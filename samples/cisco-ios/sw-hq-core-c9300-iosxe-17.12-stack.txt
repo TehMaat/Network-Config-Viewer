@@ -1162,7 +1162,7 @@ interface GigabitEthernet3/0/47
  channel-group 11 mode active
 !
 interface GigabitEthernet3/0/48
- description SW-HQ-ACC2-Gi1/1/2
+ description SW-HQ-ACC1-Gi1/1/2
  switchport trunk allowed vlan 10,20,60,70,99
  switchport mode trunk
  channel-group 11 mode active

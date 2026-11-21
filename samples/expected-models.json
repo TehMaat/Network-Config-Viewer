@@ -78,9 +78,9 @@
     "references": 6,
     "coverage": {
       "total": 914,
-      "understood": 704,
+      "understood": 705,
       "ignored": 160,
-      "unknown": 50
+      "unknown": 49
     }
   },
   "cisco-ios/sw-hq-acc1-c3850-iosxe-16.12-stack.txt": {
@@ -174,9 +174,9 @@
     "references": 187,
     "coverage": {
       "total": 991,
-      "understood": 750,
+      "understood": 751,
       "ignored": 178,
-      "unknown": 63
+      "unknown": 62
     }
   },
   "cisco-ios/sw-hq-acc2-c9200-iosxe-17.9.txt": {
@@ -233,7 +233,7 @@
         "trunk 10,20,60,70,99": 3,
         "trunk 60,70": 1
       },
-      "withDefaults": 26,
+      "withDefaults": 23,
       "unverified": {}
     },
     "vlans": [
@@ -259,12 +259,12 @@
       "routeMaps": [],
       "prefixLists": []
     },
-    "references": 51,
+    "references": 54,
     "coverage": {
-      "total": 475,
-      "understood": 318,
+      "total": 478,
+      "understood": 322,
       "ignored": 81,
-      "unknown": 76
+      "unknown": 75
     }
   },
   "cisco-ios/sw-hq-core-c9300-iosxe-17.12-stack.txt": {
@@ -403,9 +403,9 @@
     "references": 167,
     "coverage": {
       "total": 1307,
-      "understood": 975,
+      "understood": 976,
       "ignored": 266,
-      "unknown": 66
+      "unknown": 65
     }
   },
   "cisco-sb/sw-br2-acc-sg350-28p-2.5.txt": {
@@ -875,8 +875,8 @@
     ],
     "references": 46,
     "coverage": {
-      "total": 448,
-      "understood": 325,
+      "total": 449,
+      "understood": 326,
       "ignored": 26,
       "unknown": 97
     }
@@ -966,9 +966,9 @@
     "references": 31,
     "coverage": {
       "total": 952,
-      "understood": 221,
+      "understood": 223,
       "ignored": 64,
-      "unknown": 667
+      "unknown": 665
     }
   },
   "fortigate/fgt-dc-120g-fortios-8.0-vdom.conf": {
@@ -1119,10 +1119,10 @@
       "vip"
     ],
     "warnings": [
-      "policy-disabled OFFICE 533",
-      "policy-any-any OFFICE 533",
-      "policy-no-log OFFICE 547",
-      "policy-all-management OFFICE 547"
+      "policy-disabled OFFICE 535",
+      "policy-any-any OFFICE 535",
+      "policy-no-log OFFICE 549",
+      "policy-all-management OFFICE 549"
     ],
     "interfaces": {
       "kinds": {
@@ -1280,8 +1280,8 @@
     ],
     "references": 97,
     "coverage": {
-      "total": 728,
-      "understood": 625,
+      "total": 730,
+      "understood": 627,
       "ignored": 45,
       "unknown": 58
     }
@@ -1528,9 +1528,9 @@
     "references": 167,
     "coverage": {
       "total": 1306,
-      "understood": 975,
+      "understood": 976,
       "ignored": 265,
-      "unknown": 66
+      "unknown": 65
     }
   }
 }

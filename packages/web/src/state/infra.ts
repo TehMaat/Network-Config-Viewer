@@ -21,6 +21,8 @@ export const EMPTY_INFRASTRUCTURE: Infrastructure = {
   sites: [],
   externals: [],
   links: [],
+  problems: [],
+  advpn: { hubs: [], spokes: [], pairs: [] },
 };
 
 export function buildInfrastructure(

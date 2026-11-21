@@ -319,7 +319,7 @@ interface GigabitEthernet1/0/47
 !
 interface GigabitEthernet1/0/48
  description UPLINK-SW-HQ-CORE-Gi3/0/45
- channel-group 1 mode auto
+ channel-group 1 mode on
 !
 interface TenGigabitEthernet1/0/1
  shutdown
@@ -569,7 +569,7 @@ interface GigabitEthernet2/0/47
 !
 interface GigabitEthernet2/0/48
  description UPLINK-SW-HQ-CORE-Gi3/0/46
- channel-group 1 mode auto
+ channel-group 1 mode on
 !
 interface TenGigabitEthernet2/0/1
  shutdown
