@@ -6,22 +6,22 @@ Non ci sono e non devono mai esserci configurazioni reali di clienti: la repo è
 
 ## Cosa c'è
 
-Le config descrivono una rete immaginaria: una sede, tre filiali, un campus e un datacenter, collegati da un overlay ADVPN con BGP e da un tunnel statico tra sede e datacenter. Sono una rete sola: l'app li mette insieme nella mappa dell'infrastruttura (#15).
+Le config descrivono una rete immaginaria: una sede, tre filiali, un campus e un datacenter, collegati da un overlay ADVPN con BGP e da un tunnel statico tra sede e datacenter. Sono una rete sola: l'app li mette insieme nella mappa dell'infrastruttura (#15). Hanno anche un problema voluto per ogni controllo di coerenza, descritti [più sotto](#problemi-voluti).
 
 | Cartella | File | Apparato | Sistema |
 |---|---|---|---|
 | `fortigate/` | `fgt-br1-60f-fortios-7.0.conf` | FortiGate 60F, filiale 1 | FortiOS 7.0 |
 | | `fgt-hq-100f-fortios-7.2-vdom.conf` | FortiGate 100F, sede, hub ADVPN, **VDOM multiple**, HA, OSPF verso il centro stella, policy route, servizi personalizzati, policy da controllare (disattivata, senza log, gestione aperta a tutti), tunnel statico VPN-DC verso il datacenter | FortiOS 7.2 |
-| | `fgt-br2-60f-fortios-7.4.conf` | FortiGate 60F, filiale 2 | FortiOS 7.4 |
+| | `fgt-br2-60f-fortios-7.4.conf` | FortiGate 60F, filiale 2, con la porta dmz ancora all'indirizzo di fabbrica e il tunnel WAN2 senza proposte in comune con l'hub | FortiOS 7.4 |
 | | `fgt-campus-200f-fortios-7.6.conf` | FortiGate 200F con FortiSwitch e FortiAP gestiti, certificato e messaggio su più righe, VPN verso la sede con la versione IKE di default e BGP sull'overlay | FortiOS 7.6 |
 | | `fgt-dc-120g-fortios-8.0-vdom.conf` | FortiGate 120G, datacenter, **VDOM multiple**, eBGP verso due provider, tunnel statico VPN-HQ verso la sede | FortiOS 8.0 |
 | `cisco-ios/` | `sw-br1-acc-c2960x-ios-15.2-stack.txt` | Catalyst 2960-X, **stack di 2**, fine riga Windows (CRLF), **VTP server**: le VLAN non sono nella config ma solo nello show | IOS 15.2 |
 | | `sw-hq-acc1-c3850-iosxe-16.12-stack.txt` | Catalyst 3850, **stack di 2**, port security con MAC sticky, PoE statico sugli AP | IOS-XE 16.12 |
 | | `sw-hq-acc2-c9200-iosxe-17.9.txt` | Catalyst 9200, singolo, **802.1X e MAB** | IOS-XE 17.9 |
 | | `sw-hq-core-c9300-iosxe-17.12-stack.txt` | Catalyst 9300, **stack di 3**, centro stella: SVI, **OSPF**, **policy route**, rotte statiche, ACL su interfacce, VTY e SNMP, object-group, port-channel verso il FortiGate e i tre switch di accesso | IOS-XE 17.12 |
-| `cisco-sb/` | `sw-br2-acc-sg350-28p-2.5.txt` | Cisco SG350-28P, singolo, porte AP in **modalità `general`** | Small Business 2.5 |
+| `cisco-sb/` | `sw-br2-acc-sg350-28p-2.5.txt` | Cisco SG350-28P, singolo, porte AP in **modalità `general`**, LLDP e CDP spenti | Small Business 2.5 |
 | | `sw-br3-acc-cbs350-48p-3.4-stack.txt` | Cisco CBS350-48P, **stack di 2** | Small Business 3.4 |
-| | `sw-hq-acc3-c1300-48p-4.1-stack.txt` | Cisco Catalyst 1300-48P, **stack di 2**, uplink in port-channel verso SW-HQ-CORE scritto solo nelle descrizioni | Small Business 4.1 |
+| | `sw-hq-acc3-c1300-48p-4.1-stack.txt` | Cisco Catalyst 1300-48P, **stack di 2**, uplink in port-channel statico verso SW-HQ-CORE scritto solo nelle descrizioni | Small Business 4.1 |
 | `show/` | `sw-hq-core_show-version.txt` | `show version` del 9300, con prompt | IOS-XE |
 | | `sw-hq-core_show-cdp-lldp-neighbors.txt` | due comandi nello stesso file | IOS-XE |
 | | `fgt-hq_get-system-status.txt` | `get system status` del FortiGate di sede | FortiOS |
@@ -38,7 +38,25 @@ Le config descrivono una rete immaginaria: una sede, tre filiali, un campus e un
 
 Il riconoscimento atteso per ogni file è in [`expected.json`](expected.json); il riassunto atteso del modello di ogni config (porte, VLAN, ACL, routing, copertura) è in [`expected-models.json`](expected-models.json). Entrambi vengono verificati dai test.
 
-I collegamenti attesi tra gli apparati, con i siti e i nodi fuori dal cliente, sono in [`expected-links.json`](expected-links.json), verificato dai test della correlazione (#15).
+I collegamenti attesi tra gli apparati, con i siti, i nodi fuori dal cliente, i problemi trovati dai controlli di coerenza e le coppie di filiali ADVPN, sono in [`expected-links.json`](expected-links.json), verificato dai test della correlazione (#15).
+
+## Problemi voluti
+
+Per ogni controllo di coerenza (#15, parte 2) gli esempi hanno almeno un problema, con la causa nella config:
+
+| Controllo | Dove | Causa |
+|---|---|---|
+| Tunnel IPsec | FGT-BR2 HUB-WAN2 ↔ FGT-HQ ADVPN-WAN2 | la filiale propone solo `aes128-sha1` con il gruppo DH 21, che l'hub non ha (sull'hub i gruppi DH sono il default di FortiOS, quindi l'avviso è "da verificare") |
+| Sessione BGP | FGT-BR2 ↔ FGT-HQ su WAN2 | giù negli show della sede: il tunnel che la porta non si negozia |
+| Trunk | SW-HQ-ACC2 Po1 ↔ SW-HQ-CORE Po11 | VLAN nativa 999 sullo switch di accesso, 1 sul centro stella |
+| LAG | SW-HQ-ACC3 Po1 ↔ SW-HQ-CORE Po12 | statico (`channel-group 1 mode on`) da un lato, LACP active dall'altro: negli show il Po12 è giù e le porte sono sospese |
+| MTU | FGT-HQ LAG-CORE ↔ SW-HQ-CORE Po1 | 9000 sul FortiGate, il default di 1500 sullo switch |
+| OSPF | FGT-HQ VL99-MGMT ↔ SW-HQ-CORE Vlan99 | il FortiGate fa OSPF anche sulla rete di gestione, che sul centro stella è passiva (`passive-interface default`) |
+| Indirizzi | FGT-BR2 dmz e FGT-HQ VL10-DATA | la porta dmz della filiale 2 ha ancora l'indirizzo di fabbrica 10.10.10.1/24, lo stesso del gateway della VLAN dati della sede |
+| Rotte attese | FGT-BR1 | negli show manca 10.30.0.0/16, che il campus annuncia in BGP |
+| Descrizioni | SW-HQ-CORE Gi3/0/48 | la descrizione nomina SW-HQ-ACC1, CDP vede SW-HQ-ACC2 |
+| LLDP e CDP | SW-BR2-ACC Gi1/0/28 | LLDP e CDP spenti (`no lldp run`, `no cdp run`): il cavo verso FGT-BR2 resta dedotto dalla descrizione |
+| ADVPN | FGT-CAMPUS | la policy verso l'overlay permette solo le reti della sede e del datacenter: le scorciatoie verso le filiali non possono partire |
 
 Dopo una modifica voluta a un driver, alla correlazione o a un esempio, i risultati attesi si rigenerano con `NCV_UPDATE_EXPECTED=1 npx vitest run packages/core/test/samples-model.test.ts packages/core/test/correlate.test.ts` e le differenze si controllano a mano prima del commit.
 

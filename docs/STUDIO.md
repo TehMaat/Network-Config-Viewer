@@ -1,6 +1,6 @@
 # Studio preliminare: Network Config Viewer
 
-> **Stato:** novembre 2026. La [fase 0](#fase-0-fondamenta-realizzata) è realizzata: l'app si avvia in locale con Docker, riconosce le config FortiGate e Cisco e le mostra navigabili. Anche la [fase 1](#fase-1-lettura-dei-singoli-apparati-fortigate-cisco-iosios-xe-e-cisco-small-business-mvp-realizzata) è realizzata: i driver FortiOS, Cisco IOS/IOS-XE e Small Business leggono le config e l'app mostra le viste di ogni apparato (vedi il [README](../README.md)); gli output dei comandi show vanno con il loro apparato e aggiungono lo stato reale alle viste; i file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato; ogni apparato e ogni tabella si esportano in Excel. La [fase 2](#fase-2-mappa-dellinfrastruttura) è in corso ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)): con la prima parte gli apparati di un cliente si vedono insieme nella mappa dell'infrastruttura, con i siti, i cavi e i LAG, le subnet condivise, le uscite Internet, i tunnel IPsec, le sessioni BGP e le adiacenze OSPF, ognuno con i due lati affiancati e le righe da cui viene. Il resto del documento raccoglie le decisioni prese e il piano delle fasi successive. Il [mockup](mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scarica il file e aprilo nel browser.
+> **Stato:** novembre 2026. La [fase 0](#fase-0-fondamenta-realizzata) è realizzata: l'app si avvia in locale con Docker, riconosce le config FortiGate e Cisco e le mostra navigabili. Anche la [fase 1](#fase-1-lettura-dei-singoli-apparati-fortigate-cisco-iosios-xe-e-cisco-small-business-mvp-realizzata) è realizzata: i driver FortiOS, Cisco IOS/IOS-XE e Small Business leggono le config e l'app mostra le viste di ogni apparato (vedi il [README](../README.md)); gli output dei comandi show vanno con il loro apparato e aggiungono lo stato reale alle viste; i file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato; ogni apparato e ogni tabella si esportano in Excel. La [fase 2](#fase-2-mappa-dellinfrastruttura) è in corso ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)): con la prima parte gli apparati di un cliente si vedono insieme nella mappa dell'infrastruttura, con i siti, i cavi e i LAG, le subnet condivise, le uscite Internet, i tunnel IPsec, le sessioni BGP e le adiacenze OSPF, ognuno con i due lati affiancati e le righe da cui viene. Con la seconda parte gli apparati si controllano a vicenda: quello che non torna tra i due lati di un collegamento (tunnel IPsec, BGP, trunk, LAG, MTU, OSPF, indirizzi, rotte attese, descrizioni, LLDP e CDP, ADVPN) è segnato sulla mappa, in un elenco e nel riepilogo di ogni apparato; la vista VPN del cliente mostra tutti i tunnel con ADVPN, e la vista VLAN trova il gateway anche su un altro apparato. Il resto del documento raccoglie le decisioni prese e il piano delle fasi successive. Il [mockup](mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scarica il file e aprilo nel browser.
 
 ## 1. In breve
 
@@ -50,14 +50,15 @@
 | Correlazione | In `packages/core`, senza dipendenze dal browser: dalla versione attuale di ogni apparato di un cliente e dai suoi show ricava siti, collegamenti e nodi fuori dal cliente (Internet, provider, peer, vicini non caricati). Ogni collegamento dice da dove viene: *verificato* da uno show (LLDP, CDP, tunnel, BGP) o *dedotto* dalla config (descrizioni, indirizzi, `remote-gw`, DDNS, neighbor), con le righe di config e show dei due lati |
 | Siti | Proposti dalla location SNMP (la parte prima del primo separatore: `Sede - CED piano terra` → "Sede"), poi dal codice nell'hostname (`FGT-BR1` e `SW-BR1-ACC` → "BR1"), poi dai cavi: due apparati collegati da un cavo stanno nello stesso sito. Si correggono a mano (fase 2, parte 3) |
 | Mappa | React Flow con la disposizione automatica di dagre, caricati solo quando si apre la mappa. Dentro ogni sito gli apparati dall'alto in basso lungo i cavi (firewall, centro stella, accesso), i siti intorno a Internet. Livelli che si accendono e si spengono, con la scelta salvata nel browser. La stessa subnet in siti diversi è una sovrapposizione di indirizzi, non un collegamento, salvo le reti punto-punto (/30, /31). Le VDOM link restano dentro l'apparato |
-| Gravità dei problemi | Errore, avviso, informazione. Un valore che viene da un default non confermato non dà mai errore, ma un avviso "da verificare" (fase 2, parte 2) |
+| Controlli di coerenza | In `packages/core`, dopo la correlazione: confrontano i due lati dei collegamenti e gli apparati tra loro (vedi [capitolo 6](#6-analisi)). Ogni problema ha un codice, la gravità, gli apparati, il collegamento se c'è, i valori che non tornano e le righe di config e show dei due lati; il perché e il suggerimento per sistemarlo sono testi dell'app, in italiano e in inglese. I problemi sono segnati sulla mappa, sugli apparati e sui collegamenti, in un elenco con export Excel e nel riepilogo di ogni apparato |
+| Gravità dei problemi | Errore, avviso, informazione. Un valore che viene da un default non confermato non dà mai errore, ma un avviso "da verificare". La chiave condivisa dei tunnel non si confronta: nella config è cifrata, e la stessa chiave risulta diversa su ogni apparato |
 | Dati della mappa | Siti corretti, collegamenti a mano, decisioni sui collegamenti dedotti e posizioni stanno in `map.json`, nella cartella del cliente accanto a `client.json`, leggibile a mano. Apparati e porte si indicano per hostname e interfaccia, così una nuova versione della config li tiene. Senza un cliente aperto le modifiche restano nella scheda (fase 2, parte 3) |
 | FortiSwitch e FortiAP gestiti | Apparati del cliente ricavati dalla config del FortiGate, sotto il loro FortiGate (fase 2, parte 4) |
-| Fase 2 in quattro parti | Ognuna con la sua pull request e la sua versione: mappa e collegamenti (0.2.0), controlli e VPN, modifiche a mano ed export, FortiSwitch e FortiAP gestiti ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)) |
+| Fase 2 in quattro parti | Ognuna con la sua pull request e la sua versione: mappa e collegamenti (0.2.0), controlli e VPN (0.3.0), modifiche a mano ed export, FortiSwitch e FortiAP gestiti ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)) |
 | Indirizzi MAC sulle porte | Ogni porta configurata degli switch riporta i MAC dei dispositivi collegati, con la VLAN, letti dalla tabella MAC dello switch (`show mac address-table`), non dalla config. Lo strumento li mostra e segnala le porte senza MAC e lo show mancante (vedi [5.5](#55-pannello-porte-dello-switch)) |
 | Show e apparati | Ogni file di show va con il suo apparato: per hostname (dal prompt o dall'output), poi per numero di serie, poi per nome del file; se serve, si corregge a mano l'hostname del file di show. Un log di sessione si divide per prompt, anche dentro le VDOM del FortiGate, oppure dalla forma degli output. Lo stato reale si mostra accanto alla config, mai al suo posto, e ogni dato rimanda alla sua riga dello show |
 | Export Excel | Nel browser, con ExcelJS caricato solo al primo export. Per ogni apparato un file con un foglio per vista, con le stesse colonne delle tabelle dell'app: porte, VLAN, ACL, routing e MAC degli switch; interfacce e VLAN del FortiGate, e policy, oggetti, routing, VPN e SD-WAN di ogni VDOM; con gli show anche lo stato reale. Su ogni tabella un pulsante la esporta così come è filtrata e ordinata. I valori restano valori: nessun testo diventa una formula |
-| VPN | Anche ADVPN: ruoli, controlli e scorciatoie tra filiali |
+| VPN | Vista VPN del cliente: tutti i tunnel con i due estremi abbinati, il tipo, lo stato e l'esito del confronto dei due lati. Anche ADVPN: ruoli, controlli e, per ogni coppia di filiali, scorciatoia attiva, possibile o non possibile, e perché |
 | Migrazioni switch | Pianificate sul rack con i patch panel, per gestire i cablaggi da remoto; arrivano dopo la visualizzazione |
 | Prese e patch panel | Oggi i clienti non li documentano: si parte da un rilievo in sede guidato dallo strumento, che poi resta come documentazione |
 | Patch list | In tre forme: PDF da stampare per rack, Excel, pagina da telefono con spunta |
@@ -274,6 +275,14 @@ Ogni elemento ha le righe da cui proviene e l'elenco dei campi che vengono da un
 - i nodi fuori dal cliente: Internet, i provider dei peer BGP esterni, i peer IPsec, i vicini LLDP/CDP non caricati, i segmenti delle subnet condivise;
 - i collegamenti, con tipo (cavo, LAG, subnet, uscita Internet, tunnel IPsec, sessione BGP, adiacenza OSPF, scorciatoia ADVPN), i due estremi (apparato, VDOM, interfaccia, tunnel, neighbor, IP), le fonti con le righe di config e show, e lo stato reale dei due lati.
 
+**Cosa c'è già (fase 2, parte 2).** Nello stesso grafo:
+
+- i problemi trovati dai controlli di coerenza, con codice, gravità, "da verificare" quando un valore è un default non confermato, apparati, collegamento, valori e righe dei due lati;
+- per i tunnel IPsec, quanti parametri sono stati confrontati e quanti non tornano;
+- ADVPN: gli hub (con le loro VDOM e i tunnel sender), le filiali con il loro hub e i tunnel receiver, e ogni coppia di filiali dello stesso hub con lo stato della scorciatoia e i problemi che la bloccano.
+
+I driver leggono in più LLDP e CDP accesi o spenti, in generale e su ogni porta (Cisco IOS e Small Business, FortiOS), e per i tunnel IPsec la modalità IKEv1, l'autenticazione, local-id e peer-id, network-id, NAT traversal e durata della chiave di fase 1. Il gateway di una VLAN su un altro apparato si cerca lungo cavi e LAG (`packages/core/src/correlate/gateways.ts`).
+
 Rack, servizi di gestione, apparati gestiti e wireless arrivano nelle fasi successive.
 
 ## 5. Le viste grafiche
@@ -305,13 +314,20 @@ Il [mockup](mockup/index.html) contiene le viste 5.1–5.7, 5.9 e 5.11, con un c
 - sotto la mappa, l'elenco dei collegamenti in una tabella con filtro ed export Excel;
 - nelle viste dell'apparato, l'altro estremo di una porta, di un tunnel o di una sessione BGP apre l'altro apparato.
 
-I controlli di coerenza, la vista VPN con ADVPN, le modifiche a mano, l'export in draw.io e i FortiSwitch e FortiAP gestiti arrivano con le parti successive.
+**Nella fase 2, parte 2** i problemi trovati dai controlli (vedi [capitolo 6](#6-analisi)) sono sulla mappa:
 
-![La mappa del cliente di esempio: sede, filiali, campus e datacenter, con il dettaglio della sessione BGP tra la filiale 1 e l'hub](img/app-mappa.png)
+- sugli apparati e sui collegamenti, un segno con il numero dei problemi nel colore del più grave: rosso gli errori, arancione gli avvisi, blu le informazioni;
+- sotto la mappa, l'elenco dei problemi, dal più grave, con filtro ed export Excel (con il perché e come sistemare); il clic porta al collegamento o all'apparato;
+- nel dettaglio di un collegamento le righe dei valori che non tornano sono colorate, e sotto ci sono i suoi problemi: cosa, perché, come sistemare, con i pulsanti che aprono le righe dei due lati;
+- nell'elenco a sinistra un pallino segna gli apparati con problemi, e il numero dei problemi è accanto alla mappa.
+
+Le modifiche a mano, l'export in draw.io e i FortiSwitch e FortiAP gestiti arrivano con le parti successive.
+
+![La mappa del cliente di esempio: sede, filiali, campus e datacenter con i problemi segnati, e il dettaglio del LAG tra SW-HQ-ACC3 e il centro stella, dove i protocolli dei due lati non si accordano](img/app-mappa.png)
 
 ### 5.2 VPN
 
-**Nella fase 1**, per ogni FortiGate e per ogni VDOM: elenco dei tunnel con tipo, interfaccia, gateway remoto, versione IKE, proposte, ruolo ADVPN e fasi 2 (selettori, proposte, PFS, gruppi DH, negoziazione automatica, durata della chiave), con i valori di default indicati come tali. Con gli show, lo stato di ogni tunnel: quante istanze sono su e quante giù (i dial-up ne hanno una per peer), con i selettori attivi e lo stato di IKE. Dalla fase 2 (parte 1) i due estremi di ogni tunnel sono abbinati sulla mappa, con lo stato di entrambi i lati, e il dettaglio del tunnel porta all'apparato dall'altra parte; la vista VPN di tutto il cliente arriva con la parte 2.
+**Nella fase 1**, per ogni FortiGate e per ogni VDOM: elenco dei tunnel con tipo, interfaccia, gateway remoto, versione IKE, proposte, ruolo ADVPN e fasi 2 (selettori, proposte, PFS, gruppi DH, negoziazione automatica, durata della chiave), con i valori di default indicati come tali. Con gli show, lo stato di ogni tunnel: quante istanze sono su e quante giù (i dial-up ne hanno una per peer), con i selettori attivi e lo stato di IKE. Dalla fase 2 (parte 1) i due estremi di ogni tunnel sono abbinati sulla mappa, con lo stato di entrambi i lati, e il dettaglio del tunnel porta all'apparato dall'altra parte; con la parte 2 c'è la vista VPN di tutto il cliente, descritta sotto.
 
 Elenco dei tunnel di tutto il progetto con i due estremi abbinati, e per ciascuno:
 
@@ -331,6 +347,14 @@ Le topologie hub & spoke sono riconosciute. I tunnel verso peer che non fanno pa
 - sulla mappa, le scorciatoie attive collegano direttamente le filiali.
 
 ![ADVPN nel mockup: controlli sulla configurazione, stato delle scorciatoie per ogni coppia di filiali e dettaglio della scorciatoia attiva](img/mockup-advpn.png)
+
+**Nella fase 2, parte 2** la vista VPN del cliente si apre dall'elenco a sinistra, sotto la mappa:
+
+- tutti i tunnel IPsec tra gli apparati e le scorciatoie ADVPN viste negli show, con tipo (statico, dial-up, DDNS, scorciatoia), i due estremi, lo stato dei due lati, l'esito del confronto ("9 parametri coerenti", "2 incoerenze", "un solo lato") e i problemi, in una tabella con filtro ed export Excel;
+- il clic su un tunnel mostra lo stesso dettaglio della mappa, con le righe dei valori che non tornano colorate; i parametri confrontati sono versione IKE, modalità, autenticazione, proposte e gruppi DH di fase 1, selettori, proposte, PFS e gruppi DH di fase 2, ruoli ADVPN; nel dettaglio ci sono anche local-id e peer-id, network-id, NAT traversal e durata della chiave, con i default indicati;
+- per ADVPN i ruoli (hub sender, filiali receiver), i controlli (policy dell'hub tra gli overlay e delle filiali verso le altre filiali, next hop e route reflector del BGP dell'hub) e, per ogni coppia di filiali, la scorciatoia attiva, possibile o non possibile, con i problemi che la bloccano.
+
+![La vista VPN del cliente di esempio: i tunnel con l'esito del confronto, e il dettaglio del tunnel WAN2 della filiale 2, senza proposte e gruppi DH in comune con l'hub](img/app-vpn.png)
 
 ### 5.3 SD-WAN
 
@@ -398,6 +422,8 @@ Per ogni VLAN: nome, **gateway** (anche se si trova su un altro apparato del pro
 
 **Nella fase 1**: nome, gateway se sta sullo stesso apparato, porte access, voce, untagged e tagged (i membri dei port-channel contano nel `Po`); per il FortiGate, le interfacce VLAN con ID, interfaccia padre, indirizzo e VDOM. Con `show vlan brief`, o `show vlan` dei Small Business, compaiono i nomi delle VLAN tenute dal VTP, segnati come presi dallo show.
 
+**Nella fase 2, parte 2** il gateway si trova anche su un altro apparato del cliente: la VLAN si segue lungo i cavi e i LAG che la portano fino all'apparato con un'interfaccia con indirizzo in quella VLAN, una SVI o una sotto-interfaccia del FortiGate. Nel dettaglio della VLAN c'è il percorso (per esempio SW-HQ-ACC1 → SW-HQ-CORE → FGT-HQ) e il pulsante che apre l'apparato del gateway.
+
 ### 5.7 Policy firewall
 
 ![Policy di un FortiGate nel mockup: regole raggruppate per coppia di interfacce, oggetti espandibili, avvisi e config originale della regola](img/mockup-policy.png)
@@ -435,6 +461,8 @@ Hostname, modello, versione, IP di gestione, conteggi (interfacce, VLAN, policy,
 
 **Nella fase 1** il riepilogo è la prima scheda di ogni apparato letto da un driver: riconoscimento (correggibile a mano), IP di gestione, stack o VDOM, conteggi, funzioni in uso, avvisi raggruppati per tipo con il salto alle righe, copertura con l'elenco delle sezioni non interpretate, show caricati con il motivo dell'abbinamento e i comandi letti, che aprono il file alla riga. Sugli switch c'è un solo avviso per la tabella MAC non caricata e uno per le porte configurate senza MAC, con il numero di porte e il promemoria che la tabella MAC è una fotografia.
 
+**Nella fase 2, parte 2** il riepilogo mostra anche i problemi dell'apparato con gli altri del cliente, con le righe dei due lati e il pulsante che li apre sulla mappa.
+
 ### 5.11 Rack e patch panel
 
 ![Il rack del CED nel mockup: firewall, stack di switch, patch panel, mensola e UPS nelle loro unità, con l'elenco degli elementi e il modulo per aggiungerne altri](img/mockup-rack-r1.png)
@@ -462,6 +490,22 @@ Hostname, modello, versione, IP di gestione, conteggi (interfacce, VLAN, policy,
 | **Pulizia policy** | Trova regole oscurate da regole precedenti (shadowed) o ridondanti, oggetti inutilizzati, oggetti duplicati (stesso valore, nome diverso), gruppi vuoti, any-any, regole disabilitate o senza log. Serve soprattutto **prima** di una migrazione, per non portarsi dietro regole e oggetti inutili. |
 | **Confronto versioni** | Mostra le differenze tra due backup dello stesso apparato: non solo nel testo, ma anche nel significato (policy, oggetti, porte, VLAN, tunnel, rotte aggiunti, rimossi o modificati). |
 | **Topologia** | Disegna lo schema degli apparati collegati (la mappa del capitolo 5.1), ricavato da LLDP/CDP, subnet condivise, VPN, BGP e descrizioni delle porte. |
+
+**Nella fase 2, parte 2** i controlli di coerenza sono questi. Ognuno ha un test con un caso sintetico, e gli esempi ne hanno almeno un caso voluto, con la causa nella config.
+
+| Controllo | Cosa confronta | Gravità |
+|---|---|---|
+| Tunnel IPsec | Un tunnel che dall'altro lato non ha un tunnel che lo accetti; versione IKE, modalità IKEv1, autenticazione, proposte e gruppi DH di fase 1 (ne serve almeno uno in comune); selettori di fase 2 speculari, con proposte, PFS e gruppi DH; ruoli ADVPN | errore, avviso i ruoli ADVPN |
+| Sessione BGP | Il `remote-as` di un lato contro l'AS dell'altro, il neighbor (o un `neighbor-range`) dall'altro lato, la sessione stabilita negli show, con il tunnel che la porta e i suoi problemi | errore |
+| Trunk | Modalità dei due lati (access contro trunk, tutti e due in `dynamic auto`), VLAN nativa, VLAN permesse, anche le VLAN del FortiGate che lo switch non porta | errore la modalità, avviso nativa e permesse |
+| LAG | Aggregato da un lato solo, protocolli incompatibili (`on` contro LACP, LACP passivo da tutti e due i lati), numero di porte diverso | errore, avviso il numero di porte |
+| MTU | Diversa ai due lati di un cavo o di un LAG; senza MTU nella config vale il default | avviso |
+| OSPF | Area diversa, interfaccia passiva da un lato | errore l'area, avviso la passiva |
+| Indirizzi | Lo stesso IP su due apparati; la stessa subnet in siti diversi, salvo le reti punto-punto | errore i duplicati, avviso le sovrapposte |
+| Rotte attese | Una rete annunciata in BGP, o riflessa dall'hub, che manca nella tabella di routing di un apparato che dovrebbe riceverla (negli show) | avviso |
+| Descrizioni | La descrizione della porta nomina un apparato, LLDP o CDP ne vedono un altro sulla stessa porta | avviso |
+| LLDP e CDP | Cavi solo dedotti dove l'apparato ha LLDP e CDP spenti sulla porta: lì la verifica non è possibile | informazione |
+| ADVPN | Policy dell'hub tra gli overlay e delle filiali verso le altre filiali, next-hop-self e route reflector nel BGP dell'hub | avviso |
 
 **Limite da tenere presente**: lavorando offline non ci sono i contatori di utilizzo delle regole (hit count), né la risoluzione di FQDN, geolocalizzazione e Internet Service. Le regole che dipendono da questi elementi vengono segnalate come "non valutabili".
 
@@ -629,7 +673,7 @@ Issue [#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15), in cors
 - Esportazione in draw.io e immagine.
 - Le parti:
   1. **Mappa e collegamenti** (realizzata, versione 0.2.0): correlazione nel core, siti, mappa a livelli con il dettaglio dei due lati di ogni collegamento, stato reale dagli show, elenco dei collegamenti con export Excel, altro estremo nelle viste dell'apparato;
-  2. **controlli e VPN**: controlli di coerenza e problemi sulla mappa, vista VPN con ADVPN, gateway delle VLAN su altri apparati, rotte attese che mancano;
+  2. **Controlli e VPN** (realizzata, versione 0.3.0): controlli di coerenza con i problemi sulla mappa, in un elenco con export Excel e nel riepilogo degli apparati; vista VPN del cliente con ADVPN; gateway delle VLAN su altri apparati; rotte attese che mancano; un problema voluto per ogni controllo negli esempi;
   3. **modifiche a mano ed export**: siti, posizioni, collegamenti a mano e decisioni sui collegamenti dedotti salvati nel cliente; export in draw.io e immagine;
   4. **FortiSwitch e FortiAP gestiti**: driver, viste, mappa e show degli apparati gestiti dal FortiGate.
 - **Risultato**: carichi le config di sede e filiali e vedi la rete del cliente, con i problemi evidenziati.

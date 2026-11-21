@@ -8,7 +8,7 @@ Strumento per vedere l'infrastruttura di rete di un cliente partendo dai backup 
 
 Le fasi 0 e 1 della roadmap sono realizzate: trascini un backup FortiGate o Cisco e l'app lo legge e lo mostra in forma grafica, apparato per apparato, sempre collegato alla config originale, identica al file. Se aggiungi gli output dei comandi show, le viste mostrano anche lo stato reale. I file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato, e ogni apparato si esporta in Excel.
 
-La fase 2 è in corso: con la prima parte gli apparati di un cliente si vedono insieme nella **mappa dell'infrastruttura**. Le parti successive (controlli di coerenza, vista VPN, modifiche a mano ed export della mappa, FortiSwitch e FortiAP gestiti) e le altre fasi (analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
+La fase 2 è in corso: gli apparati di un cliente si vedono insieme nella **mappa dell'infrastruttura**, con i **problemi** trovati confrontandoli tra loro, e nella **vista VPN** del cliente, con ADVPN. Le parti successive (modifiche a mano ed export della mappa, FortiSwitch e FortiAP gestiti) e le altre fasi (analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
 
 ## Cosa fa oggi
 
@@ -34,6 +34,12 @@ La fase 2 è in corso: con la prima parte gli apparati di un cliente si vedono i
   - livelli che si accendono e si spengono; il clic su un collegamento mostra i due lati affiancati, parametro per parametro, con i pulsanti che aprono la config o lo show alla riga, e il clic su un apparato apre le sue viste;
   - con gli show, lo stato reale dei due lati: porte, tunnel, sessioni BGP, health check SD-WAN;
   - sotto la mappa, l'elenco dei collegamenti con filtro ed export Excel; nelle viste di ogni apparato, l'altro estremo di porte, tunnel e sessioni BGP porta all'altro apparato.
+- **Controlla gli apparati di un cliente a vicenda** e segnala quello che non torna, con la gravità (errore, avviso, informazione), il perché, come sistemarlo e le righe dei due lati:
+  - tunnel IPsec (versione IKE, autenticazione, proposte e gruppi DH, selettori, PFS, ruoli ADVPN), sessioni BGP (AS, neighbor, sessione giù), trunk (modalità, VLAN nativa e permesse), LAG, MTU, OSPF, IP duplicati e subnet sovrapposte tra siti, rotte annunciate che mancano nella tabella di routing, descrizioni in contrasto con LLDP e CDP, porte con LLDP e CDP spenti, ADVPN;
+  - un valore che viene da un default non ancora confermato non dà mai errore, ma un avviso "da verificare";
+  - i problemi sono segnati sulla mappa, sugli apparati e sui collegamenti, elencati sotto la mappa (con export Excel), nel dettaglio di ogni collegamento con i valori che non tornano colorati, e nel riepilogo di ogni apparato.
+- **Mostra la VPN del cliente**: tutti i tunnel con i due estremi, il tipo, lo stato e l'esito del confronto ("9 parametri coerenti", "2 incoerenze", "un solo lato"); per ADVPN ruoli, controlli e, per ogni coppia di filiali, se la scorciatoia è attiva, possibile o no, e perché.
+- **Trova il gateway di una VLAN** anche su un altro apparato, seguendo i trunk: nella vista VLAN di uno switch di accesso compare il FortiGate o il centro stella che fa da gateway, con il percorso.
 - **Esporta in Excel**, con il file creato nel browser:
   - ogni apparato, con un foglio per vista: porte, VLAN, ACL, routing e MAC degli switch; interfacce e VLAN del FortiGate, e policy, oggetti, routing, VPN e SD-WAN di ogni VDOM. Con gli show c'è anche lo stato reale;
   - ogni tabella, così come è filtrata e ordinata, con il pulsante accanto al filtro.
@@ -44,7 +50,9 @@ La fase 2 è in corso: con la prima parte gli apparati di un cliente si vedono i
 - Interfaccia in **italiano e inglese**, a scelta.
 - Tema **chiaro, scuro o come il sistema**, a scelta. La scelta resta salvata nel browser.
 
-![La mappa del cliente di esempio: sede, filiali, campus e datacenter, con il dettaglio della sessione BGP tra la filiale 1 e l'hub](docs/img/app-mappa.png)
+![La mappa del cliente di esempio con i problemi segnati, e il dettaglio del LAG tra SW-HQ-ACC3 e il centro stella, dove i protocolli dei due lati non si accordano](docs/img/app-mappa.png)
+
+![La vista VPN del cliente di esempio in tema scuro: i tunnel con l'esito del confronto, e il dettaglio del tunnel WAN2 della filiale 2, senza proposte e gruppi DH in comune con l'hub](docs/img/app-vpn-scuro.png)
 
 ![Il pannello delle porte di uno stack Catalyst 9300 in tema scuro, con il dettaglio di un uplink in port-channel](docs/img/app-cisco-scuro.png)
 
