@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { fileItem, loadFiles, openApp, openConfigTab, samplePath } from './helpers';
+import { fileItem, gotoApp, loadFiles, openApp, openConfigTab, samplePath } from './helpers';
 
 test('sends the security policy that blocks connections to other sites', async ({ page }) => {
-  const response = await page.goto('/');
+  const response = await gotoApp(page);
   const csp = response?.headers()['content-security-policy'] ?? '';
   expect(csp).toContain("default-src 'self'");
   expect(csp).toContain("connect-src 'self'");

@@ -1,8 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
-import { loadFiles, openApp, samplePath } from './helpers';
+import { gotoApp, loadFiles, openApp, samplePath } from './helpers';
 
 const html = (page: Page) => page.locator('html');
-const scheme = (page: Page) => html(page).getAttribute('data-mantine-color-scheme');
 
 /** Clicks one of the three choices of the theme switch. */
 async function choose(page: Page, choice: 'light' | 'dark' | 'auto') {
@@ -20,9 +19,9 @@ for (const system of ['light', 'dark'] as const) {
       // Firefox does not give the theme of the context to the first page it loads (the page
       // changes process): the theme is set on the page, which is then loaded again, and the
       // app reads it when it starts, as in the other browsers.
-      await page.goto('/');
+      await gotoApp(page);
       await page.emulateMedia({ colorScheme: system });
-      await page.reload();
+      await page.reload({ waitUntil: 'commit' });
       await expect(page.getByTestId('empty-state')).toBeVisible();
       await expect(html(page)).toHaveAttribute('data-mantine-color-scheme', system);
       await expect(
@@ -80,8 +79,8 @@ test.describe('with the system in light mode', () => {
     page.on('console', (msg) => {
       if (/Content Security Policy/i.test(msg.text())) violations.push(msg.text());
     });
-    await page.goto('/');
-    expect(await scheme(page)).toBe('dark');
+    await gotoApp(page);
+    await expect(html(page)).toHaveAttribute('data-mantine-color-scheme', 'dark');
     expect(violations).toEqual([]);
   });
 

@@ -40,7 +40,14 @@ export function EmptyState({ onChoose, archive, onDialog, onImport }: Props) {
   return (
     <Center p="xl" mih="calc(100dvh - 56px)">
       <Stack maw={720} w="100%" gap="lg">
-        <Paper withBorder radius="lg" p="xl" className="ncv-drop-target" data-testid="empty-state">
+        <Paper
+          withBorder
+          radius="lg"
+          p="xl"
+          className="ncv-drop-target"
+          data-testid="empty-state"
+          data-archive={available === null ? 'checking' : available ? 'yes' : 'no'}
+        >
           <Stack align="center" gap="md" ta="center">
             <ThemeIcon size={64} radius="xl" variant="light">
               <IconUpload size={32} />

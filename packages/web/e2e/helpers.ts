@@ -27,9 +27,21 @@ export const expectedDetections = (): Record<string, Expected> =>
 /** Paths on disk, or files built in the test. */
 export type Upload = string[] | { name: string; mimeType: string; buffer: Buffer }[];
 
+/**
+ * Loads the app. In Firefox the first page of a new tab changes process, because of the
+ * Cross-Origin-Opener-Policy of the app, and Playwright may then miss its "load" event: the
+ * tests wait for the navigation to start, and then for what they need to see on the page.
+ */
+export function gotoApp(page: Page) {
+  return page.goto('/', { waitUntil: 'commit' });
+}
+
+/** Loads the app and waits until it knows whether the archive of the clients is there. */
 export async function openApp(page: Page) {
-  await page.goto('/');
-  await expect(page.getByTestId('empty-state')).toBeVisible();
+  await gotoApp(page);
+  const start = page.getByTestId('empty-state');
+  await expect(start).toBeVisible();
+  await expect(start).not.toHaveAttribute('data-archive', 'checking');
 }
 
 /** Loads files through the hidden file input and waits until the worker has finished. */

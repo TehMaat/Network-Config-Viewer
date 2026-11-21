@@ -240,7 +240,8 @@ test('exports a client to a zip file and imports it back, byte for byte', async 
     page.waitForEvent('download'),
     page.getByTestId('btn-client-export').click(),
   ]);
-  expect(download.suggestedFilename()).toBe(`${name}.zip`);
+  // WebKit puts "_" in place of the spaces of the name it suggests.
+  expect(download.suggestedFilename().replace(/_/g, ' ')).toBe(`${name}.zip`);
 
   await page.getByTestId('client-import-input').setInputFiles(await download.path());
   await expect(page.getByTestId('client-menu')).toHaveAttribute('data-client', name);
