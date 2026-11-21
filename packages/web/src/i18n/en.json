@@ -22,7 +22,11 @@
     "privacy": "Files stay on your computer: they are read in the browser and never sent anywhere.",
     "choose": "Choose files",
     "add": "Add files",
-    "overlay": "Drop to open the files"
+    "overlay": "Drop to open the files",
+    "titleClient": "Load the files of {{name}}",
+    "hintClient": "Configurations, output of show commands and previous versions, also inside zip, tar and tar.gz archives: the app saves them in the archive of the client and groups them by device.",
+    "privacyArchive": "The files stay on your computer: they are read in the browser and saved in the archive of the app, on this PC. They are never sent anywhere.",
+    "overlayClient": "Drop to add the files to {{name}}"
   },
   "files": {
     "title": "Files",
@@ -32,7 +36,23 @@
     "clear": "Clear the list",
     "remove": "Remove from the list",
     "empty": "No files loaded",
-    "unreadable": "Not readable"
+    "unreadable": "Not readable",
+    "delete": "Delete from the archive of the client",
+    "deleteTitle": "Delete the file?",
+    "deleteText": "{{name}} is deleted from the archive of {{client}}. This cannot be undone.",
+    "deleteConfirm": "Delete",
+    "others": "Other files",
+    "current": "current",
+    "currentPinned": "current, chosen by hand",
+    "previous": "previous version",
+    "pin": "Use this version as the current one",
+    "unpin": "Back to the most recent version",
+    "dateSource": {
+      "config": "Date of the last change written in the configuration",
+      "file-name": "Date in the file name",
+      "file": "Date of the file on the computer",
+      "added": "Date the file was loaded"
+    }
   },
   "kind": {
     "config": "Configuration",
@@ -207,7 +227,8 @@
     "default": "Default value: it is not written in the config, the device uses it when it is missing.",
     "defaultUnverified": "Default value to be checked: for this vendor and version it is not confirmed on real devices yet.",
     "toCheck": "to be checked",
-    "lineIn": "line {{line}} ({{context}})"
+    "lineIn": "line {{line}} ({{context}})",
+    "showLine": "{{file}}, line {{line}}"
   },
   "summary": {
     "device": "Device",
@@ -268,7 +289,10 @@
     "policy-any-any_one": "{{count}} policy allows everything: source all, destination all, service ALL.",
     "policy-any-any_other": "{{count}} policies allow everything: source all, destination all, service ALL.",
     "policy-all-management_one": "{{count}} policy opens a management service (SSH, Telnet, SNMP, RDP, VNC) to any source.",
-    "policy-all-management_other": "{{count}} policies open a management service (SSH, Telnet, SNMP, RDP, VNC) to any source."
+    "policy-all-management_other": "{{count}} policies open a management service (SSH, Telnet, SNMP, RDP, VNC) to any source.",
+    "mac-table-missing": "MAC table not loaded: load the output of show mac address-table to see the devices on every port.",
+    "ports-without-mac_one": "{{count}} configured port, not shut down, has learnt no MAC: maybe it is not used. The MAC table is a snapshot: MACs age out (usually after 300 seconds) and a device that is off or silent may not appear.",
+    "ports-without-mac_other": "{{count}} configured ports, not shut down, have learnt no MAC: maybe they are not used. The MAC table is a snapshot: MACs age out (usually after 300 seconds) and a device that is off or silent may not appear."
   },
   "coverage": {
     "title": "Reading coverage",
@@ -334,7 +358,9 @@
       "lag": "Port-channel",
       "poe": "PoE",
       "dot1x": "802.1X",
-      "ip": "IP"
+      "ip": "IP",
+      "live": "Real state",
+      "macs": "MACs"
     },
     "legend": {
       "trunk": "trunk",
@@ -343,7 +369,11 @@
       "poe": "PoE",
       "dot1x": "802.1X / MAB",
       "voice": "voice VLAN",
-      "lag": "port-channel"
+      "lag": "port-channel",
+      "liveUp": "up (show)",
+      "liveDown": "not connected (show)",
+      "liveError": "error (show)",
+      "noMac": "configured without MACs"
     },
     "detail": {
       "accessVlan": "Access VLAN",
@@ -365,6 +395,29 @@
       "helper": "DHCP relay",
       "pbr": "Policy route",
       "secondary": "{{ip}} (secondary)"
+    },
+    "live": {
+      "title": "Real state (from the shows)",
+      "noStatus": "No status in the shows.",
+      "channel": "Port-channel: flags {{flags}}",
+      "neighbor": "{{protocol}} neighbour: {{device}} {{port}}",
+      "poe": "PoE: {{details}}",
+      "watts": "{{watts, number}} W",
+      "macsOn": "The MACs are on the port-channel {{name}}.",
+      "noMac": "Configured, but no MAC learnt: maybe it is not used. A device that is off or silent may not appear in the MAC table.",
+      "noMacShort": "none",
+      "noMacTable": "MAC table not loaded: load the output of show mac address-table to see the connected devices.",
+      "macCount_one": "{{count}} MAC",
+      "macCount_other": "{{count}} MACs",
+      "showMacs": "show the list",
+      "macInfo": "VLAN {{vlan}} · {{type}}"
+    },
+    "macType": {
+      "dynamic": "dynamic",
+      "static": "static",
+      "sticky": "sticky",
+      "secure": "secure",
+      "other": "other"
     }
   },
   "vlans": {
@@ -383,7 +436,8 @@
       "tagged": "Tagged on trunks"
     },
     "title": "VLAN {{id}}",
-    "titleNamed": "VLAN {{id}} · {{name}}"
+    "titleNamed": "VLAN {{id}} · {{name}}",
+    "fromShow": "name from the show"
   },
   "acls": {
     "col": {
@@ -462,7 +516,10 @@
       "match": "Conditions (match)",
       "set": "Actions (set)",
       "input": "Incoming",
-      "output": "Outgoing"
+      "output": "Outgoing",
+      "code": "Source",
+      "distanceMetric": "Distance/metric",
+      "age": "Age"
     },
     "type": {
       "connected": "connected",
@@ -496,11 +553,17 @@
       "out": "Outbound filters",
       "shutdown": "shut down",
       "networks": "Announced networks",
-      "groups": "Groups"
+      "groups": "Groups",
+      "established_one": "established, {{count}} prefix",
+      "established_other": "established, {{count}} prefixes",
+      "sessions": "BGP sessions in the shows",
+      "upDown": "Up/down for"
     },
     "routeMaps": "Route maps",
     "prefixLists": "Prefix lists",
-    "sdwan": "SD-WAN: {{zones}}"
+    "sdwan": "SD-WAN: {{zones}}",
+    "liveRoutes": "Real routing table",
+    "liveRoutesHelp": "From the routing table in the shows, with the routes learnt with OSPF and BGP."
   },
   "config": {
     "followLink": "Go to the definition (line {{line}})",
@@ -618,7 +681,8 @@
       "interface": "Interface",
       "remote": "Remote gateway",
       "proposals": "Proposals",
-      "phase2": "Phase 2s"
+      "phase2": "Phase 2s",
+      "live": "Real state"
     },
     "type": {
       "static": "static",
@@ -642,7 +706,13 @@
     "keylife": "Key lifetime (s)",
     "unverified": "Some defaults of this version still have to be checked",
     "none": "No IPsec tunnel in this VDOM.",
-    "pfsDh": "PFS / DH groups"
+    "pfsDh": "PFS / DH groups",
+    "liveCount": "{{up}} up, {{down}} down",
+    "liveTitle": "Real state (from the shows)",
+    "instance": "Instance",
+    "selectorsUp": "Selectors up",
+    "ikeUp": "established (IKEv{{version}})",
+    "ikeDown": "not established"
   },
   "sdwan": {
     "none": "SD-WAN is not configured in this VDOM.",
@@ -665,7 +735,8 @@
       "mode": "Strategy",
       "match": "Traffic",
       "quality": "Required quality",
-      "preferred": "Preferred members"
+      "preferred": "Preferred members",
+      "measures": "Measures"
     },
     "mode": {
       "manual": "manual",
@@ -677,7 +748,113 @@
     "from": "from {{names}}",
     "to": "to {{names}}",
     "implicit": "Implicit rule",
-    "implicitHelp": "Traffic that matches no rule follows the routing table and is spread across the members."
+    "implicitHelp": "Traffic that matches no rule follows the routing table and is spread across the members.",
+    "live": "Health checks in the shows",
+    "alive": "alive",
+    "dead": "dead",
+    "measures": "latency {{latency, number}} ms, jitter {{jitter, number}} ms, loss {{packetloss, number}}%",
+    "slaMet": "SLA met",
+    "slaMissed": "SLA missed",
+    "used": "in use: {{name}}"
+  },
+  "shows": {
+    "title": "Show commands",
+    "device": "Device: {{name}}",
+    "reason": {
+      "manual": "set by hand",
+      "hostname": "from the hostname",
+      "serial": "from the serial number",
+      "file-name": "from the file name"
+    },
+    "openDevice": "Open the device",
+    "noDevice": "No loaded file has a device with this hostname: load its config, or correct the hostname.",
+    "inferred": "recognised from the format",
+    "read": "read",
+    "notRead": "not read",
+    "loaded": "Shows loaded",
+    "none": "No show loaded for this device: load the output of the show commands to see the real state."
+  },
+  "clients": {
+    "title": "Clients",
+    "none": "No client: the files are not saved",
+    "empty": "No client in the archive",
+    "startEmpty": "There is no client in the archive yet. Create a client and load its configurations and shows: the app keeps them on this PC and always finds them again.",
+    "fileCount_one": "{{count}} file",
+    "fileCount_other": "{{count}} files",
+    "cardInfo_one": "{{count}} file · changed on {{date}}",
+    "cardInfo_other": "{{count}} files · changed on {{date}}",
+    "new": "New client…",
+    "newTitle": "New client",
+    "name": "Name of the client",
+    "create": "Create",
+    "keepFiles_one": "Save the file already loaded in the new client",
+    "keepFiles_other": "Save the {{count}} files already loaded in the new client",
+    "import": "Import from a zip file…",
+    "rename": "Rename…",
+    "renameTitle": "Rename the client",
+    "renameConfirm": "Rename",
+    "export": "Export to a zip file",
+    "close": "Close the client",
+    "delete": "Delete the client…",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteText_one": "The client and its file are deleted from the archive. This cannot be undone: to keep a copy, export the client to a zip file first.",
+    "deleteText_other": "The client and its {{count}} files are deleted from the archive. This cannot be undone: to keep a copy, export the client to a zip file first.",
+    "deleteConfirm": "Delete the client",
+    "unsaved_one": "{{count}} file not saved",
+    "unsaved_other": "{{count}} files not saved",
+    "saveTo": "Save in a client",
+    "switchTitle": "Files not saved",
+    "switchText_one": "The loaded file is in no client. Add it to {{name}}?",
+    "switchText_other": "The {{count}} loaded files are in no client. Add them to {{name}}?",
+    "switchAdd": "Add to {{name}}",
+    "switchDiscard": "Do not save them",
+    "opening": "Opening the client…",
+    "unavailable": "Archive of the clients not available: the files stay only in this tab. Start the app with Docker to keep them.",
+    "dismiss": "Close the message",
+    "error": {
+      "generic": "The operation failed. Try again.",
+      "unreachable": "The server of the app does not answer: check that the container is running.",
+      "not-found": "The client or the file is no longer in the archive.",
+      "invalid-name": "The name must have 1 to 100 characters, without line breaks.",
+      "too-large": "The file is too large for the archive.",
+      "too-many-files": "The client already has the largest number of files.",
+      "invalid-zip": "The file is not a client exported by this app.",
+      "corrupt-file": "A file in the zip file differs from the original: the client was not imported."
+    }
+  },
+  "export": {
+    "device": "Excel",
+    "deviceHelp": "Export the device to an Excel file, with a sheet for every view",
+    "table": "Export the table to Excel, filtered and sorted as it is",
+    "failed": "The Excel file was not made. Try again.",
+    "sheet": {
+      "ports": "Ports",
+      "vlans": "VLANs",
+      "acls": "ACLs",
+      "routes": "Routing",
+      "liveRoutes": "Real routing",
+      "macs": "MACs",
+      "interfaces": "Interfaces",
+      "policies": "Policies",
+      "objects": "Objects",
+      "vpn": "VPN",
+      "sdwanMembers": "SD-WAN members",
+      "sdwanHealth": "SD-WAN health checks",
+      "sdwanRules": "SD-WAN rules"
+    },
+    "col": {
+      "macType": "Type",
+      "category": "Category",
+      "used": "In use"
+    },
+    "objectKind": {
+      "addresses": "Address",
+      "groups": "Address group",
+      "services": "Service",
+      "serviceGroups": "Service group",
+      "vips": "VIP",
+      "ippools": "IP pool"
+    }
   },
   "codemirror": {
     "Find": "Find",

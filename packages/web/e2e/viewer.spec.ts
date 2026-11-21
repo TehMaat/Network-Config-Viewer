@@ -41,14 +41,53 @@ test('recognises every sample configuration and command output', async ({ page }
   }
 });
 
-test.describe('the text is the original, byte for byte', () => {
-  test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
+/**
+ * Firefox and WebKit do not let a test read the clipboard: there the text is taken where the
+ * app hands it over, to the clipboard API or to the copy event of the editor.
+ */
+function captureClipboard() {
+  const w = window as unknown as { __ncvCopied: string[] };
+  w.__ncvCopied = [];
+  const clipboard = navigator.clipboard;
+  if (clipboard) {
+    const write = clipboard.writeText.bind(clipboard);
+    clipboard.writeText = async (text: string) => {
+      w.__ncvCopied.push(text);
+      try {
+        await write(text);
+      } catch {
+        // The browser may refuse without a real user: the text was taken anyway.
+      }
+    };
+  }
+  document.addEventListener('copy', (event) => {
+    const text = event.clipboardData?.getData('text/plain');
+    if (text) w.__ncvCopied.push(text);
+  });
+}
 
+test.describe('the text is the original, byte for byte', () => {
   for (const rel of [
     'cisco-ios/sw-br1-acc-c2960x-ios-15.2-stack.txt',
     'fortigate/fgt-campus-200f-fortios-7.6.conf',
   ]) {
-    test(`copies ${rel} exactly`, async ({ page }) => {
+    test(`copies ${rel} exactly`, async ({ page, context, browserName }) => {
+      const real = browserName === 'chromium';
+      if (real) await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+      else await page.addInitScript(captureClipboard);
+      const copied = () =>
+        real
+          ? page.evaluate(() => navigator.clipboard.readText())
+          : page.evaluate(() =>
+              (window as unknown as { __ncvCopied: string[] }).__ncvCopied.at(-1),
+            );
+      const reset = () =>
+        real
+          ? page.evaluate(() => navigator.clipboard.writeText(''))
+          : page.evaluate(() => {
+              (window as unknown as { __ncvCopied: string[] }).__ncvCopied = [];
+            });
+
       const original = readFileSync(samplePath(rel), 'utf8');
       await openApp(page);
       await loadFiles(page, [samplePath(rel)], 1);
@@ -56,14 +95,14 @@ test.describe('the text is the original, byte for byte', () => {
 
       await page.getByTestId('btn-copy').click();
       await expect(page.getByTestId('copy-feedback')).toBeVisible();
-      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(original);
+      expect(await copied()).toBe(original);
 
       // Selecting everything in the viewer and copying gives the same text.
-      await page.evaluate(() => navigator.clipboard.writeText(''));
+      await reset();
       await page.getByTestId('config-editor').click();
       await page.keyboard.press('ControlOrMeta+a');
       await page.keyboard.press('ControlOrMeta+c');
-      await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(original);
+      await expect.poll(copied).toBe(original);
     });
   }
 

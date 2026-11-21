@@ -11,7 +11,8 @@ export function sampleFiles(): string[] {
     for (const name of readdirSync(dir)) {
       const full = join(dir, name);
       if (statSync(full).isDirectory()) walk(full);
-      else if (name !== 'README.md' && !/^expected.*\.json$/.test(name)) {
+      // The exported example client is an archive of the app, not a sample to read.
+      else if (name !== 'README.md' && !/^expected.*\.json$/.test(name) && !name.endsWith('.zip')) {
         out.push(relative(SAMPLES_DIR, full).split(sep).join('/'));
       }
     }

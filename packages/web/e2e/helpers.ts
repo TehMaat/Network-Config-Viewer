@@ -27,9 +27,28 @@ export const expectedDetections = (): Record<string, Expected> =>
 /** Paths on disk, or files built in the test. */
 export type Upload = string[] | { name: string; mimeType: string; buffer: Buffer }[];
 
+/**
+ * Loads the app. Firefox and WebKit move a page with Cross-Origin-Opener-Policy to another
+ * process, and their automation can lose that first navigation and wait forever (Mozilla bug
+ * 1706353, WebKit bug 233391; Chromium is not affected). The tests wait only for the
+ * navigation to start; if it is lost, the page is loaded again, now without a change of
+ * process. Every check of the tests stays as it is.
+ */
+export async function gotoApp(page: Page) {
+  try {
+    return await page.goto('/', { waitUntil: 'commit', timeout: 15_000 });
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.includes('Timeout')) throw error;
+    return page.goto('/', { waitUntil: 'commit' });
+  }
+}
+
+/** Loads the app and waits until it knows whether the archive of the clients is there. */
 export async function openApp(page: Page) {
-  await page.goto('/');
-  await expect(page.getByTestId('empty-state')).toBeVisible();
+  await gotoApp(page);
+  const start = page.getByTestId('empty-state');
+  await expect(start).toBeVisible();
+  await expect(start).not.toHaveAttribute('data-archive', 'checking');
 }
 
 /** Loads files through the hidden file input and waits until the worker has finished. */

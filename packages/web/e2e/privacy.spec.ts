@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { fileItem, loadFiles, openApp, openConfigTab, samplePath } from './helpers';
+import { fileItem, gotoApp, loadFiles, openApp, openConfigTab, samplePath } from './helpers';
 
 test('sends the security policy that blocks connections to other sites', async ({ page }) => {
-  const response = await page.goto('/');
+  const response = await gotoApp(page);
   const csp = response?.headers()['content-security-policy'] ?? '';
   expect(csp).toContain("default-src 'self'");
   expect(csp).toContain("connect-src 'self'");
@@ -39,6 +39,8 @@ test('never contacts another site, and cannot', async ({ page, baseURL }) => {
     const tabs = page.locator('[data-testid^="tab-"]');
     for (let i = 0; i < (await tabs.count()); i++) await tabs.nth(i).click();
   }
+  // The Excel file is made in the page: nothing is fetched from outside.
+  await Promise.all([page.waitForEvent('download'), page.getByTestId('btn-export-device').click()]);
   await openConfigTab(page);
   await page.getByTestId('btn-search').click();
   await page.getByTestId('language-switch').getByText('EN').click();

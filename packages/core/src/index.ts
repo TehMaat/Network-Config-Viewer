@@ -11,3 +11,4 @@ export * from './model/names';
 export * from './model/types';
 export * from './model/vlans';
 export * from './query';
+export * from './show';

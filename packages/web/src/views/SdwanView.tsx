@@ -1,12 +1,17 @@
 import { Badge, Group, Paper, Stack, Table, Text, Title } from '@mantine/core';
-import type { LogicalContext, Sdwan } from '@ncv/core';
+import type { LogicalContext, Sdwan, SdwanServiceState, SlaState } from '@ncv/core';
 import { useTranslation } from 'react-i18next';
-import { SourceButton, Value } from './source';
+import { ShowSourceButton, SourceButton, useDeviceView, Value } from './source';
 
 /** SD-WAN of a VDOM: zones and members, health checks with their SLAs, rules in order. */
 export function SdwanView({ context }: { context: LogicalContext }) {
   const { t } = useTranslation();
+  const { state } = useDeviceView();
   const sdwan = context.sdwan;
+  const inContext = <T extends { context?: string }>(items: T[]) =>
+    items.filter((x) => !x.context || x.context === context.name);
+  const sla = inContext(state?.sla ?? []);
+  const services = inContext(state?.sdwanServices ?? []);
   if (!sdwan) {
     return (
       <Text p="md" size="sm" c="dimmed">
@@ -114,12 +119,85 @@ export function SdwanView({ context }: { context: LogicalContext }) {
         </Table>
       </Paper>
 
-      <Rules sdwan={sdwan} memberName={memberName} />
+      {sla.length > 0 && <LiveHealth sla={sla} />}
+
+      <Rules sdwan={sdwan} memberName={memberName} services={services} />
     </Stack>
   );
 }
 
-function Rules({ sdwan, memberName }: { sdwan: Sdwan; memberName(seq: number): string }) {
+/** Health checks in the shows: every member with its measures and the SLAs it meets. */
+function LiveHealth({ sla }: { sla: SlaState[] }) {
+  const { t } = useTranslation();
+  return (
+    <Paper withBorder p="sm" data-testid="sdwan-live">
+      <Title order={5} mb="xs">
+        {t('sdwan.live')}
+      </Title>
+      <Table fz="sm" verticalSpacing={2}>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>{t('sdwan.col.name')}</Table.Th>
+            <Table.Th>{t('sdwan.col.interface')}</Table.Th>
+            <Table.Th>{t('ports.col.state')}</Table.Th>
+            <Table.Th>{t('sdwan.col.measures')}</Table.Th>
+            <Table.Th>SLA</Table.Th>
+            <Table.Th />
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {sla.map((x) => (
+            <Table.Tr
+              key={`${x.healthCheck}-${x.seq}`}
+              data-testid="sdwan-live-row"
+              data-ok={x.alive && (x.slaMap ?? 0) > 0}
+            >
+              <Table.Td ff="monospace">{x.healthCheck}</Table.Td>
+              <Table.Td ff="monospace">{x.member}</Table.Td>
+              <Table.Td>
+                <Badge size="sm" variant="dot" color={x.alive ? 'teal' : 'red'} tt="none">
+                  {x.alive ? t('sdwan.alive') : t('sdwan.dead')}
+                </Badge>
+              </Table.Td>
+              <Table.Td>
+                {x.latency !== undefined
+                  ? t('sdwan.measures', {
+                      latency: x.latency,
+                      jitter: x.jitter ?? 0,
+                      packetloss: x.packetLoss ?? 0,
+                    })
+                  : ''}
+              </Table.Td>
+              <Table.Td>
+                <Badge
+                  size="sm"
+                  variant="light"
+                  color={(x.slaMap ?? 0) > 0 ? 'teal' : 'orange'}
+                  tt="none"
+                >
+                  {(x.slaMap ?? 0) > 0 ? t('sdwan.slaMet') : t('sdwan.slaMissed')}
+                </Badge>
+              </Table.Td>
+              <Table.Td>
+                <ShowSourceButton item={x} />
+              </Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    </Paper>
+  );
+}
+
+function Rules({
+  sdwan,
+  memberName,
+  services,
+}: {
+  sdwan: Sdwan;
+  memberName(seq: number): string;
+  services: SdwanServiceState[];
+}) {
   const { t } = useTranslation();
   return (
     <Paper withBorder p="sm" data-testid="sdwan-rules">
@@ -179,6 +257,23 @@ function Rules({ sdwan, memberName }: { sdwan: Sdwan; memberName(seq: number): s
               </Table.Td>
               <Table.Td>
                 {[...r.priorityMembers.map(memberName), ...r.priorityZones].join(' › ')}
+                {(() => {
+                  // The member the rule uses now: the first alive one chosen in the shows.
+                  const service = services.find((x) => x.id === r.id);
+                  const used = service?.members.find((m) => m.selected && m.alive);
+                  return used ? (
+                    <Badge
+                      size="xs"
+                      color="teal"
+                      variant="light"
+                      tt="none"
+                      ml={6}
+                      data-testid="sdwan-rule-used"
+                    >
+                      {t('sdwan.used', { name: used.interface })}
+                    </Badge>
+                  ) : null;
+                })()}
               </Table.Td>
               <Table.Td>
                 <SourceButton src={r.src} />

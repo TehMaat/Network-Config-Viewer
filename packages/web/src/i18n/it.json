@@ -22,7 +22,11 @@
     "privacy": "I file restano sul tuo computer: vengono letti nel browser e non vengono inviati da nessuna parte.",
     "choose": "Scegli i file",
     "add": "Aggiungi file",
-    "overlay": "Rilascia per aprire i file"
+    "overlay": "Rilascia per aprire i file",
+    "titleClient": "Carica i file di {{name}}",
+    "hintClient": "Config, output dei comandi show e versioni precedenti, anche dentro archivi zip, tar e tar.gz: l'app li salva nell'archivio del cliente e li raggruppa per apparato.",
+    "privacyArchive": "I file restano sul tuo computer: vengono letti nel browser e salvati nell'archivio dell'app, sul PC. Non vengono inviati da nessuna parte.",
+    "overlayClient": "Rilascia per aggiungere i file a {{name}}"
   },
   "files": {
     "title": "File",
@@ -32,7 +36,23 @@
     "clear": "Svuota l'elenco",
     "remove": "Togli dall'elenco",
     "empty": "Nessun file caricato",
-    "unreadable": "Non leggibile"
+    "unreadable": "Non leggibile",
+    "delete": "Elimina dall'archivio del cliente",
+    "deleteTitle": "Eliminare il file?",
+    "deleteText": "{{name}} viene eliminato dall'archivio di {{client}}. Non si può annullare.",
+    "deleteConfirm": "Elimina",
+    "others": "Altri file",
+    "current": "attuale",
+    "currentPinned": "attuale, scelta a mano",
+    "previous": "versione precedente",
+    "pin": "Usa questa versione come attuale",
+    "unpin": "Torna alla versione più recente",
+    "dateSource": {
+      "config": "Data dell'ultima modifica scritta nella config",
+      "file-name": "Data nel nome del file",
+      "file": "Data del file sul computer",
+      "added": "Data in cui il file è stato caricato"
+    }
   },
   "kind": {
     "config": "Configurazione",
@@ -207,7 +227,8 @@
     "default": "Valore di default: non è scritto nella config, l'apparato lo usa quando manca.",
     "defaultUnverified": "Valore di default da verificare: per questa marca e versione non è ancora confermato su apparati reali.",
     "toCheck": "da verificare",
-    "lineIn": "riga {{line}} ({{context}})"
+    "lineIn": "riga {{line}} ({{context}})",
+    "showLine": "{{file}}, riga {{line}}"
   },
   "summary": {
     "device": "Apparato",
@@ -268,7 +289,10 @@
     "policy-any-any_one": "{{count}} policy che permette tutto: sorgente all, destinazione all, servizio ALL.",
     "policy-any-any_other": "{{count}} policy che permettono tutto: sorgente all, destinazione all, servizio ALL.",
     "policy-all-management_one": "{{count}} policy che apre un servizio di gestione (SSH, Telnet, SNMP, RDP, VNC) a qualsiasi sorgente.",
-    "policy-all-management_other": "{{count}} policy che aprono un servizio di gestione (SSH, Telnet, SNMP, RDP, VNC) a qualsiasi sorgente."
+    "policy-all-management_other": "{{count}} policy che aprono un servizio di gestione (SSH, Telnet, SNMP, RDP, VNC) a qualsiasi sorgente.",
+    "mac-table-missing": "Tabella MAC non caricata: carica l'output di show mac address-table per vedere i dispositivi collegati a ogni porta.",
+    "ports-without-mac_one": "{{count}} porta configurata, e non spenta, senza nessun MAC appreso: forse non è usata. La tabella MAC è una fotografia: i MAC scadono (di solito dopo 300 secondi) e un dispositivo spento o silenzioso può non comparire.",
+    "ports-without-mac_other": "{{count}} porte configurate, e non spente, senza nessun MAC appreso: forse non sono usate. La tabella MAC è una fotografia: i MAC scadono (di solito dopo 300 secondi) e un dispositivo spento o silenzioso può non comparire."
   },
   "coverage": {
     "title": "Copertura della lettura",
@@ -334,7 +358,9 @@
       "lag": "Port-channel",
       "poe": "PoE",
       "dot1x": "802.1X",
-      "ip": "IP"
+      "ip": "IP",
+      "live": "Stato reale",
+      "macs": "MAC"
     },
     "legend": {
       "trunk": "trunk",
@@ -343,7 +369,11 @@
       "poe": "PoE",
       "dot1x": "802.1X / MAB",
       "voice": "VLAN voce",
-      "lag": "port-channel"
+      "lag": "port-channel",
+      "liveUp": "attiva (show)",
+      "liveDown": "non collegata (show)",
+      "liveError": "in errore (show)",
+      "noMac": "configurata senza MAC"
     },
     "detail": {
       "accessVlan": "VLAN access",
@@ -365,6 +395,29 @@
       "helper": "Inoltro DHCP",
       "pbr": "Policy route",
       "secondary": "{{ip}} (secondario)"
+    },
+    "live": {
+      "title": "Stato reale (dagli show)",
+      "noStatus": "Stato non presente negli show.",
+      "channel": "Port-channel: flag {{flags}}",
+      "neighbor": "Vicino {{protocol}}: {{device}} {{port}}",
+      "poe": "PoE: {{details}}",
+      "watts": "{{watts, number}} W",
+      "macsOn": "I MAC sono sul port-channel {{name}}.",
+      "noMac": "Configurata, ma senza nessun MAC appreso: forse non è usata. Un dispositivo spento o silenzioso può non comparire nella tabella MAC.",
+      "noMacShort": "nessuno",
+      "noMacTable": "Tabella MAC non caricata: carica l'output di show mac address-table per vedere i dispositivi collegati.",
+      "macCount_one": "{{count}} MAC",
+      "macCount_other": "{{count}} MAC",
+      "showMacs": "mostra l'elenco",
+      "macInfo": "VLAN {{vlan}} · {{type}}"
+    },
+    "macType": {
+      "dynamic": "dinamico",
+      "static": "statico",
+      "sticky": "sticky",
+      "secure": "sicuro",
+      "other": "altro"
     }
   },
   "vlans": {
@@ -383,7 +436,8 @@
       "tagged": "Tagged sui trunk"
     },
     "title": "VLAN {{id}}",
-    "titleNamed": "VLAN {{id}} · {{name}}"
+    "titleNamed": "VLAN {{id}} · {{name}}",
+    "fromShow": "nome dallo show"
   },
   "acls": {
     "col": {
@@ -462,7 +516,10 @@
       "match": "Condizioni (match)",
       "set": "Azioni (set)",
       "input": "Ingresso",
-      "output": "Uscita"
+      "output": "Uscita",
+      "code": "Origine",
+      "distanceMetric": "Distanza/metrica",
+      "age": "Da quanto"
     },
     "type": {
       "connected": "connessa",
@@ -496,11 +553,17 @@
       "out": "Filtri in uscita",
       "shutdown": "disattivato",
       "networks": "Reti annunciate",
-      "groups": "Gruppi"
+      "groups": "Gruppi",
+      "established_one": "stabilita, {{count}} prefisso",
+      "established_other": "stabilita, {{count}} prefissi",
+      "sessions": "Sessioni BGP negli show",
+      "upDown": "Su/giù da"
     },
     "routeMaps": "Route-map",
     "prefixLists": "Prefix-list",
-    "sdwan": "SD-WAN: {{zones}}"
+    "sdwan": "SD-WAN: {{zones}}",
+    "liveRoutes": "Tabella di routing reale",
+    "liveRoutesHelp": "Dalla tabella di routing negli show, con le rotte imparate con OSPF e BGP."
   },
   "config": {
     "followLink": "Vai alla definizione (riga {{line}})",
@@ -618,7 +681,8 @@
       "interface": "Interfaccia",
       "remote": "Gateway remoto",
       "proposals": "Proposte",
-      "phase2": "Fasi 2"
+      "phase2": "Fasi 2",
+      "live": "Stato reale"
     },
     "type": {
       "static": "statico",
@@ -642,7 +706,13 @@
     "keylife": "Durata chiave (s)",
     "unverified": "Alcuni default di questa versione sono da verificare",
     "none": "Nessun tunnel IPsec in questa VDOM.",
-    "pfsDh": "PFS / gruppi DH"
+    "pfsDh": "PFS / gruppi DH",
+    "liveCount": "{{up}} su, {{down}} giù",
+    "liveTitle": "Stato reale (dagli show)",
+    "instance": "Istanza",
+    "selectorsUp": "Selettori su",
+    "ikeUp": "stabilito (IKEv{{version}})",
+    "ikeDown": "non stabilito"
   },
   "sdwan": {
     "none": "SD-WAN non configurato in questa VDOM.",
@@ -665,7 +735,8 @@
       "mode": "Strategia",
       "match": "Traffico",
       "quality": "Qualità richiesta",
-      "preferred": "Membri preferiti"
+      "preferred": "Membri preferiti",
+      "measures": "Misure"
     },
     "mode": {
       "manual": "manuale",
@@ -677,7 +748,113 @@
     "from": "da {{names}}",
     "to": "verso {{names}}",
     "implicit": "Regola implicita",
-    "implicitHelp": "Il traffico che non corrisponde a nessuna regola segue la tabella di routing e si distribuisce tra i membri."
+    "implicitHelp": "Il traffico che non corrisponde a nessuna regola segue la tabella di routing e si distribuisce tra i membri.",
+    "live": "Health check negli show",
+    "alive": "attivo",
+    "dead": "non raggiungibile",
+    "measures": "latenza {{latency, number}} ms, jitter {{jitter, number}} ms, perdita {{packetloss, number}}%",
+    "slaMet": "SLA rispettato",
+    "slaMissed": "SLA non rispettato",
+    "used": "in uso: {{name}}"
+  },
+  "shows": {
+    "title": "Comandi show",
+    "device": "Apparato: {{name}}",
+    "reason": {
+      "manual": "indicato a mano",
+      "hostname": "dall'hostname",
+      "serial": "dal numero di serie",
+      "file-name": "dal nome del file"
+    },
+    "openDevice": "Apri l'apparato",
+    "noDevice": "Nessun apparato con questo hostname tra i file caricati: carica la sua config, oppure correggi l'hostname.",
+    "inferred": "riconosciuto dal formato",
+    "read": "letto",
+    "notRead": "non letto",
+    "loaded": "Show caricati",
+    "none": "Nessuno show caricato per questo apparato: carica gli output dei comandi show per vedere lo stato reale."
+  },
+  "clients": {
+    "title": "Clienti",
+    "none": "Nessun cliente: i file non sono salvati",
+    "empty": "Nessun cliente nell'archivio",
+    "startEmpty": "Nell'archivio non c'è ancora nessun cliente. Crea un cliente e caricaci config e show: l'app li conserva sul PC e li ritrova sempre.",
+    "fileCount_one": "{{count}} file",
+    "fileCount_other": "{{count}} file",
+    "cardInfo_one": "{{count}} file · modificato il {{date}}",
+    "cardInfo_other": "{{count}} file · modificato il {{date}}",
+    "new": "Nuovo cliente…",
+    "newTitle": "Nuovo cliente",
+    "name": "Nome del cliente",
+    "create": "Crea",
+    "keepFiles_one": "Salva nel nuovo cliente il file già caricato",
+    "keepFiles_other": "Salva nel nuovo cliente i {{count}} file già caricati",
+    "import": "Importa da un file zip…",
+    "rename": "Rinomina…",
+    "renameTitle": "Rinomina il cliente",
+    "renameConfirm": "Rinomina",
+    "export": "Esporta in un file zip",
+    "close": "Chiudi il cliente",
+    "delete": "Elimina il cliente…",
+    "deleteTitle": "Eliminare {{name}}?",
+    "deleteText_one": "Il cliente e il suo file vengono eliminati dall'archivio. Non si può annullare: se vuoi tenerne una copia, esporta prima il cliente in un file zip.",
+    "deleteText_other": "Il cliente e i suoi {{count}} file vengono eliminati dall'archivio. Non si può annullare: se vuoi tenerne una copia, esporta prima il cliente in un file zip.",
+    "deleteConfirm": "Elimina il cliente",
+    "unsaved_one": "{{count}} file non salvato",
+    "unsaved_other": "{{count}} file non salvati",
+    "saveTo": "Salva in un cliente",
+    "switchTitle": "File non salvati",
+    "switchText_one": "Il file caricato non è in nessun cliente. Vuoi aggiungerlo a {{name}}?",
+    "switchText_other": "I {{count}} file caricati non sono in nessun cliente. Vuoi aggiungerli a {{name}}?",
+    "switchAdd": "Aggiungi a {{name}}",
+    "switchDiscard": "Non salvarli",
+    "opening": "Apertura del cliente…",
+    "unavailable": "Archivio dei clienti non disponibile: i file restano solo in questa scheda. Avvia l'app con Docker per conservarli.",
+    "dismiss": "Chiudi il messaggio",
+    "error": {
+      "generic": "L'operazione non è riuscita. Riprova.",
+      "unreachable": "Il server dell'app non risponde: controlla che il container sia avviato.",
+      "not-found": "Il cliente o il file non esiste più nell'archivio.",
+      "invalid-name": "Il nome deve avere da 1 a 100 caratteri, senza a capo.",
+      "too-large": "Il file è troppo grande per l'archivio.",
+      "too-many-files": "Il cliente ha già il numero massimo di file.",
+      "invalid-zip": "Il file non è un cliente esportato da questa app.",
+      "corrupt-file": "Nel file zip c'è un file diverso dall'originale: il cliente non è stato importato."
+    }
+  },
+  "export": {
+    "device": "Excel",
+    "deviceHelp": "Esporta l'apparato in un file Excel, con un foglio per ogni vista",
+    "table": "Esporta la tabella in Excel, così come è filtrata e ordinata",
+    "failed": "Il file Excel non è stato creato. Riprova.",
+    "sheet": {
+      "ports": "Porte",
+      "vlans": "VLAN",
+      "acls": "ACL",
+      "routes": "Routing",
+      "liveRoutes": "Routing reale",
+      "macs": "MAC",
+      "interfaces": "Interfacce",
+      "policies": "Policy",
+      "objects": "Oggetti",
+      "vpn": "VPN",
+      "sdwanMembers": "SD-WAN membri",
+      "sdwanHealth": "SD-WAN health check",
+      "sdwanRules": "SD-WAN regole"
+    },
+    "col": {
+      "macType": "Tipo",
+      "category": "Categoria",
+      "used": "In uso"
+    },
+    "objectKind": {
+      "addresses": "Indirizzo",
+      "groups": "Gruppo di indirizzi",
+      "services": "Servizio",
+      "serviceGroups": "Gruppo di servizi",
+      "vips": "VIP",
+      "ippools": "IP pool"
+    }
   },
   "codemirror": {
     "Find": "Trova",

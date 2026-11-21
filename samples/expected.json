@@ -16,7 +16,11 @@
     "build": "1706",
     "model": "FortiGate-100F",
     "hostname": "FGT-HQ",
-    "vdoms": ["root", "OFFICE", "DMZ"]
+    "vdoms": [
+      "root",
+      "OFFICE",
+      "DMZ"
+    ]
   },
   "fortigate/fgt-br2-60f-fortios-7.4.conf": {
     "kind": "config",
@@ -44,7 +48,11 @@
     "build": "0145",
     "model": "FortiGate-120G",
     "hostname": "FGT-DC",
-    "vdoms": ["root", "CORE", "EXTRANET"]
+    "vdoms": [
+      "root",
+      "CORE",
+      "EXTRANET"
+    ]
   },
   "cisco-ios/sw-br1-acc-c2960x-ios-15.2-stack.txt": {
     "kind": "config",
@@ -118,13 +126,18 @@
     "model": "C9300-48P",
     "hostname": "SW-HQ-CORE",
     "stack": 3,
-    "commands": ["show version"]
+    "commands": [
+      "show version"
+    ]
   },
   "show/sw-hq-core_show-cdp-lldp-neighbors.txt": {
     "kind": "show",
     "vendor": "cisco",
     "hostname": "SW-HQ-CORE",
-    "commands": ["show cdp neighbors detail", "show lldp neighbors detail"]
+    "commands": [
+      "show cdp neighbors detail",
+      "show lldp neighbors detail"
+    ]
   },
   "show/fgt-hq_get-system-status.txt": {
     "kind": "show",
@@ -134,11 +147,110 @@
     "build": "1706",
     "model": "FortiGate-100F",
     "hostname": "FGT-HQ",
-    "commands": ["get system status"]
+    "commands": [
+      "get system status"
+    ]
   },
   "show/sw-br1-acc_show-vlan-brief-senza-prompt.txt": {
     "kind": "show",
     "vendor": "cisco",
-    "commands": ["show vlan brief"]
+    "commands": [
+      "show vlan brief"
+    ]
+  },
+  "show/fgt-br1_sessione.txt": {
+    "kind": "show",
+    "vendor": "fortinet",
+    "os": "fortios",
+    "version": "7.0.15",
+    "build": "0632",
+    "model": "FortiGate-60F",
+    "hostname": "FGT-BR1",
+    "commands": [
+      "get system status",
+      "diagnose sys sdwan health-check",
+      "diagnose sys sdwan service",
+      "get vpn ipsec tunnel summary",
+      "get router info routing-table all",
+      "get router info bgp summary"
+    ]
+  },
+  "show/fgt-hq_sessione.txt": {
+    "kind": "show",
+    "vendor": "fortinet",
+    "hostname": "FGT-HQ",
+    "commands": [
+      "get system interface physical",
+      "config vdom",
+      "edit OFFICE",
+      "get vpn ipsec tunnel summary",
+      "diagnose vpn ike gateway list",
+      "get router info routing-table all",
+      "get router info bgp summary"
+    ]
+  },
+  "show/sw-br1-acc_sessione.txt": {
+    "kind": "show",
+    "vendor": "cisco",
+    "os": "ios",
+    "version": "15.2(7)E10",
+    "model": "WS-C2960X-48FPD-L",
+    "hostname": "SW-BR1-ACC",
+    "stack": 2,
+    "commands": [
+      "terminal length 0",
+      "show version",
+      "show interfaces status",
+      "show mac address-table",
+      "show power inline"
+    ]
+  },
+  "show/sw-br3-acc_sessione.txt": {
+    "kind": "show",
+    "vendor": "cisco",
+    "hostname": "SW-BR3-ACC",
+    "commands": [
+      "terminal datadump",
+      "show version",
+      "show inventory",
+      "show interfaces status",
+      "show vlan",
+      "show lldp neighbors",
+      "show mac address-table",
+      "show power inline"
+    ]
+  },
+  "show/sw-hq-core_sessione.txt": {
+    "kind": "show",
+    "vendor": "cisco",
+    "hostname": "SW-HQ-CORE",
+    "commands": [
+      "terminal length 0",
+      "show inventory",
+      "show interfaces status",
+      "show etherchannel summary",
+      "show mac address-table",
+      "show ip arp",
+      "show power inline",
+      "show lldp neighbors detail"
+    ]
+  },
+  "versioni/sw-hq-core-c9300-iosxe-17.12-stack_2025-06-30.txt": {
+    "kind": "config",
+    "vendor": "cisco",
+    "os": "ios-xe",
+    "version": "17.12",
+    "model": "C9300-48P",
+    "hostname": "SW-HQ-CORE",
+    "stack": 3
+  },
+  "versioni/fgt-br1-60f-fortios-7.0_2025-05-12.conf": {
+    "kind": "config",
+    "vendor": "fortinet",
+    "os": "fortios",
+    "version": "7.0.15",
+    "build": "0632",
+    "model": "FortiGate-60F",
+    "hostname": "FGT-BR1"
   }
 }

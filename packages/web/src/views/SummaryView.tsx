@@ -13,24 +13,36 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { IconAlertTriangle } from '@tabler/icons-react';
-import type { DeviceModel } from '@ncv/core';
+import { hasMacTable, portsWithoutMac, type DeviceModel } from '@ncv/core';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { LinkedShow } from '../state/devices';
 import { useDeviceView } from './source';
 
 interface Props {
   model: DeviceModel;
   /** The recognition panel, editable, shown at the top of the summary. */
   detection: ReactNode;
+  /** Files of shows of the device. */
+  shows: LinkedShow[];
 }
 
 const SECTIONS_SHOWN = 12;
 /** Links to the lines shown for each kind of warning. */
 const WARNING_LINKS = 5;
 
-export function SummaryView({ model, detection }: Props) {
+export function SummaryView({ model, detection, shows }: Props) {
   const { t, i18n } = useTranslation();
-  const { showSource } = useDeviceView();
+  const { showSource, state, openFile } = useDeviceView();
+  const switchDevice = model.vendor === 'cisco';
+  const withoutMac = switchDevice ? portsWithoutMac(model, state) : [];
+  // Warnings about the real state of a switch (#6): one per device.
+  const stateWarnings = switchDevice
+    ? [
+        ...(!hasMacTable(state) ? [{ code: 'mac-table-missing', count: 1 }] : []),
+        ...(withoutMac.length > 0 ? [{ code: 'ports-without-mac', count: withoutMac.length }] : []),
+      ]
+    : [];
   const [allSections, setAllSections] = useState(false);
   const ctx = model.contexts[0]!;
   const physical = model.interfaces.filter((i) => i.kind === 'physical');
@@ -158,7 +170,7 @@ export function SummaryView({ model, detection }: Props) {
         </Group>
       </Paper>
 
-      {model.warnings.length > 0 && (
+      {(model.warnings.length > 0 || stateWarnings.length > 0) && (
         <Alert
           color="orange"
           icon={<IconAlertTriangle />}
@@ -166,6 +178,11 @@ export function SummaryView({ model, detection }: Props) {
           data-testid="warnings"
         >
           <Stack gap={4}>
+            {stateWarnings.map(({ code, count }) => (
+              <Text key={code} size="sm" data-warning={code} data-count={count}>
+                {t(`warning.${code}`, { count })}
+              </Text>
+            ))}
             {warningGroups.map(({ code, items }) => (
               <Text key={code} size="sm" data-warning={code} data-count={items.length}>
                 {t(`warning.${code}`, { count: items.length })}
@@ -196,6 +213,58 @@ export function SummaryView({ model, detection }: Props) {
           </Stack>
         </Alert>
       )}
+
+      <Paper withBorder p="sm" data-testid="summary-shows">
+        <Title order={5} mb="xs">
+          {t('shows.loaded')}
+        </Title>
+        {shows.length === 0 ? (
+          <Text size="sm" c="dimmed">
+            {t('shows.none')}
+          </Text>
+        ) : (
+          <Stack gap={6}>
+            {shows.map(({ entry, reason }) => {
+              const commands = state?.commands.filter((c) => c.file === entry.id) ?? [];
+              return (
+                <div key={entry.id} data-testid="summary-show" data-file={entry.name}>
+                  <Group gap="xs">
+                    <Anchor
+                      component="button"
+                      type="button"
+                      size="sm"
+                      onClick={() => openFile(entry.id)}
+                    >
+                      {entry.name}
+                    </Anchor>
+                    <Text span size="xs" c="dimmed">
+                      {t(`shows.reason.${reason}`)}
+                    </Text>
+                  </Group>
+                  <Group gap={4} mt={2}>
+                    {commands.map((c) => (
+                      <Badge
+                        key={`${c.line}`}
+                        component="button"
+                        type="button"
+                        size="sm"
+                        variant="light"
+                        color="teal"
+                        tt="none"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => openFile(entry.id, c.line)}
+                        data-testid="summary-show-command"
+                      >
+                        {c.context ? `${c.id} (${c.context})` : c.id}
+                      </Badge>
+                    ))}
+                  </Group>
+                </div>
+              );
+            })}
+          </Stack>
+        )}
+      </Paper>
 
       <Paper
         withBorder

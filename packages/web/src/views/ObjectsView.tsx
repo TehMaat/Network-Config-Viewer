@@ -22,9 +22,18 @@ import { DataTable } from './DataTable';
 import { SourceButton } from './source';
 import { addressText } from './values';
 
-type Kind = 'addresses' | 'groups' | 'services' | 'serviceGroups' | 'vips' | 'ippools';
+export type ObjectKind = 'addresses' | 'groups' | 'services' | 'serviceGroups' | 'vips' | 'ippools';
 
-interface Row {
+export const OBJECT_KINDS: ObjectKind[] = [
+  'addresses',
+  'groups',
+  'services',
+  'serviceGroups',
+  'vips',
+  'ippools',
+];
+
+export interface ObjectRow {
   name: string;
   type: string;
   value: string;
@@ -44,84 +53,87 @@ function usageText(use: ObjectUse, t: TFunction): string {
   }
 }
 
+/** The rows of one kind of objects, as the table and the Excel file show them. */
+export function objectRows(kind: ObjectKind, context: LogicalContext, t: TFunction): ObjectRow[] {
+  const row = (
+    name: string,
+    type: string,
+    value: string,
+    comment: string | undefined,
+    builtin: boolean,
+    src: Src,
+  ): ObjectRow => ({
+    name,
+    type,
+    value,
+    comment: comment ?? '',
+    builtin,
+    src,
+  });
+  switch (kind) {
+    case 'addresses':
+      return context.addresses.map((a: AddressObject) =>
+        row(
+          a.name,
+          t(`objects.addressType.${a.type}`, { defaultValue: a.type }),
+          addressText(a, t),
+          a.comment,
+          !!a.builtin,
+          a.src,
+        ),
+      );
+    case 'groups':
+      return context.addressGroups.map((g: AddressGroup) =>
+        row(
+          g.name,
+          t('objects.group'),
+          [
+            g.members.join(', '),
+            g.exclude.length > 0 ? t('objects.excluded', { names: g.exclude.join(', ') }) : '',
+          ]
+            .filter(Boolean)
+            .join(' · '),
+          g.comment,
+          false,
+          g.src,
+        ),
+      );
+    case 'services':
+      return context.services.map((s: ServiceObject) =>
+        row(s.name, s.category ?? '', serviceText(s).join(' '), s.comment, !!s.builtin, s.src),
+      );
+    case 'serviceGroups':
+      return context.serviceGroups.map((g: ServiceGroup) =>
+        row(g.name, t('objects.group'), g.members.join(', '), g.comment, false, g.src),
+      );
+    case 'vips':
+      return context.vips.map((v: Vip) =>
+        row(
+          v.name,
+          v.type ?? '',
+          `${v.extip ?? ''}${v.extport ? `:${v.extport}` : ''} → ${v.mappedip.join(', ')}${v.mappedport ? `:${v.mappedport}` : ''}${v.extintf ? ` (${v.extintf})` : ''}`,
+          v.comment,
+          false,
+          v.src,
+        ),
+      );
+    case 'ippools':
+      return context.ippools.map((p: IpPool) =>
+        row(p.name, p.type, `${p.startip ?? ''}-${p.endip ?? ''}`, p.comment, false, p.src),
+      );
+  }
+}
+
 /** Addresses, groups, services, VIPs and IP pools of a VDOM, with where they are used. */
 export function ObjectsView({ context }: { context: LogicalContext }) {
   const { t } = useTranslation();
-  const [kind, setKind] = useState<Kind>('addresses');
+  const [kind, setKind] = useState<ObjectKind>('addresses');
   const [selected, setSelected] = useState<string | null>(null);
   const usage = useMemo(() => objectUsage(context), [context]);
 
-  const rows = useMemo((): Row[] => {
-    const row = (
-      name: string,
-      type: string,
-      value: string,
-      comment: string | undefined,
-      builtin: boolean,
-      src: Src,
-    ): Row => ({
-      name,
-      type,
-      value,
-      comment: comment ?? '',
-      builtin,
-      src,
-    });
-    switch (kind) {
-      case 'addresses':
-        return context.addresses.map((a: AddressObject) =>
-          row(
-            a.name,
-            t(`objects.addressType.${a.type}`, { defaultValue: a.type }),
-            addressText(a, t),
-            a.comment,
-            !!a.builtin,
-            a.src,
-          ),
-        );
-      case 'groups':
-        return context.addressGroups.map((g: AddressGroup) =>
-          row(
-            g.name,
-            t('objects.group'),
-            [
-              g.members.join(', '),
-              g.exclude.length > 0 ? t('objects.excluded', { names: g.exclude.join(', ') }) : '',
-            ]
-              .filter(Boolean)
-              .join(' · '),
-            g.comment,
-            false,
-            g.src,
-          ),
-        );
-      case 'services':
-        return context.services.map((s: ServiceObject) =>
-          row(s.name, s.category ?? '', serviceText(s).join(' '), s.comment, !!s.builtin, s.src),
-        );
-      case 'serviceGroups':
-        return context.serviceGroups.map((g: ServiceGroup) =>
-          row(g.name, t('objects.group'), g.members.join(', '), g.comment, false, g.src),
-        );
-      case 'vips':
-        return context.vips.map((v: Vip) =>
-          row(
-            v.name,
-            v.type ?? '',
-            `${v.extip ?? ''}${v.extport ? `:${v.extport}` : ''} → ${v.mappedip.join(', ')}${v.mappedport ? `:${v.mappedport}` : ''}${v.extintf ? ` (${v.extintf})` : ''}`,
-            v.comment,
-            false,
-            v.src,
-          ),
-        );
-      case 'ippools':
-        return context.ippools.map((p: IpPool) =>
-          row(p.name, p.type, `${p.startip ?? ''}-${p.endip ?? ''}`, p.comment, false, p.src),
-        );
-    }
-  }, [kind, context, t]);
+  const rows = useMemo(() => objectRows(kind, context, t), [kind, context, t]);
 
-  const columns = useMemo<ColumnDef<Row, unknown>[]>(
+  const columns = useMemo<ColumnDef<ObjectRow, unknown>[]>(
     () => [
       {
         id: 'name',
@@ -180,7 +192,7 @@ export function ObjectsView({ context }: { context: LogicalContext }) {
   );
 
   const current = rows.find((r) => r.name === selected) ?? null;
-  const counts: Record<Kind, number> = {
+  const counts: Record<ObjectKind, number> = {
     addresses: context.addresses.length,
     groups: context.addressGroups.length,
     services: context.services.length,
@@ -195,10 +207,10 @@ export function ObjectsView({ context }: { context: LogicalContext }) {
         size="xs"
         value={kind}
         onChange={(v) => {
-          setKind(v as Kind);
+          setKind(v as ObjectKind);
           setSelected(null);
         }}
-        data={(Object.keys(counts) as Kind[]).map((k) => ({
+        data={(Object.keys(counts) as ObjectKind[]).map((k) => ({
           value: k,
           label: t(`objects.kind.${k}`, { count: counts[k] }),
         }))}

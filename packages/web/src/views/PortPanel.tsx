@@ -1,7 +1,8 @@
 import { Paper, Text } from '@mantine/core';
-import { portVlanRole, type Interface, type StackMember } from '@ncv/core';
+import { portLive, portVlanRole, type Interface, type PortLive, type StackMember } from '@ncv/core';
 import { useTranslation } from 'react-i18next';
 import { NEUTRAL } from './colors';
+import { useDeviceView } from './source';
 
 // Generic front panel: front ports in two rows (odd on top, even below, as on most
 // switches), in groups of twelve, and the uplinks apart on the right.
@@ -58,8 +59,20 @@ function stripeColors(port: Interface, colors: Map<number, string>): string[] {
   return out;
 }
 
+/** Colour class of the bar on top of a port, from the status in the shows. */
+export function liveClass(live: PortLive): string | null {
+  const status = live.status?.status;
+  if (!status) return null;
+  if (status === 'connected' || status === 'up') return 'ncv-live-up';
+  if (status === 'err-disabled') return 'ncv-live-error';
+  if (status === 'disabled') return null;
+  return 'ncv-live-down';
+}
+
 export function PortPanel({ member, ports, colors, selected, vlanFilter, onSelect }: Props) {
   const { t } = useTranslation();
+  const { state } = useDeviceView();
+  const lives = new Map(ports.map((p) => [p.name, portLive(p, state)]));
   const front = ports.filter((p) => !p.position!.uplink);
   const uplinks = ports.filter((p) => p.position!.uplink);
   const a = layout(front, PAD);
@@ -92,6 +105,10 @@ export function PortPanel({ member, ports, colors, selected, vlanFilter, onSelec
       parts.push(t('ports.vlanShort', { vlan: sp.accessVlan }));
     if (sp?.voiceVlan !== undefined) parts.push(t('ports.voiceShort', { vlan: sp.voiceVlan }));
     if (port.lag) parts.push(port.lag.group);
+    const live = lives.get(port.name)!;
+    if (live.status) parts.push(live.status.statusText);
+    if (live.macs.length > 0) parts.push(t('ports.live.macCount', { count: live.macs.length }));
+    if (live.noMac) parts.push(t('ports.live.noMac'));
     return parts.join(' · ');
   };
 
@@ -200,6 +217,24 @@ export function PortPanel({ member, ports, colors, selected, vlanFilter, onSelec
                   <circle cx={4} cy={H - 4} r={2.6} className="ncv-mark-voice" />
                 )}
                 {port.lag && <circle cx={W - 4} cy={H - 4} r={2.6} className="ncv-mark-lag" />}
+                {(() => {
+                  const live = lives.get(port.name)!;
+                  const cls = liveClass(live);
+                  return (
+                    <>
+                      {cls && (
+                        <rect x={6} y={1} width={W - 12} height={2.5} rx={1} className={cls} />
+                      )}
+                      {live.noMac && (
+                        <path
+                          d={`M ${W / 2 - 3.2} ${H - 1} L ${W / 2} ${H - 5.5} L ${W / 2 + 3.2} ${H - 1} Z`}
+                          className="ncv-mark-nomac"
+                          data-testid="mark-nomac"
+                        />
+                      )}
+                    </>
+                  );
+                })()}
               </g>
             );
           })}

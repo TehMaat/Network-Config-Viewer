@@ -1,0 +1,423 @@
+SW-HQ-CORE#terminal length 0
+
+SW-HQ-CORE#show inventory
+NAME: "c93xx Stack", DESCR: "c93xx Stack"
+PID: C9300-48P         , VID: V02  , SN: FOC2001X0AA
+
+NAME: "Switch 1", DESCR: "C9300-48P"
+PID: C9300-48P         , VID: V02  , SN: FOC2001X0AA
+
+NAME: "Switch 2", DESCR: "C9300-48P"
+PID: C9300-48P         , VID: V02  , SN: FOC2001X0BB
+
+NAME: "Switch 3", DESCR: "C9300-48P"
+PID: C9300-48P         , VID: V02  , SN: FOC2001X0CC
+
+
+SW-HQ-CORE#show interfaces status
+
+Port         Name               Status       Vlan       Duplex  Speed Type
+Po1          FGT-HQ-LAG-CORE    connected    trunk      a-full   10G N/A
+Po10         SW-HQ-ACC1         connected    trunk      a-full   10G N/A
+Po11         SW-HQ-ACC2         connected    trunk      a-full a-1000 N/A
+Gi0/0                           disabled     routed       auto  auto 10/100/1000BaseTX
+Gi1/0/1      SRV-101            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/2      SRV-102            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/3      SRV-103            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/4      SRV-104            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/5      SRV-105            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/6      SRV-106            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/7      SRV-107            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/8      SRV-108            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/9      SRV-109            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/10     SRV-110            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/11     SRV-111            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/12     SRV-112            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/13     SRV-113            notconnect   100          auto  auto 10/100/1000BaseTX
+Gi1/0/14     SRV-114            notconnect   100          auto  auto 10/100/1000BaseTX
+Gi1/0/15     SRV-115            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/16     SRV-116            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/17     SRV-117            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/18     SRV-118            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/19     SRV-119            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/20     SRV-120            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/21     SRV-121            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/22     SRV-122            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/23     SRV-123            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/24     SRV-124            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi1/0/25     PDL-025            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/26     PDL-026            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/27     PDL-027            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/28     PDL-028            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/29     PDL-029            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/30     PDL-030            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/31     PDL-031            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/32     PDL-032            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/33     PDL-033            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/34     PDL-034            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/35     PDL-035            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/36     PDL-036            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/37     PDL-037            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/38     PDL-038            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/39     PDL-039            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi1/0/40     PDL-040            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi1/0/41     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/42     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/43     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/44     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/45     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/46     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/47     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/48     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Te1/1/1      FGT-HQ-x1          connected    trunk        full   10G SFP-10GBase-SR
+Te1/1/2      SW-HQ-ACC1-Te1/1/1 connected    trunk        full   10G SFP-10GBase-SR
+Te1/1/3                         notconnect   1            auto  auto Not Present
+Te1/1/4                         notconnect   1            auto  auto Not Present
+Te1/1/5                         notconnect   1            auto  auto Not Present
+Te1/1/6                         notconnect   1            auto  auto Not Present
+Te1/1/7                         notconnect   1            auto  auto Not Present
+Te1/1/8                         notconnect   1            auto  auto Not Present
+Gi2/0/1      SRV-201            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/2      SRV-202            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/3      SRV-203            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/4      SRV-204            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/5      SRV-205            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/6      SRV-206            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/7      SRV-207            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/8      SRV-208            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/9      SRV-209            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/10     SRV-210            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/11     SRV-211            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/12     SRV-212            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/13     SRV-213            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/14     SRV-214            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/15     SRV-215            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/16     SRV-216            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/17     SRV-217            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/18     SRV-218            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/19     SRV-219            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/20     SRV-220            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi2/0/21     SRV-221            notconnect   100          auto  auto 10/100/1000BaseTX
+Gi2/0/22     SRV-222            notconnect   100          auto  auto 10/100/1000BaseTX
+Gi2/0/23     SRV-223            notconnect   100          auto  auto 10/100/1000BaseTX
+Gi2/0/24     SRV-224            notconnect   100          auto  auto 10/100/1000BaseTX
+Gi2/0/25     PDL-073            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/26     PDL-074            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/27     PDL-075            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/28     PDL-076            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/29     PDL-077            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/30     PDL-078            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/31     PDL-079            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/32     PDL-080            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/33     PDL-081            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/34     PDL-082            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/35     PDL-083            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/36     PDL-084            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/37     PDL-085            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi2/0/38     PDL-086            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi2/0/39     PDL-087            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi2/0/40     PDL-088            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi2/0/41     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/42     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/43     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/44     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/45     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/46     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/47     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/48     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Te2/1/1      FGT-HQ-x2          connected    trunk        full   10G SFP-10GBase-SR
+Te2/1/2      SW-HQ-ACC1-Te2/1/1 notconnect   trunk        auto  auto Not Present
+Te2/1/3                         notconnect   1            auto  auto Not Present
+Te2/1/4                         notconnect   1            auto  auto Not Present
+Te2/1/5                         notconnect   1            auto  auto Not Present
+Te2/1/6                         notconnect   1            auto  auto Not Present
+Te2/1/7                         notconnect   1            auto  auto Not Present
+Te2/1/8                         notconnect   1            auto  auto Not Present
+Gi3/0/1      SRV-301            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/2      SRV-302            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/3      SRV-303            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/4      SRV-304            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/5      SRV-305            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/6      SRV-306            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/7      SRV-307            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/8      SRV-308            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/9      SRV-309            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/10     SRV-310            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/11     SRV-311            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/12     SRV-312            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/13     SRV-313            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/14     SRV-314            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/15     SRV-315            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/16     SRV-316            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/17     SRV-317            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/18     SRV-318            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/19     SRV-319            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/20     SRV-320            connected    100        a-full a-1000 10/100/1000BaseTX
+Gi3/0/21     SRV-321            notconnect   100          auto  auto 10/100/1000BaseTX
+Gi3/0/22     SRV-322            notconnect   100          auto  auto 10/100/1000BaseTX
+Gi3/0/23     SRV-323            notconnect   100          auto  auto 10/100/1000BaseTX
+Gi3/0/24     SRV-324            notconnect   100          auto  auto 10/100/1000BaseTX
+Gi3/0/25     PDL-121            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi3/0/26     PDL-122            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi3/0/27     PDL-123            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi3/0/28     PDL-124            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi3/0/29     PDL-125            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi3/0/30     PDL-126            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi3/0/31     PDL-127            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi3/0/32     PDL-128            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi3/0/33     PDL-129            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi3/0/34     PDL-130            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi3/0/35     PDL-131            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi3/0/36     PDL-132            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi3/0/37     PDL-133            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi3/0/38     PDL-134            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi3/0/39     PDL-135            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi3/0/40     PDL-136            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi3/0/41     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi3/0/42     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi3/0/43     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi3/0/44     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi3/0/45     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi3/0/46     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi3/0/47     SW-HQ-ACC2-Gi1/1/1 connected    trunk      a-full a-1000 10/100/1000BaseTX
+Gi3/0/48     SW-HQ-ACC2-Gi1/1/2 connected    trunk      a-full a-1000 10/100/1000BaseTX
+Te3/1/1                         notconnect   1            auto  auto Not Present
+Te3/1/2                         notconnect   1            auto  auto Not Present
+Te3/1/3                         notconnect   1            auto  auto Not Present
+Te3/1/4                         notconnect   1            auto  auto Not Present
+Te3/1/5                         notconnect   1            auto  auto Not Present
+Te3/1/6                         notconnect   1            auto  auto Not Present
+Te3/1/7                         notconnect   1            auto  auto Not Present
+Te3/1/8                         notconnect   1            auto  auto Not Present
+
+SW-HQ-CORE#show etherchannel summary
+Flags:  D - down        P - bundled in port-channel
+        I - stand-alone s - suspended
+        H - Hot-standby (LACP only)
+        R - Layer3      S - Layer2
+        U - in use      f - failed to allocate aggregator
+
+        M - not in use, minimum links not met
+        u - unsuitable for bundling
+        w - waiting to be aggregated
+        d - default port
+
+        A - formed by Auto LAG
+
+
+Number of channel-groups in use: 3
+Number of aggregators:           3
+
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+-----------------------------------------------
+1      Po1(SU)         LACP        Te1/1/1(P)      Te2/1/1(P)      
+10     Po10(SU)        LACP        Te1/1/2(P)      Te2/1/2(D)      
+11     Po11(SU)        LACP        Gi3/0/47(P)     Gi3/0/48(P)     
+
+SW-HQ-CORE#show mac address-table
+          Mac Address Table
+-------------------------------------------
+
+Vlan    Mac Address       Type        Ports
+----    -----------       --------    -----
+ 100    0000.5e00.5301    DYNAMIC     Gi1/0/1
+ 100    0000.5e00.5302    DYNAMIC     Gi1/0/2
+ 100    0000.5e00.5303    DYNAMIC     Gi1/0/3
+ 100    0000.5e00.5304    DYNAMIC     Gi1/0/4
+ 100    0000.5e00.5305    DYNAMIC     Gi1/0/5
+ 100    0000.5e00.5306    DYNAMIC     Gi1/0/6
+ 100    0000.5e00.5307    DYNAMIC     Gi1/0/7
+ 100    0000.5e00.5308    DYNAMIC     Gi1/0/8
+ 100    0000.5e00.5309    DYNAMIC     Gi1/0/9
+ 100    0000.5e00.530a    DYNAMIC     Gi1/0/10
+ 100    0000.5e00.530b    DYNAMIC     Gi1/0/11
+ 100    0000.5e00.530c    DYNAMIC     Gi1/0/12
+ 100    0000.5e00.530d    DYNAMIC     Gi1/0/15
+ 100    0000.5e00.530e    DYNAMIC     Gi1/0/16
+ 100    0000.5e00.530f    DYNAMIC     Gi1/0/17
+ 100    0000.5e00.5310    DYNAMIC     Gi1/0/18
+ 100    0000.5e00.5311    DYNAMIC     Gi1/0/19
+ 100    0000.5e00.5312    DYNAMIC     Gi1/0/20
+ 100    0000.5e00.5313    DYNAMIC     Gi1/0/21
+ 100    0000.5e00.5314    DYNAMIC     Gi1/0/22
+ 100    0000.5e00.5315    DYNAMIC     Gi1/0/23
+ 100    0000.5e00.5316    DYNAMIC     Gi1/0/24
+  10    0000.5e00.5317    DYNAMIC     Gi1/0/25
+  10    0000.5e00.5318    DYNAMIC     Gi1/0/25
+  10    0000.5e00.5319    DYNAMIC     Gi1/0/26
+  10    0000.5e00.531a    DYNAMIC     Gi1/0/26
+  10    0000.5e00.531b    DYNAMIC     Gi1/0/27
+  10    0000.5e00.531c    DYNAMIC     Gi1/0/27
+  10    0000.5e00.531d    DYNAMIC     Gi1/0/28
+  10    0000.5e00.531e    DYNAMIC     Gi1/0/29
+  10    0000.5e00.531f    DYNAMIC     Gi1/0/30
+  10    0000.5e00.5334    DYNAMIC     Gi1/0/33
+  10    0000.5e00.5335    DYNAMIC     Gi1/0/34
+  10    0000.5e00.5336    DYNAMIC     Gi1/0/35
+  10    0000.5e00.5337    DYNAMIC     Gi1/0/36
+  10    0000.5e00.5338    DYNAMIC     Gi1/0/37
+  10    0000.5e00.5339    DYNAMIC     Gi1/0/38
+ 100    0000.5e00.533a    DYNAMIC     Gi2/0/1
+ 100    0000.5e00.533b    DYNAMIC     Gi2/0/2
+ 100    0000.5e00.533c    DYNAMIC     Gi2/0/3
+ 100    0000.5e00.533d    DYNAMIC     Gi2/0/4
+ 100    0000.5e00.533e    DYNAMIC     Gi2/0/5
+ 100    0000.5e00.533f    DYNAMIC     Gi2/0/6
+ 100    0000.5e00.536e    DYNAMIC     Gi2/0/7
+ 100    0000.5e00.536f    DYNAMIC     Gi2/0/8
+ 100    0000.5e00.5370    DYNAMIC     Gi2/0/9
+ 100    0000.5e00.5371    DYNAMIC     Gi2/0/10
+ 100    0000.5e00.5372    DYNAMIC     Gi2/0/11
+ 100    0000.5e00.5373    DYNAMIC     Gi2/0/12
+ 100    0000.5e00.5374    DYNAMIC     Gi2/0/13
+ 100    0000.5e00.5375    DYNAMIC     Gi2/0/14
+ 100    0000.5e00.5376    DYNAMIC     Gi2/0/15
+ 100    0000.5e00.5377    DYNAMIC     Gi2/0/16
+ 100    0000.5e00.5378    DYNAMIC     Gi2/0/17
+ 100    0000.5e00.5379    DYNAMIC     Gi2/0/18
+ 100    0000.5e00.537a    DYNAMIC     Gi2/0/19
+ 100    0000.5e00.537b    DYNAMIC     Gi2/0/20
+  10    0000.5e00.537c    DYNAMIC     Gi2/0/25
+  10    0000.5e00.537d    DYNAMIC     Gi2/0/26
+  10    0000.5e00.537e    DYNAMIC     Gi2/0/27
+  10    0000.5e00.537f    DYNAMIC     Gi2/0/28
+  10    0000.5e00.539f    DYNAMIC     Gi2/0/29
+  10    0000.5e00.53a0    DYNAMIC     Gi2/0/30
+  10    0000.5e00.53a1    DYNAMIC     Gi2/0/31
+  10    0000.5e00.53a2    DYNAMIC     Gi2/0/32
+  10    0000.5e00.53a3    DYNAMIC     Gi2/0/33
+  10    0000.5e00.53a4    DYNAMIC     Gi2/0/34
+  10    0000.5e00.53a5    DYNAMIC     Gi2/0/35
+  10    0000.5e00.53a6    DYNAMIC     Gi2/0/36
+ 100    0000.5e00.53a7    DYNAMIC     Gi3/0/1
+ 100    0000.5e00.53a8    DYNAMIC     Gi3/0/2
+ 100    0000.5e00.53a9    DYNAMIC     Gi3/0/3
+ 100    0000.5e00.53aa    DYNAMIC     Gi3/0/4
+ 100    0000.5e00.53ab    DYNAMIC     Gi3/0/5
+ 100    0000.5e00.53ac    DYNAMIC     Gi3/0/6
+ 100    0000.5e00.53ad    DYNAMIC     Gi3/0/7
+ 100    0000.5e00.53ae    DYNAMIC     Gi3/0/8
+ 100    0000.5e00.53af    DYNAMIC     Gi3/0/9
+ 100    0000.5e00.53b0    DYNAMIC     Gi3/0/10
+ 100    0000.5e00.53b1    DYNAMIC     Gi3/0/11
+ 100    0000.5e00.53b2    DYNAMIC     Gi3/0/12
+ 100    0000.5e00.53b3    DYNAMIC     Gi3/0/13
+ 100    0000.5e00.53b4    DYNAMIC     Gi3/0/14
+ 100    0000.5e00.53b5    DYNAMIC     Gi3/0/15
+ 100    0000.5e00.53b6    DYNAMIC     Gi3/0/16
+ 100    0000.5e00.53b7    DYNAMIC     Gi3/0/17
+ 100    0000.5e00.53b8    DYNAMIC     Gi3/0/18
+ 100    0000.5e00.53b9    DYNAMIC     Gi3/0/19
+ 100    0000.5e00.53ba    DYNAMIC     Gi3/0/20
+  10    0000.5e00.53bb    DYNAMIC     Gi3/0/25
+  10    0000.5e00.53bc    DYNAMIC     Gi3/0/26
+  10    0000.5e00.53bd    DYNAMIC     Gi3/0/27
+  10    0000.5e00.53be    DYNAMIC     Gi3/0/28
+  10    0000.5e00.53bf    DYNAMIC     Gi3/0/29
+  10    0000.5e00.53c0    DYNAMIC     Gi3/0/30
+  10    0000.5e00.53c2    DYNAMIC     Gi3/0/31
+  10    0000.5e00.53c3    DYNAMIC     Gi3/0/32
+  10    0000.5e00.53c4    DYNAMIC     Gi3/0/33
+  10    0000.5e00.53c5    DYNAMIC     Gi3/0/34
+  10    0000.5e00.53c6    DYNAMIC     Gi3/0/35
+  10    0000.5e00.53c7    DYNAMIC     Gi3/0/36
+  10    0000.5e00.53c8    DYNAMIC     Gi3/0/37
+  10    0000.5e00.53c9    DYNAMIC     Gi3/0/38
+  10    0000.5e00.5320    DYNAMIC     Po10
+  10    0000.5e00.5321    DYNAMIC     Po10
+  10    0000.5e00.5322    DYNAMIC     Po10
+  10    0000.5e00.5323    DYNAMIC     Po10
+  10    0000.5e00.5324    DYNAMIC     Po10
+  20    0000.5e00.5325    DYNAMIC     Po10
+  50    0000.5e00.532d    DYNAMIC     Po10
+  50    0000.5e00.532e    DYNAMIC     Po10
+  60    0000.5e00.5332    DYNAMIC     Po10
+  60    0000.5e00.5333    DYNAMIC     Po11
+  10    0000.5e00.5326    DYNAMIC     Po11
+  99    0000.5e00.5330    DYNAMIC     Po10
+  99    0000.5e00.5331    DYNAMIC     Po11
+  10    0000.5e00.53f1    DYNAMIC     Po1
+  20    0000.5e00.53f1    DYNAMIC     Po1
+  50    0000.5e00.53f1    DYNAMIC     Po1
+  99    0000.5e00.53f1    DYNAMIC     Po1
+ 100    0000.5e00.53f1    DYNAMIC     Po1
+ 900    0000.5e00.53f1    DYNAMIC     Po1
+Total Mac Addresses for this criterion: 122
+
+SW-HQ-CORE#show ip arp
+Protocol  Address          Age (min)  Hardware Addr   Type   Interface
+Internet  10.10.60.1              -   0000.5e00.53c1  ARPA   Vlan60
+Internet  10.10.60.11            41   0000.5e00.5332  ARPA   Vlan60
+Internet  10.10.60.12            38   0000.5e00.5333  ARPA   Vlan60
+Internet  10.10.70.1              -   0000.5e00.53c1  ARPA   Vlan70
+Internet  10.10.99.2              -   0000.5e00.53c1  ARPA   Vlan99
+Internet  10.10.99.11            12   0000.5e00.5330  ARPA   Vlan99
+Internet  10.10.99.12            12   0000.5e00.5331  ARPA   Vlan99
+Internet  10.10.99.250            3   0000.5e00.53f1  ARPA   Vlan99
+Internet  10.10.254.1             0   0000.5e00.53f1  ARPA   Vlan900
+Internet  10.10.254.2             -   0000.5e00.53c1  ARPA   Vlan900
+
+SW-HQ-CORE#show power inline
+Module   Available     Used     Remaining
+          (Watts)     (Watts)    (Watts)
+------   ---------   --------   ---------
+1           715.0       12.4       702.6
+2           715.0        0.0       715.0
+3           715.0        0.0       715.0
+Interface Admin  Oper       Power   Device              Class Max
+                           (Watts)
+--------- ------ ---------- ------- ------------------- ----- ----
+Gi1/0/25  auto   on         4.1     IP Phone 8845       2     30.0
+Gi1/0/26  auto   on         4.1     IP Phone 8845       2     30.0
+Gi1/0/27  auto   on         4.1     IP Phone 8845       2     30.0
+Gi1/0/28  auto   off        0.0     n/a                 n/a   30.0
+Gi1/0/29  auto   off        0.0     n/a                 n/a   30.0
+Gi1/0/30  auto   off        0.0     n/a                 n/a   30.0
+Gi1/0/31  auto   off        0.0     n/a                 n/a   30.0
+Gi1/0/32  auto   off        0.0     n/a                 n/a   30.0
+
+SW-HQ-CORE#show lldp neighbors detail
+------------------------------------------------
+Local Intf: Te1/1/1
+Chassis id: 0000.5e00.53f1
+Port id: x1
+Port Description: x1
+System Name: FGT-HQ
+
+System Description: 
+FortiGate-100F v7.2.10,build1706,240808 (GA.M)
+
+Time remaining: 101 seconds
+System Capabilities: B,R
+Enabled Capabilities: R
+Management Addresses:
+    IP: 10.10.99.250
+Auto Negotiation - not supported
+Physical media capabilities - not advertised
+Media Attachment Unit type - not advertised
+Vlan ID: - not advertised
+
+------------------------------------------------
+Local Intf: Te2/1/1
+Chassis id: 0000.5e00.53f1
+Port id: x2
+Port Description: x2
+System Name: FGT-HQ
+
+System Description: 
+FortiGate-100F v7.2.10,build1706,240808 (GA.M)
+
+Time remaining: 101 seconds
+System Capabilities: B,R
+Enabled Capabilities: R
+Management Addresses:
+    IP: 10.10.99.250
+Auto Negotiation - not supported
+Physical media capabilities - not advertised
+Media Attachment Unit type - not advertised
+Vlan ID: - not advertised
+
+
+Total entries displayed: 2
+
+SW-HQ-CORE#

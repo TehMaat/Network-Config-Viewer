@@ -1,0 +1,81 @@
+FGT-BR1 # get system status
+Version: FortiGate-60F v7.0.15,build0632,240313 (GA.M)
+Serial-Number: FGT60FTK20000021
+Hostname: FGT-BR1
+Operation Mode: NAT
+Current virtual domain: root
+Virtual domain configuration: disable
+Current HA mode: standalone
+Branch point: 0632
+System time: Wed Oct 29 10:24:02 2025
+
+FGT-BR1 # diagnose sys sdwan health-check
+Health Check(INTERNET): 
+Seq(1 wan1): state(alive), packet-loss(0.000%) latency(14.521), jitter(1.087), mos(4.402), bandwidth-up(49999), bandwidth-dw(199999), bandwidth-bi(249998) sla_map=0x1
+Seq(2 wan2): state(alive), packet-loss(3.000%) latency(171.880), jitter(31.210), mos(3.910), bandwidth-up(999999), bandwidth-dw(999999), bandwidth-bi(1999998) sla_map=0x0
+Health Check(HUB): 
+Seq(3 HUB-WAN1): state(alive), packet-loss(0.000%) latency(22.004), jitter(0.876), mos(4.395), bandwidth-up(49999), bandwidth-dw(199999), bandwidth-bi(249998) sla_map=0x1
+Seq(4 HUB-WAN2): state(alive), packet-loss(0.000%) latency(35.312), jitter(2.004), mos(4.380), bandwidth-up(999999), bandwidth-dw(999999), bandwidth-bi(1999998) sla_map=0x1
+
+FGT-BR1 # diagnose sys sdwan service
+
+Service(1): Address Mode(IPV4) flags=0x4200 use-shortcut-sla use-shortcut
+  Tie break: cfg
+  Gen(3), TOS(0x0/0x0), Protocol(0): src(1->65535):dst(1->65535)
+  Service role: standalone
+  Members(2): 
+    1: Seq_num(3 HUB-WAN1 overlay), alive, sla(0x1), gid(0), cfg_order(0), local cost(0), selected
+    2: Seq_num(4 HUB-WAN2 overlay), alive, sla(0x1), gid(0), cfg_order(1), local cost(0), selected
+  Src address(1): 
+        10.21.0.0-10.21.255.255
+
+  Dst address(6): 
+        10.10.0.0-10.10.255.255
+
+Service(2): Address Mode(IPV4) flags=0x200 use-shortcut-sla
+  Gen(2), TOS(0x0/0x0), Protocol(0): src(1->65535):dst(1->65535)
+  Service role: standalone
+  Members(2): 
+    1: Seq_num(1 wan1 virtual-wan-link), alive, selected
+    2: Seq_num(2 wan2 virtual-wan-link), alive, selected
+  Src address(1): 
+        0.0.0.0-255.255.255.255
+
+  Dst address(1): 
+        0.0.0.0-255.255.255.255
+
+FGT-BR1 # get vpn ipsec tunnel summary
+'HUB-WAN1' 203.0.113.2:0  selectors(total,up): 1/1  rx(pkt,err): 1490112/0  tx(pkt,err): 1532077/0
+'HUB-WAN2' 198.51.100.10:0  selectors(total,up): 1/1  rx(pkt,err): 118230/0  tx(pkt,err): 120044/0
+
+FGT-BR1 # get router info routing-table all
+Codes: K - kernel, C - connected, S - static, R - RIP, B - BGP
+       O - OSPF, IA - OSPF inter area
+       * - candidate default
+
+Routing table for VRF=0
+S*      0.0.0.0/0 [1/0] via 192.0.2.33, wan1, [1/0]
+                  [1/0] via 198.51.100.65, wan2, [1/0]
+B       10.10.0.0/16 [200/0] via 10.255.1.254 (recursive is directly connected, HUB-WAN1), 2d03h12m, [1/0]
+                     [200/0] via 10.255.2.254 (recursive is directly connected, HUB-WAN2), 2d03h10m, [1/0]
+C       10.21.10.0/24 is directly connected, internal
+C       10.21.20.0/24 is directly connected, VL20-VOICE
+C       10.21.99.0/24 is directly connected, VL99-MGMT
+B       10.22.0.0/16 [200/0] via 10.255.1.22 (recursive via 10.255.1.254, HUB-WAN1), 2d03h12m, [1/0]
+C       10.255.1.21/32 is directly connected, HUB-WAN1
+C       10.255.2.21/32 is directly connected, HUB-WAN2
+C       192.0.2.32/30 is directly connected, wan1
+
+FGT-BR1 # get router info bgp summary
+VRF 0 BGP router identifier 10.21.99.1, local AS number 65000
+BGP table version is 7
+1 BGP AS-PATH entries
+0 BGP community entries
+
+Neighbor        V         AS   MsgRcvd   MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.255.1.254    4      65000      6245      6211        7    0    0 2d03h12m        3
+10.255.2.254    4      65000      6230      6198        7    0    0 2d03h10m        3
+
+Total number of neighbors 2
+
+FGT-BR1 # 

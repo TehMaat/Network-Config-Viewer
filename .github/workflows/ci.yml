@@ -43,13 +43,28 @@ jobs:
       - run: npm ci
       - name: Build and start the container, as on the user's PC
         run: docker compose up -d --build --wait
-      - name: Check that the port is open only on localhost
+      - name: Check the port, open only on localhost, and the protections of the server
         run: |
           docker compose port app 8080 | grep -q '^127.0.0.1:'
           curl -fsS -o /dev/null http://127.0.0.1:8080/
-      - run: npx playwright install --with-deps chromium
-      - name: Browser tests against the container
+          # Another name for this computer (DNS rebinding): refused.
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: evil.example' http://127.0.0.1:8080/api/clients)" = 403
+          # A change without the header of the app: refused.
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -d '{"name":"x"}' http://127.0.0.1:8080/api/clients)" = 403
+          # No root, and a read-only filesystem except the volume of the data.
+          docker compose exec -T app sh -c 'test "$(id -u)" != 0 && ! touch /app/x 2>/dev/null && touch /data/.w && rm /data/.w'
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - name: Browser tests against the container, on Chromium, Firefox and WebKit
         run: npm run test:e2e
+        env:
+          NCV_BASE_URL: http://127.0.0.1:8080
+          NCV_ALL_BROWSERS: '1'
+      - name: The archive survives a restart and an update of the container
+        run: |
+          (cd packages/web && NCV_PERSISTENCE=prepare npx playwright test persistence --project=chromium)
+          docker compose down
+          docker compose up -d --build --wait
+          (cd packages/web && NCV_PERSISTENCE=verify npx playwright test persistence --project=chromium)
         env:
           NCV_BASE_URL: http://127.0.0.1:8080
       - name: Container logs

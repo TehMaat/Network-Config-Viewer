@@ -1,28 +1,46 @@
 # Network Config Viewer
 
-Strumento per vedere l'infrastruttura di rete di un cliente partendo dai backup di configurazione degli apparati. Gira tutto sul tuo PC: le config vengono lette nel browser e non vengono mai inviate da nessuna parte.
+Strumento per vedere l'infrastruttura di rete di un cliente partendo dai backup di configurazione degli apparati. Gira tutto sul tuo PC: le config vengono lette nel browser, conservate nell'archivio dell'app sul PC e non vengono mai inviate altrove.
 
-![Una config FortiGate con VDOM multiple: elenco dei file, riconoscimento con la riga da cui viene ogni dato, struttura navigabile e testo originale](docs/img/app-fortigate.png)
+![Le policy di un FortiGate con VDOM multiple: ricerca di un IP, che trova le regole tramite subnet, gruppi e VIP](docs/img/app-fortigate.png)
 
 ## Stato del progetto
 
-Versione 0.0.1, con la fase 0 della roadmap: trascini un backup FortiGate o Cisco, l'app lo riconosce e mostra la config navigabile, identica all'originale.
+Versione 0.0.1, con le fasi 0 e 1 della roadmap: trascini un backup FortiGate o Cisco e l'app lo legge e lo mostra in forma grafica, apparato per apparato, sempre collegato alla config originale, identica al file. Se aggiungi gli output dei comandi show, le viste mostrano anche lo stato reale. I file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato, e ogni apparato si esporta in Excel.
 
-Le fasi successive (lettura delle config, mappa dell'infrastruttura, analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
+Le fasi successive (mappa dell'infrastruttura, analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
 
 ## Cosa fa oggi
 
 - **Carica più file insieme**, anche dentro archivi zip, tar, tar.gz e gz, anche uno dentro l'altro. Si può trascinare anche una cartella intera.
+- **Conserva i file di ogni cliente** nell'archivio dell'app, sul PC: crei un cliente e ci carichi config, show e versioni precedenti, anche in più volte. L'app li ritrova sempre, da qualsiasi browser, anche dopo averlo pulito o dopo aver aggiornato l'app, e li tiene identici all'originale.
+  - Raggruppa i file per apparato: la config attuale, le versioni precedenti e gli show. L'attuale è la più recente, per la data scritta nella config, nel nome del file o del file stesso; se serve, si sceglie a mano.
+  - Le correzioni a mano restano salvate con il cliente.
+  - Un cliente si esporta in un file zip, come copia di sicurezza o per passarlo a un collega, e si reimporta. Per provare l'app c'è un cliente di esempio da importare: [`samples/cliente-esempio.zip`](samples/cliente-esempio.zip).
+  - Senza un cliente aperto i file restano solo nella scheda del browser: va bene per un'occhiata veloce.
 - **Riconosce** marca, sistema operativo, versione, modello, hostname, stack e VDOM, e per ogni dato mostra la riga da cui viene. Se sbaglia, si corregge a mano.
   - FortiGate (FortiOS) e FortiSwitch, Cisco IOS e IOS-XE, Cisco Small Business. Cisco NX-OS e ASA vengono riconosciuti, ma non ancora letti.
   - Output dei comandi show, con o senza prompt.
-- **Mostra la config originale** con evidenziazione, blocchi piegabili, numeri di riga, ricerca e una struttura navigabile: blocchi `config`, VDOM, interfacce, banner…
+- **Legge le config** di FortiGate (FortiOS 7.0–8.0, anche con VDOM multiple), Cisco IOS e IOS-XE e Cisco Small Business, e per ogni apparato mostra le sue viste:
+  - **riepilogo**: IP di gestione, stack o VDOM, conteggi, funzioni in uso, avvisi e copertura della lettura, con le sezioni non interpretate;
+  - **switch**: pannello delle porte di ogni membro dello stack (colori per VLAN, trunk a strisce, porte spente, L3, PoE, 802.1X/MAB, VLAN voce, port-channel), VLAN con porte e gateway, ACL con la ricerca per IP, routing;
+  - **FortiGate**: interfacce e zone, VLAN, policy nell'ordine reale (lista unica o per coppia di interfacce) con la ricerca per IP anche tramite subnet, gruppi, VIP e "all", oggetti con "dove è usato", routing, VPN IPsec, SD-WAN.
+- **Legge gli output dei comandi show** di Cisco IOS e IOS-XE, Cisco Small Business e FortiGate, da file singoli o da log di sessione, e li abbina da solo al loro apparato: per hostname, numero di serie o nome del file, con la correzione a mano. Le viste mostrano lo stato reale accanto alla config, e ogni dato porta alla sua riga dello show:
+  - **switch**: stato delle porte, vicini CDP e LLDP, PoE, nomi delle VLAN tenute dal VTP e i **MAC dei dispositivi collegati** a ogni porta configurata (con l'IP, se lo switch ha la tabella ARP), con un segno sulle porte configurate senza MAC: forse non sono usate;
+  - **FortiGate**: stato delle interfacce e dei tunnel IPsec (anche dial-up), tabella di routing reale, sessioni BGP, health check SD-WAN e membro in uso da ogni regola.
+- **Esporta in Excel**, con il file creato nel browser:
+  - ogni apparato, con un foglio per vista: porte, VLAN, ACL, routing e MAC degli switch; interfacce e VLAN del FortiGate, e policy, oggetti, routing, VPN e SD-WAN di ogni VDOM. Con gli show c'è anche lo stato reale;
+  - ogni tabella, così come è filtrata e ordinata, con il pulsante accanto al filtro.
+- **Indica i valori di default**: quello che la config non scrive ma l'apparato usa è in corsivo, e i default ancora da confermare su apparati reali sono segnati "da verificare".
+- **Mostra la config originale** con evidenziazione, blocchi piegabili, numeri di riga, ricerca e una struttura navigabile: blocchi `config`, VDOM, interfacce, banner… Per gli apparati letti, i nomi portano alla loro definizione, le righe non interpretate sono evidenziate e da ogni elemento delle viste si salta alle sue righe.
 - **Non modifica mai le config**: il testo si copia o si scarica identico al file, byte per byte, anche con i fine riga di Windows.
 - **Segnala i file che non si possono leggere**: binari, vuoti, archivi danneggiati o protetti da password, backup FortiGate cifrati.
 - Interfaccia in **italiano e inglese**, a scelta.
 - Tema **chiaro, scuro o come il sistema**, a scelta. La scelta resta salvata nel browser.
 
-![La config di uno stack Catalyst 9300 in tema scuro, con la struttura filtrata sui port-channel](docs/img/app-cisco-scuro.png)
+![Il pannello delle porte di uno stack Catalyst 9300 in tema scuro, con il dettaglio di un uplink in port-channel](docs/img/app-cisco-scuro.png)
+
+![Lo stesso stack con gli show caricati: stato reale sulle porte, segno sulle porte configurate senza MAC e dettaglio di una porta con telefono e PC](docs/img/app-stato.png)
 
 ## Come avviarlo
 
@@ -40,14 +58,21 @@ La prima volta Docker scarica il necessario e costruisce l'immagine: serve inter
 
 | Per… | Comando |
 |---|---|
-| aggiornare | `git pull`, poi `docker compose up -d --build` |
+| aggiornare | `git pull`, poi `docker compose up -d --build` (l'archivio dei clienti resta) |
 | fermare | `docker compose down` |
 | usare un'altra porta | `NCV_PORT=9090 docker compose up -d` (in PowerShell: `$env:NCV_PORT=9090; docker compose up -d`) |
 
+### L'archivio dei clienti
+
+- I clienti stanno nel volume Docker `ncv-data`, sul PC: restano quando fermi, riavvii o aggiorni l'app.
+- **Non usare mai `docker compose down -v`**: `-v` cancella il volume e con lui tutti i clienti. Lo stesso succede ripristinando Docker Desktop ai valori di fabbrica o cancellandone i dati.
+- Su Windows e macOS il volume sta dentro Docker e non si apre come una cartella normale. Per avere i file a portata di mano, e come copia di sicurezza, esporta il cliente dall'app: menu del cliente, *Esporta in un file zip*.
+
 ## Riservatezza
 
-- I file vengono letti ed elaborati nel browser: non arrivano a nessun server, nemmeno al container, che contiene solo un web server con i file dell'app.
+- I file vengono letti ed elaborati nel browser. Quando li salvi in un cliente vanno al container, sul tuo PC, che li conserva nel suo volume così come sono: non arrivano a nessun altro server.
 - L'app risponde solo al tuo PC (`127.0.0.1`): gli altri computer della rete non la raggiungono.
+- Il server dell'archivio accetta solo richieste indirizzate a `localhost` o `127.0.0.1` e modifiche che arrivano dall'app: una pagina di un altro sito aperta nel browser non può leggere né cambiare l'archivio. Gira senza privilegi di amministratore, con il filesystem in sola lettura tranne il volume dei dati, e sceglie lui i nomi dei file sul disco.
 - Il browser riceve una regola di sicurezza (Content Security Policy) che blocca qualsiasi collegamento ad altri siti. I test automatici lo verificano.
 - Nessuna telemetria, nessun font o script scaricato da fuori.
 - Nella repo, nei test, nella documentazione e negli screenshot ci sono solo dati inventati: vedi [`samples/`](samples/README.md).
@@ -59,27 +84,29 @@ Serve Node.js 22.12 o successivo (i test automatici usano la versione 24).
 | Comando | Cosa fa |
 |---|---|
 | `npm install` | Installa le dipendenze |
-| `npm run dev` | Avvia l'app in sviluppo su http://localhost:5173 |
+| `npm run dev` | Avvia l'app in sviluppo su http://localhost:5173, senza l'archivio dei clienti |
+| `npm start` | Avvia il server dell'app sulla build, su http://localhost:8080, con l'archivio in `packages/server/data` |
 | `npm test` | Test unitari (Vitest) |
 | `npm run lint`, `npm run typecheck`, `npm run format:check` | Controlli del codice |
-| `npm run build` | Costruisce l'app in `packages/web/dist` |
-| `npm run test:e2e` | Test nel browser (Playwright) sulla build, servita con le stesse regole di sicurezza del container. Con `NCV_BASE_URL=http://127.0.0.1:8080` li esegue sul container |
+| `npm run build` | Costruisce l'app in `packages/web/dist` e il server in `packages/server/dist` |
+| `npm run test:e2e` | Test nel browser (Playwright) sul server dell'app, con un archivio vuoto in una cartella temporanea (prima `npm run build`). Con `NCV_BASE_URL=http://127.0.0.1:8080` li esegue sul container; con `NCV_ALL_BROWSERS=1` anche su Firefox e WebKit |
 
-La prima volta, per i test nel browser: `npx playwright install chromium`.
+La prima volta, per i test nel browser: `npx playwright install chromium`, e con `NCV_ALL_BROWSERS=1` anche `firefox webkit`.
 
 Struttura del codice:
-- `packages/core`: lettura dei file e degli archivi, riconoscimento, parser. TypeScript senza dipendenze dal browser, così potrà girare anche sul server.
-- `packages/web`: interfaccia React con Mantine, CodeMirror e i18next. Le traduzioni sono in `packages/web/src/i18n`.
-- `samples`: config di esempio sintetiche, con il riconoscimento atteso in `expected.json`.
-- `docker`: configurazione di nginx e delle regole di sicurezza; `Dockerfile` e `compose.yaml` sono nella radice.
+- `packages/core`: lettura dei file e degli archivi, riconoscimento, parser, driver di marca, modello neutro e funzioni di ricerca sul modello. TypeScript senza dipendenze dal browser, così potrà girare anche sul server.
+- `packages/web`: interfaccia React con Mantine, CodeMirror, TanStack Table e i18next. Le viste degli apparati sono in `packages/web/src/views`, i clienti e l'archivio in `packages/web/src/archive`, le traduzioni in `packages/web/src/i18n`.
+- `packages/server`: il server dell'app, con Fastify: serve l'app e conserva l'archivio dei clienti. Le regole di sicurezza inviate al browser sono in `packages/server/src/security-headers.json`, unica fonte anche per i test.
+- `samples`: config di esempio sintetiche, con il riconoscimento atteso in `expected.json`, il riassunto atteso del modello in `expected-models.json` e il cliente di esempio `cliente-esempio.zip`.
+- `Dockerfile` e `compose.yaml` sono nella radice.
 
-Gli screenshot in `docs/img/app-*.png`, in tema chiaro e in tema scuro (`-scuro`), si rigenerano con `NCV_SCREENSHOTS=1 npm run test:e2e -- screenshots`.
+Gli screenshot in `docs/img/app-*.png`, in tema chiaro e in tema scuro (`-scuro`), si rigenerano con `NCV_SCREENSHOTS=1 npm run test:e2e -- screenshots`, da soli: svuotano l'archivio del server di prova e importano il cliente di esempio.
 
 ## Come si lavora
 
 - Ogni proposta viene analizzata e diventa un'issue; il lavoro parte solo dopo l'okay. Le regole complete sono in [CLAUDE.md](CLAUDE.md).
 - Tutte le modifiche sono annotate nel [registro delle modifiche](CHANGELOG.md), con le versioni secondo il Semantic Versioning.
-- A ogni pull request GitHub Actions esegue lint, controllo dei tipi, test, build, immagine Docker e test nel browser sul container. Non si pubblica niente.
+- A ogni pull request GitHub Actions esegue lint, controllo dei tipi, test, build, immagine Docker e test nel browser sul container, con Chromium, Firefox e WebKit, compreso l'archivio che resta dopo il riavvio e l'aggiornamento del container. Non si pubblica niente.
 
 ## Licenza
 

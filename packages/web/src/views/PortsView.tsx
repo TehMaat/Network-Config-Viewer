@@ -1,6 +1,7 @@
 import {
   Badge,
   Box,
+  Button,
   Group,
   Paper,
   Select,
@@ -10,16 +11,23 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { portVlanRole, type DeviceModel, type Interface } from '@ncv/core';
+import {
+  expectsMacs,
+  hasMacTable,
+  portLive,
+  portVlanRole,
+  type DeviceModel,
+  type Interface,
+  type PortLive,
+} from '@ncv/core';
 import type { ColumnDef } from '@tanstack/react-table';
-import type { TFunction } from 'i18next';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { vlanColors } from './colors';
 import { DataTable } from './DataTable';
 import { PortPanel } from './PortPanel';
-import { SourceButton, Value } from './source';
-import { formatVlans, shortInterfaceName } from './values';
+import { ShowSourceButton, SourceButton, useDeviceView, Value } from './source';
+import { formatVlans, FULL_LABEL, shortInterfaceName, vlanText } from './values';
 
 export function PortsView({ model }: { model: DeviceModel }) {
   const { t } = useTranslation();
@@ -29,6 +37,7 @@ export function PortsView({ model }: { model: DeviceModel }) {
   const placed = model.interfaces.filter((i) => i.kind === 'physical' && i.position);
   const members = model.stack.length > 0 ? model.stack : [{ member: 1, src: [] }];
   const port = model.interfaces.find((i) => i.name === selected) ?? null;
+  const { state } = useDeviceView();
 
   const columns = useMemo<ColumnDef<Interface, unknown>[]>(
     () => [
@@ -124,6 +133,49 @@ export function PortsView({ model }: { model: DeviceModel }) {
         accessorFn: (i) =>
           i.ipv4.map((a) => `${a.ip}/${a.prefix}`).join(' ') || (i.dhcpClient ? 'DHCP' : ''),
       },
+      ...(state && state.ports.length > 0
+        ? ([
+            {
+              id: 'live',
+              header: t('ports.col.live'),
+              accessorFn: (i) => portLive(i, state).status?.statusText ?? '',
+              cell: (c) => {
+                const live = portLive(c.row.original, state);
+                return live.status ? (
+                  <Badge
+                    size="sm"
+                    variant="dot"
+                    color={liveColor(live)}
+                    tt="none"
+                    styles={FULL_LABEL}
+                  >
+                    {live.status.statusText}
+                  </Badge>
+                ) : null;
+              },
+            },
+          ] as ColumnDef<Interface, unknown>[])
+        : []),
+      ...(state && hasMacTable(state)
+        ? ([
+            {
+              id: 'macs',
+              header: t('ports.col.macs'),
+              accessorFn: (i) => portLive(i, state).macs.length,
+              cell: (c) => {
+                const live = portLive(c.row.original, state);
+                if (live.noMac) {
+                  return (
+                    <Text span size="sm" c="orange">
+                      {t('ports.live.noMacShort')}
+                    </Text>
+                  );
+                }
+                return live.macs.length > 0 ? live.macs.length : '';
+              },
+            },
+          ] as ColumnDef<Interface, unknown>[])
+        : []),
       {
         id: 'src',
         header: '',
@@ -131,7 +183,7 @@ export function PortsView({ model }: { model: DeviceModel }) {
         cell: (c) => <SourceButton src={c.row.original.src} />,
       },
     ],
-    [t],
+    [t, state],
   );
 
   const vlanOptions = model.vlans.map((v) => ({
@@ -154,7 +206,12 @@ export function PortsView({ model }: { model: DeviceModel }) {
           searchable
           data-testid="filter-vlan"
         />
-        <Legend colors={colors} model={model} />
+        <Legend
+          colors={colors}
+          model={model}
+          status={(state?.ports.length ?? 0) > 0}
+          macTable={hasMacTable(state)}
+        />
       </Group>
 
       {placed.length === 0 ? (
@@ -199,26 +256,6 @@ export function PortsView({ model }: { model: DeviceModel }) {
   );
 }
 
-function vlanText(i: Interface, t: TFunction): string {
-  const sp = i.switchport;
-  if (!sp || sp.mode === 'routed') return '';
-  if (sp.mode === 'trunk') {
-    const allowed = formatVlans(sp.allowed) || t('ports.detail.none');
-    return sp.nativeVlan !== undefined
-      ? t('ports.trunkVlans', { vlans: allowed, native: sp.nativeVlan })
-      : allowed;
-  }
-  if (sp.mode === 'general') {
-    return [
-      formatVlans(sp.untagged) && t('ports.untaggedShort', { vlans: formatVlans(sp.untagged) }),
-      formatVlans(sp.allowed) && t('ports.taggedShort', { vlans: formatVlans(sp.allowed) }),
-    ]
-      .filter(Boolean)
-      .join(' · ');
-  }
-  return String(sp.accessVlan ?? '');
-}
-
 /** Small marks on the ports: CSS class and text of the legend. */
 const MARKS: [string, string][] = [
   ['ncv-mark-poe', 'ports.legend.poe'],
@@ -227,7 +264,27 @@ const MARKS: [string, string][] = [
   ['ncv-mark-lag', 'ports.legend.lag'],
 ];
 
-function Legend({ colors, model }: { colors: Map<number, string>; model: DeviceModel }) {
+/** Colour of the status of a port in the shows. */
+function liveColor(live: PortLive): string {
+  const status = live.status?.status;
+  if (status === 'connected' || status === 'up') return 'teal';
+  if (status === 'err-disabled') return 'red';
+  return 'gray';
+}
+
+function Legend({
+  colors,
+  model,
+  status,
+  macTable,
+}: {
+  colors: Map<number, string>;
+  model: DeviceModel;
+  /** The shows have the status of the ports. */
+  status: boolean;
+  /** The MAC table is loaded. */
+  macTable: boolean;
+}) {
   const { t } = useTranslation();
   const used = model.vlans.filter((v) => colors.has(v.id)).slice(0, 14);
   const mark = (cls: string, label: string) => (
@@ -259,12 +316,43 @@ function Legend({ colors, model }: { colors: Map<number, string>; model: DeviceM
         <Text size="xs">{t('ports.legend.down')}</Text>
       </Group>
       {MARKS.map(([cls, key]) => mark(cls, t(key)))}
+      {LIVE_MARKS.filter(([cls]) => (cls === 'ncv-mark-nomac' ? macTable : status)).map(
+        ([cls, key]) => (
+          <Group gap={4} wrap="nowrap" key={cls}>
+            <svg width={12} height={10} aria-hidden>
+              {cls === 'ncv-mark-nomac' ? (
+                <path d="M 1 9 L 6 1 L 11 9 Z" className={cls} />
+              ) : (
+                <rect
+                  x={0}
+                  y={3}
+                  width={12}
+                  height={4}
+                  rx={1}
+                  className={cls}
+                  style={{ stroke: 'var(--mantine-color-dimmed)', strokeWidth: 0.5 }}
+                />
+              )}
+            </svg>
+            <Text size="xs">{t(key)}</Text>
+          </Group>
+        ),
+      )}
     </Group>
   );
 }
 
+/** Marks of the real state, shown in the legend when shows are loaded. */
+const LIVE_MARKS: [string, string][] = [
+  ['ncv-live-up', 'ports.legend.liveUp'],
+  ['ncv-live-down', 'ports.legend.liveDown'],
+  ['ncv-live-error', 'ports.legend.liveError'],
+  ['ncv-mark-nomac', 'ports.legend.noMac'],
+];
+
 function PortDetail({ port }: { port: Interface }) {
   const { t } = useTranslation();
+  const { state } = useDeviceView();
   const sp = port.switchport;
   const rows: [string, ReactNode][] = [];
   const add = (label: string, value: ReactNode) => {
@@ -403,7 +491,176 @@ function PortDetail({ port }: { port: Interface }) {
             ))}
           </Table.Tbody>
         </Table>
+        {(state || expectsMacs(port)) && (
+          <LiveDetail
+            key={port.name}
+            live={portLive(port, state)}
+            trunk={port.switchport?.mode === 'trunk'}
+            statusLoaded={(state?.ports.length ?? 0) > 0}
+            macTable={hasMacTable(state)}
+            expects={expectsMacs(port)}
+          />
+        )}
       </SimpleGrid>
     </Paper>
+  );
+}
+
+/** MACs listed at once on a trunk; with more, the list opens on request. */
+const FEW_MACS = 4;
+
+/** What the shows say about a port: status, neighbours, PoE, MACs (#6). */
+function LiveDetail({
+  live,
+  trunk,
+  statusLoaded,
+  macTable,
+  expects,
+}: {
+  live: PortLive;
+  trunk: boolean;
+  /** The shows have the status of the ports, maybe not of this one. */
+  statusLoaded: boolean;
+  /** The MAC table of the switch is loaded. */
+  macTable: boolean;
+  /** The port should have MACs (#6). */
+  expects: boolean;
+}) {
+  const { t } = useTranslation();
+  // Trunks and port-channels learn tens or hundreds of MACs: the count, and the list on request.
+  const [allMacs, setAllMacs] = useState(!trunk || live.macs.length <= FEW_MACS);
+  const macs = allMacs ? live.macs : [];
+  const noMacTable = !macTable && expects;
+  const macInfo = noMacTable || (macTable && (!!live.macsOn || live.noMac || live.macs.length > 0));
+  // Nothing in the shows about this port: no section.
+  if (
+    !live.status &&
+    !statusLoaded &&
+    !live.channelFlags &&
+    live.neighbors.length === 0 &&
+    !live.poe &&
+    !macInfo
+  ) {
+    return null;
+  }
+  return (
+    <Stack gap={4} data-testid="port-live">
+      <Text size="sm" fw={600}>
+        {t('ports.live.title')}
+      </Text>
+      {live.status ? (
+        <Group gap={6}>
+          <Badge
+            size="sm"
+            variant="dot"
+            color={liveColor(live)}
+            tt="none"
+            data-testid="port-live-status"
+          >
+            {live.status.statusText}
+          </Badge>
+          <Text size="sm">
+            {[
+              live.status.speed,
+              live.status.duplex,
+              live.status.vlan && t('ports.vlanShort', { vlan: live.status.vlan }),
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </Text>
+          <ShowSourceButton item={live.status} />
+        </Group>
+      ) : statusLoaded ? (
+        <Text size="sm" c="dimmed">
+          {t('ports.live.noStatus')}
+        </Text>
+      ) : null}
+      {live.channelFlags && (
+        <Text size="sm">{t('ports.live.channel', { flags: live.channelFlags })}</Text>
+      )}
+      {live.neighbors.map((n, i) => (
+        <Group key={i} gap={6} wrap="nowrap">
+          <Text size="sm">
+            {t('ports.live.neighbor', {
+              protocol: n.protocol.toUpperCase(),
+              device: n.device,
+              port: n.port ?? '',
+            })}
+            {n.ip ? ` · ${n.ip}` : ''}
+            {n.platform ? ` · ${n.platform}` : ''}
+          </Text>
+          <ShowSourceButton item={n} />
+        </Group>
+      ))}
+      {live.poe && (
+        <Group gap={6}>
+          <Text size="sm">
+            {t('ports.live.poe', {
+              details: [
+                live.poe.oper,
+                live.poe.watts !== undefined
+                  ? t('ports.live.watts', { watts: live.poe.watts })
+                  : undefined,
+                live.poe.device,
+              ]
+                .filter(Boolean)
+                .join(' · '),
+            })}
+          </Text>
+          <ShowSourceButton item={live.poe} />
+        </Group>
+      )}
+      {noMacTable ? (
+        <Text size="sm" c="dimmed" data-testid="port-no-mac-table">
+          {t('ports.live.noMacTable')}
+        </Text>
+      ) : !macTable ? null : live.macsOn ? (
+        <Text size="sm" c="dimmed">
+          {t('ports.live.macsOn', { name: live.macsOn })}
+        </Text>
+      ) : live.noMac ? (
+        <Text size="sm" c="orange" data-testid="port-nomac">
+          {t('ports.live.noMac')}
+        </Text>
+      ) : live.macs.length > 0 ? (
+        <Stack gap={0} data-testid="port-macs">
+          <Group gap={6}>
+            <Text size="sm">{t('ports.live.macCount', { count: live.macs.length })}</Text>
+            {!allMacs && (
+              <Button
+                size="compact-xs"
+                variant="subtle"
+                onClick={() => setAllMacs(true)}
+                data-testid="btn-all-macs"
+              >
+                {t('ports.live.showMacs')}
+              </Button>
+            )}
+          </Group>
+          {macs.map((m) => (
+            <Group key={`${m.mac}-${m.vlan}`} gap={6} wrap="nowrap">
+              <Text size="sm" ff="monospace">
+                {m.mac}
+              </Text>
+              <Text size="xs" c="dimmed">
+                {t('ports.live.macInfo', {
+                  vlan: m.vlan ?? '—',
+                  type: t(`ports.macType.${m.type}`),
+                })}
+              </Text>
+              <ShowSourceButton item={m} />
+              {m.arp.map((a) => (
+                <Group key={a.ip} gap={2} wrap="nowrap" data-testid="mac-ip">
+                  <Text size="sm" ff="monospace">
+                    {a.ip}
+                  </Text>
+                  <ShowSourceButton item={a} />
+                </Group>
+              ))}
+            </Group>
+          ))}
+        </Stack>
+      ) : null}
+    </Stack>
   );
 }

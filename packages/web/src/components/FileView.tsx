@@ -18,6 +18,7 @@ import {
   IconArrowBackUp,
   IconCopy,
   IconDownload,
+  IconFileSpreadsheet,
   IconFold,
   IconFoldDown,
   IconLayoutSidebarLeftCollapse,
@@ -25,12 +26,14 @@ import {
   IconLock,
   IconSearch,
 } from '@tabler/icons-react';
-import type { DeviceModel, Src } from '@ncv/core';
+import type { AssignReason, DeviceModel, DeviceState, Src } from '@ncv/core';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { saveBlob, safeFileName } from '../export/download';
 import { baseName, formatBytes, formatOrigin, formatPath } from '../format';
 import { contentStore, type FileContent } from '../state/content';
 import { effectiveDetection } from '../state/effective';
+import type { LinkedShow } from '../state/devices';
 import type { FileEntry, Overrides, TextEntry } from '../state/files';
 import { AclsView } from '../views/AclsView';
 import { FirewallVlansView, InterfacesView } from '../views/InterfacesView';
@@ -46,15 +49,28 @@ import { VlansView } from '../views/VlansView';
 import { ConfigEditor, type EditorHandle } from './ConfigEditor';
 import { DetectionPanel } from './DetectionPanel';
 import { OutlinePanel } from './OutlinePanel';
+import { ShowPanel } from './ShowPanel';
 
 interface Props {
   entry: FileEntry;
   onOverride(id: string, overrides: Overrides): void;
+  /** Files of shows of this device. */
+  shows: LinkedShow[];
+  /** Real state from those shows. */
+  state: DeviceState | null;
+  /** For a file of shows: the device it belongs to. */
+  device: { device: TextEntry; reason: AssignReason } | null;
+  onOpenFile(id: string, line?: number): void;
+  fileName(id: string): string;
+  /** A line to show as soon as the file is open. */
+  goTo: number | null;
+  onGoToDone(): void;
 }
 
-export function FileView({ entry, onOverride }: Props) {
+export function FileView(props: Props) {
+  const { entry } = props;
   if (entry.type === 'issue') return <IssueView entry={entry} />;
-  return <TextView key={entry.id} entry={entry} onOverride={onOverride} />;
+  return <TextView key={entry.id} {...props} entry={entry} />;
 }
 
 function IssueView({ entry }: { entry: Extract<FileEntry, { type: 'issue' }> }) {
@@ -129,7 +145,17 @@ function mainContext(model: DeviceModel): string {
   );
 }
 
-function TextView({ entry, onOverride }: { entry: TextEntry; onOverride: Props['onOverride'] }) {
+function TextView({
+  entry,
+  onOverride,
+  shows,
+  state,
+  device,
+  onOpenFile,
+  fileName,
+  goTo,
+  onGoToDone,
+}: Props & { entry: TextEntry }) {
   const { t, i18n } = useTranslation();
   const editor = useRef<EditorHandle>(null);
   const effective = useMemo(
@@ -166,15 +192,50 @@ function TextView({ entry, onOverride }: { entry: TextEntry; onOverride: Props['
     return () => cancelAnimationFrame(frame);
   }, [tab, pending]);
 
+  // The exported files are named after the device, or after the file without its extension.
+  const exportName = safeFileName(model?.hostname ?? entry.name.replace(/\.[^.]+$/, ''));
   const api = useMemo<DeviceViewApi>(
     () => ({
       showSource: (src: Src) => {
         const range = sourceRange(src);
         if (range) showLines(range[0], range[1]);
       },
+      state,
+      openFile: onOpenFile,
+      fileName,
+      exportName,
     }),
-    [showLines],
+    [showLines, state, onOpenFile, fileName, exportName],
   );
+  const [exporting, setExporting] = useState(false);
+  const [exportFailed, setExportFailed] = useState(false);
+  /** The Excel file of the device: one sheet for every view (#10). */
+  const exportDevice = async () => {
+    if (!model) return;
+    setExporting(true);
+    setExportFailed(false);
+    try {
+      const [{ deviceSheets }, { workbookBlob }] = await Promise.all([
+        import('../export/device'),
+        import('../export/xlsx'),
+      ]);
+      saveBlob(await workbookBlob(deviceSheets(model, state, t)), `${exportName}.xlsx`);
+    } catch {
+      setExportFailed(true);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // A line asked by another file (for example a value of the real state of a device).
+  useEffect(() => {
+    if (goTo === null) return;
+    const frame = requestAnimationFrame(() => {
+      showLines(goTo);
+      onGoToDone();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [goTo, showLines, onGoToDone]);
 
   if (!content) return null;
 
@@ -230,6 +291,14 @@ function TextView({ entry, onOverride }: { entry: TextEntry; onOverride: Props['
         </Group>
       </Group>
       {!model && detection}
+      {content.show && (
+        <ShowPanel
+          show={content.show}
+          device={device}
+          onOpenFile={onOpenFile}
+          onGoToLine={(line) => showLines(line)}
+        />
+      )}
       {effective.encrypted && (
         <Alert
           color="orange"
@@ -295,7 +364,7 @@ function TextView({ entry, onOverride }: { entry: TextEntry; onOverride: Props['
   const view = (name: Tab): ReactNode => {
     switch (name) {
       case 'summary':
-        return <SummaryView model={model} detection={detection} />;
+        return <SummaryView model={model} detection={detection} shows={shows} />;
       case 'ports':
         return <PortsView model={model} />;
       case 'interfaces':
@@ -357,6 +426,22 @@ function TextView({ entry, onOverride }: { entry: TextEntry; onOverride: Props['
               </Tabs.Tab>
             ))}
             {vdomSelector}
+            <Tooltip label={exportFailed ? t('export.failed') : t('export.deviceHelp')}>
+              <Button
+                size="compact-xs"
+                variant="light"
+                color={exportFailed ? 'red' : undefined}
+                my="auto"
+                ml={vdomSelector ? 'xs' : 'auto'}
+                mr="xs"
+                leftSection={<IconFileSpreadsheet size={14} />}
+                loading={exporting}
+                onClick={() => void exportDevice()}
+                data-testid="btn-export-device"
+              >
+                {t('export.device')}
+              </Button>
+            </Tooltip>
           </Tabs.List>
           {tabs
             .filter((name) => name !== 'config')
@@ -410,14 +495,7 @@ function ConfigPane({ entry, content, editor, onGoToLine }: ConfigPaneProps) {
     const blob = new Blob([content.bytes as Uint8Array<ArrayBuffer>], {
       type: 'application/octet-stream',
     });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = entry.name;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    saveBlob(blob, entry.name);
   };
 
   const outlineAvailable = entry.family !== 'plain';

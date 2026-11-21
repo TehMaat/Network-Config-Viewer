@@ -1,0 +1,221 @@
+SW-BR3-ACC#terminal datadump
+
+SW-BR3-ACC#show version
+Active-image: flash://system/images/image_cbs_ros_3.4.1.03_release_cisco_signed.bin
+  Version: 3.4.1.03
+  MD5 Digest: 00000000000000000000000000000000
+  Date: 21-Jul-2023
+  Time: 18:13:21
+Inactive-image: flash://system/images/image_cbs_ros_3.3.0.16_release_cisco_signed.bin
+  Version: 3.3.0.16
+  MD5 Digest: 00000000000000000000000000000000
+  Date: 10-Feb-2023
+  Time: 11:02:45
+
+SW-BR3-ACC#show inventory
+NAME: "1"   DESCR: "CBS350-48P-4G 48-Port Gigabit PoE Managed Switch with 4 SFP"
+PID: CBS350-48P-4G     VID: V02    SN: FOC2003XAA
+
+NAME: "2"   DESCR: "CBS350-48P-4G 48-Port Gigabit PoE Managed Switch with 4 SFP"
+PID: CBS350-48P-4G     VID: V02    SN: FOC2003XBB
+
+
+SW-BR3-ACC#show interfaces status
+                                             Flow Link          Back   Mdix
+Port     Type         Duplex  Speed Neg      ctrl State       Pressure Mode
+-------- ------------ ------  ----- -------- ---- ----------- -------- -------
+gi1/0/1  1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/2  1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/3  1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/4  1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/5  1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/6  1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/7  1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/8  1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/9  1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/10 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/11 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/12 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/13 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/14 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/15 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/16 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/17 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/18 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/19 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/20 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/21 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/22 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/23 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/24 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/25 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/26 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/27 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/28 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/29 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/30 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/31 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/32 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/33 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/34 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/35 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/36 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/37 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/38 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/39 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/40 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi1/0/41 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/42 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/43 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/44 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/45 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/46 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/47 1G-Copper      --      --     --     --  Down           --    --
+gi1/0/48 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+te1/0/1  10G-Fiber      --      --     --     --  Down           --    --
+te1/0/2  10G-Fiber      --      --     --     --  Down           --    --
+te1/0/3  10G-Fiber      --      --     --     --  Down           --    --
+te1/0/4  10G-Fiber      --      --     --     --  Down           --    --
+gi2/0/1  1G-Copper      --      --     --     --  Down           --    --
+gi2/0/2  1G-Copper      --      --     --     --  Down           --    --
+gi2/0/3  1G-Copper      --      --     --     --  Down           --    --
+gi2/0/4  1G-Copper      --      --     --     --  Down           --    --
+gi2/0/5  1G-Copper      --      --     --     --  Down           --    --
+gi2/0/6  1G-Copper      --      --     --     --  Down           --    --
+gi2/0/7  1G-Copper      --      --     --     --  Down           --    --
+gi2/0/8  1G-Copper      --      --     --     --  Down           --    --
+gi2/0/9  1G-Copper      --      --     --     --  Down           --    --
+gi2/0/10 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi2/0/11 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/12 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/13 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/14 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/15 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/16 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/17 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/18 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/19 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/20 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi2/0/21 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/22 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/23 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/24 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/25 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/26 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/27 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/28 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/29 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/30 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi2/0/31 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/32 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/33 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/34 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/35 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/36 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/37 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/38 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/39 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/40 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+gi2/0/41 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/42 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/43 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/44 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/45 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/46 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/47 1G-Copper      --      --     --     --  Down           --    --
+gi2/0/48 1G-Copper    Full    1000  Enabled  Off  Up          Disabled On
+te2/0/1  10G-Fiber      --      --     --     --  Down           --    --
+te2/0/2  10G-Fiber      --      --     --     --  Down           --    --
+te2/0/3  10G-Fiber      --      --     --     --  Down           --    --
+te2/0/4  10G-Fiber      --      --     --     --  Down           --    --
+
+                                          Flow    Link        
+Ch       Type    Duplex  Speed  Neg      control  State       
+-------- ------- ------  -----  -------- -------  ----------- 
+Po1      1G      Full    2000   Enabled  Off      Up          
+
+SW-BR3-ACC#show vlan
+Created by: D-Default, S-Static, G-GVRP, R-Radius Assigned VLAN, V-Voice VLAN
+
+Vlan       Name           Tagged Ports      UnTagged Ports      Created by    
+---- ----------------- ------------------ ------------------ ---------------- 
+ 1           1                             gi1/0/41-47,Po1          DV       
+ 10        DATI                            gi1/0/1-9               S        
+ 20        VOCE                                                    SV       
+ 60        AP                              gi1/0/10,gi1/0/20       S        
+ 70        WIFI         gi1/0/10,gi1/0/20                          S        
+ 99      GESTIONE       Po1                                        S        
+
+SW-BR3-ACC#show lldp neighbors
+
+System capability supported: Bridge, Router, WLAN Access Point, Telephone, DOCSIS cable device, Station Only
+Port ID subtype: Local, Interface name
+
+  Port        Device ID          Port ID          System Name    Capabilities  TTL  
+--------- ----------------- ----------------- ----------------- ------------ ----- 
+gi1/0/48  00:00:5e:00:53:f4  internal5         FGT-BR3           B, R         111  
+gi1/0/10  00:00:5e:00:53:8a  eth0              AP-BR3-01         W            97   
+
+SW-BR3-ACC#show mac address-table
+Flags: I - Internal usage VLAN
+Aging time is 300 sec
+
+    Vlan          Mac Address         Port       Type    
+------------ --------------------- ---------- ---------- 
+       10         00:00:5e:00:53:80    gi1/0/1    dynamic   
+       10         00:00:5e:00:53:81    gi1/0/2    dynamic   
+       10         00:00:5e:00:53:82    gi1/0/3    dynamic   
+       10         00:00:5e:00:53:83    gi1/0/4    dynamic   
+       10         00:00:5e:00:53:84    gi1/0/5    dynamic   
+       10         00:00:5e:00:53:85    gi1/0/6    dynamic   
+       10         00:00:5e:00:53:86    gi1/0/7    dynamic   
+       10         00:00:5e:00:53:87    gi1/0/8    dynamic   
+       10         00:00:5e:00:53:88    gi1/0/9    dynamic   
+       60         00:00:5e:00:53:89    gi1/0/10   dynamic   
+       10         00:00:5e:00:53:8a    gi1/0/11   dynamic   
+       10         00:00:5e:00:53:8b    gi1/0/12   dynamic   
+       10         00:00:5e:00:53:8c    gi1/0/13   dynamic   
+       10         00:00:5e:00:53:8d    gi1/0/14   dynamic   
+       10         00:00:5e:00:53:8e    gi1/0/15   dynamic   
+       10         00:00:5e:00:53:8f    gi1/0/16   dynamic   
+       10         00:00:5e:00:53:90    gi1/0/17   dynamic   
+       10         00:00:5e:00:53:91    gi1/0/18   dynamic   
+       10         00:00:5e:00:53:92    gi1/0/19   dynamic   
+       60         00:00:5e:00:53:93    gi1/0/20   dynamic   
+       60         00:00:5e:00:53:94    gi1/0/30   dynamic   
+       60         00:00:5e:00:53:95    gi1/0/40   dynamic   
+       60         00:00:5e:00:53:96    gi2/0/10   dynamic   
+       60         00:00:5e:00:53:97    gi2/0/20   dynamic   
+       60         00:00:5e:00:53:98    gi2/0/30   dynamic   
+       60         00:00:5e:00:53:99    gi2/0/40   dynamic   
+       10         00:00:5e:00:53:f4    Po1        dynamic   
+       60         00:00:5e:00:53:f4    Po1        dynamic   
+       70         00:00:5e:00:53:f4    Po1        dynamic   
+       99         00:00:5e:00:53:f4    Po1        dynamic   
+
+SW-BR3-ACC#show power inline
+Unit  Power  Nominal Power   Consumed Power   Usage Threshold   Traps  
+----  -----  -------------   --------------   ---------------   -------
+1     On     370 Watts       31 Watts (8%)    95                Disable
+2     On     370 Watts       0 Watts (0%)     95                Disable
+
+   Port          Powered Device         State           Status      Priority   Class   
+-------------- -------------------- ------------ -------------- ---------- ---------- 
+gi1/0/1        IP Phone             Auto         On             low        class2
+gi1/0/2        IP Phone             Auto         On             low        class2
+gi1/0/3        IP Phone             Auto         On             low        class2
+gi1/0/4        IP Phone             Auto         On             low        class2
+gi1/0/5        IP Phone             Auto         On             low        class2
+gi1/0/6        IP Phone             Auto         On             low        class2
+gi1/0/7        IP Phone             Auto         On             low        class2
+gi1/0/8        IP Phone             Auto         On             low        class2
+gi1/0/10       Access point         Auto         On             high       class4
+gi1/0/20       Access point         Auto         On             high       class4
+gi1/0/30       Access point         Auto         On             high       class4
+gi1/0/40       Access point         Auto         On             high       class4
+gi2/0/10       Access point         Auto         On             high       class4
+gi2/0/20       Access point         Auto         On             high       class4
+gi2/0/30       Access point         Auto         On             high       class4
+gi2/0/40       Access point         Auto         On             high       class4
+
+SW-BR3-ACC#

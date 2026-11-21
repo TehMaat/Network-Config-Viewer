@@ -1277,5 +1277,252 @@
       "ignored": 43,
       "unknown": 62
     }
+  },
+  "versioni/fgt-br1-60f-fortios-7.0_2025-05-12.conf": {
+    "hostname": "FGT-BR1",
+    "model": "FortiGate-60F",
+    "version": "7.0.15",
+    "management": "10.21.99.1 VL99-MGMT",
+    "features": [
+      "advpn",
+      "bgp",
+      "ipsec",
+      "nat",
+      "sdwan",
+      "static-routes"
+    ],
+    "warnings": [],
+    "interfaces": {
+      "kinds": {
+        "hard-switch": 1,
+        "physical": 2,
+        "subinterface": 2,
+        "tunnel": 2
+      },
+      "byContext": {
+        "root": 7
+      },
+      "shutdown": 0,
+      "lags": [
+        "internal: internal1 internal2 internal3 internal4 internal5"
+      ],
+      "layer3": [
+        "wan1 192.0.2.34/30",
+        "internal 10.21.10.1/24",
+        "VL20-VOICE 10.21.20.1/24",
+        "VL99-MGMT 10.21.99.1/24",
+        "HUB-WAN1 10.255.1.21/32",
+        "HUB-WAN2 10.255.2.21/32"
+      ],
+      "vlans": [
+        "VL20-VOICE 20 on internal",
+        "VL99-MGMT 99 on internal"
+      ]
+    },
+    "contexts": [
+      {
+        "name": "root",
+        "zones": [
+          "LAN: internal VL20-VOICE"
+        ],
+        "addresses": "9 + 1 built in",
+        "addressGroups": [
+          "GRP-CORPORATE 6",
+          "GRP-DNS 2"
+        ],
+        "services": "0 + 2 built in",
+        "serviceGroups": [],
+        "policies": [
+          "1. #1 LAN-verso-Internet LAN>virtual-wan-link LAN-BR1>all ALL accept nat log all",
+          "2. #2 LAN-verso-Corporate LAN>overlay LAN-BR1>GRP-CORPORATE ALL accept log all",
+          "3. #3 Corporate-verso-LAN overlay>LAN GRP-CORPORATE>LAN-BR1 ALL accept log all",
+          "4. #4 Gestione-verso-DNS VL99-MGMT>overlay LAN-BR1>GRP-DNS DNS accept log all"
+        ],
+        "vips": [],
+        "ippools": [],
+        "routing": {
+          "statics": [
+            "0.0.0.0/0  ad 1 sdwan virtual-wan-link"
+          ],
+          "policyRoutes": [],
+          "ospf": [],
+          "bgp": "65000 neighbors 2 groups 0 ranges 0 networks 1",
+          "routeMaps": [],
+          "prefixLists": []
+        },
+        "ipsec": [
+          "HUB-WAN1 static ike2 wan1 203.0.113.2 receiver phase2 1",
+          "HUB-WAN2 static ike2 wan2 198.51.100.10 receiver phase2 1"
+        ],
+        "sdwan": {
+          "enabled": true,
+          "zones": [
+            "virtual-wan-link",
+            "overlay"
+          ],
+          "members": [
+            "1 wan1 virtual-wan-link",
+            "2 wan2 virtual-wan-link",
+            "3 HUB-WAN1 overlay",
+            "4 HUB-WAN2 overlay"
+          ],
+          "healthChecks": [
+            "INTERNET members 1,2 sla 1",
+            "HUB members 3,4 sla 1"
+          ],
+          "rules": [
+            "1 CORPORATE sla",
+            "2 INTERNET priority"
+          ]
+        }
+      }
+    ],
+    "references": 46,
+    "coverage": {
+      "total": 443,
+      "understood": 316,
+      "ignored": 26,
+      "unknown": 101
+    }
+  },
+  "versioni/sw-hq-core-c9300-iosxe-17.12-stack_2025-06-30.txt": {
+    "hostname": "SW-HQ-CORE",
+    "model": "C9300-48P",
+    "version": "17.12",
+    "stack": [
+      "1 C9300-48P",
+      "2 C9300-48P",
+      "3 C9300-48P"
+    ],
+    "management": "10.10.99.2 Vlan99",
+    "features": [
+      "acl",
+      "ip-routing",
+      "lag",
+      "ospf",
+      "pbr",
+      "poe",
+      "stack",
+      "static-routes",
+      "svi"
+    ],
+    "warnings": [],
+    "interfaces": {
+      "kinds": {
+        "lag": 3,
+        "loopback": 1,
+        "management": 1,
+        "physical": 168,
+        "svi": 5,
+        "virtual": 3
+      },
+      "modes": {
+        "access": 142,
+        "dynamic-auto": 20,
+        "trunk": 9
+      },
+      "shutdown": 24,
+      "uplinks": [
+        "TenGigabitEthernet1/1/1",
+        "TenGigabitEthernet1/1/2",
+        "TenGigabitEthernet1/1/3",
+        "TenGigabitEthernet1/1/4",
+        "TenGigabitEthernet1/1/5",
+        "TenGigabitEthernet1/1/6",
+        "TenGigabitEthernet1/1/7",
+        "TenGigabitEthernet1/1/8",
+        "TenGigabitEthernet2/1/1",
+        "TenGigabitEthernet2/1/2",
+        "TenGigabitEthernet2/1/3",
+        "TenGigabitEthernet2/1/4",
+        "TenGigabitEthernet2/1/5",
+        "TenGigabitEthernet2/1/6",
+        "TenGigabitEthernet2/1/7",
+        "TenGigabitEthernet2/1/8",
+        "TenGigabitEthernet3/1/1",
+        "TenGigabitEthernet3/1/2",
+        "TenGigabitEthernet3/1/3",
+        "TenGigabitEthernet3/1/4",
+        "TenGigabitEthernet3/1/5",
+        "TenGigabitEthernet3/1/6",
+        "TenGigabitEthernet3/1/7",
+        "TenGigabitEthernet3/1/8"
+      ],
+      "lags": [
+        "Port-channel1: TenGigabitEthernet1/1/1 TenGigabitEthernet2/1/1",
+        "Port-channel10: TenGigabitEthernet1/1/2 TenGigabitEthernet2/1/2",
+        "Port-channel11: GigabitEthernet3/0/47 GigabitEthernet3/0/48"
+      ],
+      "layer3": [
+        "Loopback0 10.10.255.2/32",
+        "Vlan60 10.10.60.1/24",
+        "Vlan70 10.10.70.1/24",
+        "Vlan99 10.10.99.2/24",
+        "Vlan900 10.10.254.2/29"
+      ],
+      "poe": {
+        "auto": 144
+      },
+      "dot1x": 0,
+      "portSecurity": 0,
+      "voice": 0,
+      "trunks": {
+        "trunk 10,20,50,60,70,99": 3,
+        "trunk 10,20,50,60,99-100,900": 3,
+        "trunk 10,20,60,70,99": 3
+      },
+      "withDefaults": 171,
+      "unverified": {}
+    },
+    "vlans": [
+      "1 default (implicit)",
+      "10 DATI",
+      "20 VOCE",
+      "50 OSPITI",
+      "60 AP",
+      "70 WIFI-OSPITI",
+      "99 GESTIONE",
+      "100 SERVER",
+      "900 TRANSITO-FGT",
+      "999 PARCHEGGIO"
+    ],
+    "acls": [
+      "ACL-OSPITI-IN extended 4: Vlan70 in",
+      "ACL-PBR-OSPITI extended 1: route-map PBR-OSPITI",
+      "ACL-SERVER-IN extended 4: GigabitEthernet1/0/1 in, GigabitEthernet1/0/2 in, GigabitEthernet1/0/3 in, GigabitEthernet1/0/4 in",
+      "MGMT-ACCESS standard 3: line vty 0 4, line vty 5 15, snmp"
+    ],
+    "objectGroups": [
+      "OG-DC network 2",
+      "OG-RETI-INTERNE network 3",
+      "OG-SERVIZI-WEB service 3"
+    ],
+    "routing": {
+      "statics": [
+        "0.0.0.0/0 10.10.254.1 ad 250",
+        "10.99.0.0/16 Null0"
+      ],
+      "policyRoutes": [
+        "Vlan70 route-map PBR-OSPITI"
+      ],
+      "ospf": [
+        "1 networks 10.10.60.0/24 area 0, 10.10.70.0/24 area 0, 10.10.254.0/29 area 0; interfaces Loopback0 passive, Vlan60 passive, Vlan70 passive, Vlan900"
+      ],
+      "bgp": null,
+      "routeMaps": [
+        "PBR-OSPITI 1",
+        "RM-STATICHE-OSPF 1"
+      ],
+      "prefixLists": [
+        "PL-STATICHE-OSPF 1"
+      ]
+    },
+    "references": 167,
+    "coverage": {
+      "total": 1306,
+      "understood": 974,
+      "ignored": 265,
+      "unknown": 67
+    }
   }
 }

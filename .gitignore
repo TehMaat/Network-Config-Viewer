@@ -11,3 +11,5 @@ playwright/.cache/
 Thumbs.db
 .env
 .env.*
+# Archive of the server started outside Docker (npm start)
+packages/server/data/

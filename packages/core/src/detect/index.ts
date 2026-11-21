@@ -4,6 +4,7 @@ import { detectShowSignature, detectShowWithPrompts, findPrompts, isConfigDump }
 import { syntaxFor, type Detection } from './types';
 import { detected } from './util';
 
+export * from './date';
 export * from './types';
 
 const CONFIG_DETECTORS = [

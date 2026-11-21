@@ -1,5 +1,5 @@
 import type { ModelHints, OsId, SyntaxFamily } from '@ncv/core';
-import type { WorkerMessage, WorkerRequest } from './protocol';
+import type { LoadInput, WorkerMessage, WorkerRequest } from './protocol';
 
 /** Talks to the analysis worker. */
 export class AnalyzerClient {
@@ -15,7 +15,7 @@ export class AnalyzerClient {
   }
 
   /** Sends the files to the worker, which takes ownership of the buffers. Returns the batch number. */
-  load(files: { name: string; buffer: ArrayBuffer }[]): number {
+  load(files: LoadInput[]): number {
     const batch = ++this.batch;
     this.post(
       { type: 'load', batch, files },

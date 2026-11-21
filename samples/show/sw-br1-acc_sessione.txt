@@ -1,0 +1,221 @@
+SW-BR1-ACC#terminal length 0
+
+SW-BR1-ACC#show version
+Cisco IOS Software, C2960X Software (C2960X-UNIVERSALK9-M), Version 15.2(7)E10, RELEASE SOFTWARE (fc2)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2024 by Cisco Systems, Inc.
+
+SW-BR1-ACC uptime is 2 years, 3 weeks, 1 day, 4 hours, 12 minutes
+System image file is "flash:c2960x-universalk9-mz.152-7.E10.bin"
+
+cisco WS-C2960X-48FPD-L (APM86XXX) processor (revision C0) with 524288K bytes of memory.
+Processor board ID FOC2002X1AA
+
+
+Switch Ports Model                     SW Version            SW Image
+------ ----- -----                     ----------            ----------
+*    1 52    WS-C2960X-48FPD-L         15.2(7)E10            C2960X-UNIVERSALK9-M
+     2 52    WS-C2960X-48FPD-L         15.2(7)E10            C2960X-UNIVERSALK9-M
+
+Switch 02
+---------
+Switch uptime                      : 2 years, 3 weeks, 1 day, 4 hours, 10 minutes 
+Model Number                       : WS-C2960X-48FPD-L
+System Serial Number               : FOC2002X1BB
+
+
+SW-BR1-ACC#show interfaces status
+
+Port         Name               Status       Vlan       Duplex  Speed Type
+Gi1/0/1      PDL-001            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/2      PDL-002            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/3      PDL-003            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi1/0/4      PDL-004            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/5      PDL-005            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/6      PDL-006            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi1/0/7      PDL-007            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/8      PDL-008            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/9      PDL-009            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi1/0/10     PDL-010            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/11     PDL-011            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/12     PDL-012            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi1/0/13     PDL-013            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/14     PDL-014            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/15     PDL-015            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi1/0/16     PDL-016            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/17     PDL-017            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/18     PDL-018            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi1/0/19     PDL-019            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/20     PDL-020            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/21     PDL-021            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/22     PDL-022            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/23     PDL-023            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/24     PDL-024            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi1/0/25     PDL-025            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/26     PDL-026            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/27     PDL-027            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi1/0/28     PDL-028            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/29     PDL-029            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/30     PDL-030            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi1/0/31     PDL-031            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/32     PDL-032            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/33     PDL-033            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi1/0/34     PDL-034            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/35     PDL-035            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/36     PDL-036            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi1/0/37     PDL-037            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/38     PDL-038            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/39     PDL-039            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi1/0/40     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/41     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/42     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/43     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/44     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/45     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/46     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/47     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi1/0/48     UPLINK-FGT-BR1-int connected    trunk      a-full a-1000 10/100/1000BaseTX
+Te1/0/1      RISERVA-UPLINK     disabled     trunk        auto  auto Not Present
+Te1/0/2                         disabled     1            auto  auto Not Present
+Gi2/0/1      PDL-049            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/2      PDL-050            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/3      PDL-051            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi2/0/4      PDL-052            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/5      PDL-053            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/6      PDL-054            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi2/0/7      PDL-055            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/8      PDL-056            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/9      PDL-057            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi2/0/10     PDL-058            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/11     PDL-059            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/12     PDL-060            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi2/0/13     PDL-061            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/14     PDL-062            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/15     PDL-063            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi2/0/16     PDL-064            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/17     PDL-065            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/18     PDL-066            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi2/0/19     PDL-067            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/20     PDL-068            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/21     PDL-069            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/22     PDL-070            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/23     PDL-071            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/24     PDL-072            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi2/0/25     PDL-073            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/26     PDL-074            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/27     PDL-075            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi2/0/28     PDL-076            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/29     PDL-077            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/30     PDL-078            notconnect   10           auto  auto 10/100/1000BaseTX
+Gi2/0/31     PDL-079            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/32     PDL-080            connected    10         a-full a-1000 10/100/1000BaseTX
+Gi2/0/33     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/34     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/35     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/36     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/37     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/38     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/39     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/40     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/41     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/42     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/43     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/44     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/45     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/46     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/47     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Gi2/0/48     LIBERA             disabled     999          auto  auto 10/100/1000BaseTX
+Te2/0/1                         disabled     1            auto  auto Not Present
+Te2/0/2                         disabled     1            auto  auto Not Present
+
+SW-BR1-ACC#show mac address-table
+          Mac Address Table
+-------------------------------------------
+
+Vlan    Mac Address       Type        Ports
+----    -----------       --------    -----
+  10    0000.5e00.5340    DYNAMIC     Gi1/0/1
+  20    0000.5e00.5341    DYNAMIC     Gi1/0/1
+  10    0000.5e00.5342    DYNAMIC     Gi1/0/2
+  20    0000.5e00.5343    DYNAMIC     Gi1/0/2
+  10    0000.5e00.5344    DYNAMIC     Gi1/0/4
+  20    0000.5e00.5345    DYNAMIC     Gi1/0/4
+  10    0000.5e00.5346    DYNAMIC     Gi1/0/5
+  20    0000.5e00.5347    DYNAMIC     Gi1/0/5
+  10    0000.5e00.5348    DYNAMIC     Gi1/0/8
+  20    0000.5e00.5349    DYNAMIC     Gi1/0/8
+  10    0000.5e00.534a    DYNAMIC     Gi1/0/10
+  20    0000.5e00.534b    DYNAMIC     Gi1/0/10
+  10    0000.5e00.534c    DYNAMIC     Gi1/0/11
+  20    0000.5e00.534d    DYNAMIC     Gi1/0/11
+  10    0000.5e00.534e    DYNAMIC     Gi1/0/13
+  20    0000.5e00.534f    DYNAMIC     Gi1/0/13
+  10    0000.5e00.5350    DYNAMIC     Gi1/0/16
+  20    0000.5e00.5351    DYNAMIC     Gi1/0/16
+  10    0000.5e00.5352    DYNAMIC     Gi1/0/17
+  20    0000.5e00.5353    DYNAMIC     Gi1/0/17
+  10    0000.5e00.5354    DYNAMIC     Gi1/0/19
+  20    0000.5e00.5355    DYNAMIC     Gi1/0/19
+  10    0000.5e00.5356    DYNAMIC     Gi1/0/20
+  20    0000.5e00.5357    DYNAMIC     Gi1/0/20
+  10    0000.5e00.5358    DYNAMIC     Gi1/0/22
+  20    0000.5e00.5359    DYNAMIC     Gi1/0/22
+  10    0000.5e00.535a    DYNAMIC     Gi1/0/23
+  20    0000.5e00.535b    DYNAMIC     Gi1/0/23
+  10    0000.5e00.535c    DYNAMIC     Gi1/0/25
+  20    0000.5e00.535d    DYNAMIC     Gi1/0/25
+  10    0000.5e00.535e    DYNAMIC     Gi1/0/26
+  20    0000.5e00.535f    DYNAMIC     Gi1/0/26
+  10    0000.5e00.5360    DYNAMIC     Gi1/0/29
+  20    0000.5e00.5361    DYNAMIC     Gi1/0/29
+  10    0000.5e00.5362    DYNAMIC     Gi1/0/31
+  20    0000.5e00.5363    DYNAMIC     Gi1/0/31
+  10    0000.5e00.5364    DYNAMIC     Gi1/0/32
+  20    0000.5e00.5365    DYNAMIC     Gi1/0/32
+  10    0000.5e00.5366    DYNAMIC     Gi1/0/34
+  20    0000.5e00.5367    DYNAMIC     Gi1/0/34
+  10    0000.5e00.5368    DYNAMIC     Gi1/0/37
+  20    0000.5e00.5369    DYNAMIC     Gi1/0/37
+  10    0000.5e00.536a    DYNAMIC     Gi1/0/38
+  20    0000.5e00.536b    DYNAMIC     Gi1/0/38
+  10    0000.5e00.536c    DYNAMIC     Gi2/0/1
+  20    0000.5e00.536d    DYNAMIC     Gi2/0/1
+  10    0000.5e00.53f3    DYNAMIC     Gi1/0/48
+  20    0000.5e00.53f3    DYNAMIC     Gi1/0/48
+  99    0000.5e00.53f3    DYNAMIC     Gi1/0/48
+Total Mac Addresses for this criterion: 49
+
+SW-BR1-ACC#show power inline
+Module   Available     Used     Remaining
+          (Watts)     (Watts)    (Watts)
+------   ---------   --------   ---------
+1           740.0       45.2       694.8
+2           740.0       20.5       719.5
+Interface Admin  Oper       Power   Device              Class Max
+                           (Watts)
+--------- ------ ---------- ------- ------------------- ----- ----
+Gi1/0/1   auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/2   auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/4   auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/5   auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/8   auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/10  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/11  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/13  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/16  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/17  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/19  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/20  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/22  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/23  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/25  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/26  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/29  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/31  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/32  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/34  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/37  auto   on         4.6     IP Phone 7841       2     30.0
+Gi1/0/38  auto   on         4.6     IP Phone 7841       2     30.0
+Gi2/0/1   auto   on         4.6     IP Phone 7841       2     30.0
+
+SW-BR1-ACC#
