@@ -8,6 +8,10 @@ import { openApp, samplePath, selectFile } from './helpers';
 const DOCS_IMG = fileURLToPath(new URL('../../../docs/img/', import.meta.url));
 
 test.skip(!process.env.NCV_SCREENSHOTS, 'only when updating the documentation');
+
+// The number of the version changes with every release (#13): it is left out of the
+// screenshots, which then change only when what they show changes.
+const style = '[data-testid="app-version"] { display: none !important; }';
 test.describe.configure({ mode: 'serial' });
 test.use({ deviceScaleFactor: 2, viewport: { width: 1440, height: 900 } });
 
@@ -42,7 +46,7 @@ for (const [colorScheme, suffix] of [
       ).toBeVisible();
       await page.locator('[data-testid="row-policies"][data-id="6"]').click();
       await expect(page.getByTestId('policy-detail')).toBeVisible();
-      await page.screenshot({ path: `${DOCS_IMG}app-fortigate${suffix}.png` });
+      await page.screenshot({ path: `${DOCS_IMG}app-fortigate${suffix}.png`, style });
     });
 
     test('Cisco stack', async ({ page, request }) => {
@@ -51,7 +55,7 @@ for (const [colorScheme, suffix] of [
       await page.getByTestId('tab-ports').click();
       await page.locator('[data-testid="port"][data-name="TenGigabitEthernet1/1/1"]').click();
       await expect(page.getByTestId('port-detail')).toBeVisible();
-      await page.screenshot({ path: `${DOCS_IMG}app-cisco${suffix}.png` });
+      await page.screenshot({ path: `${DOCS_IMG}app-cisco${suffix}.png`, style });
     });
 
     test('real state of a switch', async ({ page, request }) => {
@@ -61,7 +65,7 @@ for (const [colorScheme, suffix] of [
       await page.locator('[data-testid="port"][data-name="GigabitEthernet1/0/25"]').click();
       await expect(page.getByTestId('port-macs')).toBeVisible();
       await page.getByTestId('port-detail').scrollIntoViewIfNeeded();
-      await page.screenshot({ path: `${DOCS_IMG}app-stato${suffix}.png` });
+      await page.screenshot({ path: `${DOCS_IMG}app-stato${suffix}.png`, style });
     });
 
     test('linked config', async ({ page, request }) => {
@@ -75,7 +79,7 @@ for (const [colorScheme, suffix] of [
       await expect(page.locator('.ncv-line-unknown').first()).toBeVisible();
       // Syntax highlighting is applied right after scrolling: wait for the coloured tokens.
       await expect(page.locator('.cm-line span:not(.ncv-ref)').first()).toBeVisible();
-      await page.screenshot({ path: `${DOCS_IMG}app-config${suffix}.png` });
+      await page.screenshot({ path: `${DOCS_IMG}app-config${suffix}.png`, style });
     });
 
     test('start page', async ({ page, request }) => {
@@ -84,7 +88,7 @@ for (const [colorScheme, suffix] of [
       await page.getByTestId('client-menu').click();
       await page.getByTestId('btn-client-close').click();
       await expect(page.getByTestId('client-card')).toHaveCount(1);
-      await page.screenshot({ path: `${DOCS_IMG}app-avvio${suffix}.png` });
+      await page.screenshot({ path: `${DOCS_IMG}app-avvio${suffix}.png`, style });
     });
   });
 }

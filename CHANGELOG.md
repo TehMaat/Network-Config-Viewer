@@ -6,8 +6,11 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
 
 ## [Non rilasciato]
 
+## [0.1.0] - 2026-11-21
+
 ### Aggiunto
 
+- Rilascio automatico: quando una pull request è unita su `main` e i test sono verdi, la CI crea il tag `vX.Y.Z` e la release su GitHub con le note della versione, prese dal registro con `scripts/release-notes.mjs` ([#13](https://github.com/TehMaat/Network-Config-Viewer/issues/13)).
 - Regole di lavoro in `CLAUDE.md`: analisi e issue prima di ogni modifica, lavoro solo dopo l'okay, registro delle modifiche, documentazione sempre aggiornata, versioning e riservatezza dei dati ([#2](https://github.com/TehMaat/Network-Config-Viewer/issues/2)).
 - Questo registro delle modifiche ([#2](https://github.com/TehMaat/Network-Config-Viewer/issues/2)).
 - Prima versione dell'app, fase 0 della roadmap ([#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4)):
@@ -60,6 +63,9 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
 
 ### Modificato
 
+- Versioning: ogni pull request è una versione, scelta da Claude secondo il Semantic Versioning, e unirla su `main` è l'okay al rilascio; con "non rilasciare" le voci restano in "Non rilasciato". Regole in `CLAUDE.md`, studio e README aggiornati ([#13](https://github.com/TehMaat/Network-Config-Viewer/issues/13)).
+- La CI non annulla più un'esecuzione su `main` quando ne parte un'altra, così ogni versione unita viene rilasciata ([#13](https://github.com/TehMaat/Network-Config-Viewer/issues/13)).
+- Screenshot della documentazione senza il numero di versione, che cambia a ogni rilascio ([#13](https://github.com/TehMaat/Network-Config-Viewer/issues/13)).
 - Docker: il container contiene il server dell'app, senza privilegi di amministratore, al posto di nginx, con il volume dei dati in `compose.yaml`; le intestazioni di sicurezza vengono da un'unica fonte, usata anche dai test ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
 - Test nel browser: girano sul server dell'app invece che su `vite preview`, e in CI anche su Firefox e WebKit; il test della copia verifica il testo anche nei browser che non lasciano leggere gli appunti ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
 - Pagina iniziale con l'elenco dei clienti; testi sulla riservatezza della pagina iniziale e del README aggiornati con l'archivio sul PC ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
