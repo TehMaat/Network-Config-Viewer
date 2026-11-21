@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { zipSync } from 'fflate';
 import { readFileSync } from 'node:fs';
 import {
   field,
@@ -130,6 +131,29 @@ test('keeps the corrections, and the files byte for byte', async ({ page }) => {
     page.getByTestId('btn-download').click(),
   ]);
   expect(readFileSync(await download.path())).toEqual(sampleBytes(BR1));
+});
+
+test('saves the files found inside an archive, with the place they were in', async ({ page }) => {
+  await openApp(page);
+  await createClient(page, uniqueName('Eta'));
+  const zip = zipSync({ 'sede/core.txt': sampleBytes(CORE), 'filiale/fgt.conf': sampleBytes(BR1) });
+  await loadFiles(
+    page,
+    [{ name: 'backup.zip', mimeType: 'application/zip', buffer: Buffer.from(zip) }],
+    2,
+  );
+  await expect(saved(page)).toHaveCount(2);
+
+  await page.reload();
+  await expect(saved(page)).toHaveCount(2);
+  await expect(fileItem(page, 'core.txt')).toContainText('backup.zip › sede');
+  await selectFile(page, 'core.txt');
+  await openConfigTab(page);
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByTestId('btn-download').click(),
+  ]);
+  expect(readFileSync(await download.path())).toEqual(sampleBytes(CORE));
 });
 
 test('groups the versions of a device and lets the user choose the current one', async ({
