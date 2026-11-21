@@ -287,6 +287,40 @@ test('imports the example client of the samples, ready to try', async ({ page })
   await expect(core.locator('[data-role="show"]')).toHaveCount(3);
 });
 
+test('keeps the menu of the clients on the screen, also with many clients', async ({
+  page,
+  request,
+}) => {
+  const prefix = uniqueName('Riempitivo');
+  const ids: string[] = [];
+  for (let i = 0; i < 30; i++) {
+    const res = await request.post('/api/clients', {
+      headers: { 'x-ncv-request': '1' },
+      data: { name: `${prefix} ${i}` },
+    });
+    ids.push(((await res.json()) as { id: string }).id);
+  }
+  try {
+    await openApp(page);
+    await createClient(page, uniqueName('Theta'));
+    await page.getByTestId('client-menu').click();
+    // The actions come first and are always on the screen.
+    const { height } = page.viewportSize()!;
+    for (const item of ['btn-client-delete', 'btn-client-new', 'btn-client-import']) {
+      const box = (await page.getByTestId(item).boundingBox())!;
+      expect(box.y + box.height, item).toBeLessThanOrEqual(height);
+    }
+    // The list of the clients scrolls by itself.
+    const last = page.locator(`[data-testid="client-option"][data-client="${prefix} 29"]`);
+    await last.scrollIntoViewIfNeeded();
+    await expect(last).toBeInViewport();
+  } finally {
+    for (const id of ids) {
+      await request.delete(`/api/clients/${id}`, { headers: { 'x-ncv-request': '1' } });
+    }
+  }
+});
+
 test('accepts changes to the archive only from the app', async ({ page }) => {
   await openApp(page);
   const status = await page.evaluate(async () => {

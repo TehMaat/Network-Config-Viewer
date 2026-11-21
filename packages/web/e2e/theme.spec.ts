@@ -17,7 +17,13 @@ for (const system of ['light', 'dark'] as const) {
     test.use({ colorScheme: system });
 
     test('follows the system until the user chooses', async ({ page }) => {
-      await openApp(page);
+      // Firefox does not give the theme of the context to the first page it loads (the page
+      // changes process): the theme is set on the page, which is then loaded again, and the
+      // app reads it when it starts, as in the other browsers.
+      await page.goto('/');
+      await page.emulateMedia({ colorScheme: system });
+      await page.reload();
+      await expect(page.getByTestId('empty-state')).toBeVisible();
       await expect(html(page)).toHaveAttribute('data-mantine-color-scheme', system);
       await expect(
         page.getByTestId('theme-switch').getByRole('radio', { name: 'Sistema' }),

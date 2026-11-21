@@ -6,6 +6,7 @@ import {
   Loader,
   Menu,
   Modal,
+  ScrollArea,
   Stack,
   Text,
   TextInput,
@@ -77,48 +78,10 @@ export function ClientBar({ archive, unsavedCount, onDialog, onImport }: BarProp
           </Button>
         </Menu.Target>
         <Menu.Dropdown>
-          <Menu.Label>{t('clients.title')}</Menu.Label>
-          {state.clients.length === 0 && <Menu.Item disabled>{t('clients.empty')}</Menu.Item>}
-          {state.clients.map((client) => (
-            <Menu.Item
-              key={client.id}
-              onClick={() => choose(client)}
-              leftSection={
-                client.id === state.current?.id ? (
-                  <IconCheck size={14} />
-                ) : (
-                  <span className="ncv-icon-space" />
-                )
-              }
-              rightSection={
-                <Text span size="xs" c="dimmed">
-                  {t('clients.fileCount', { count: client.files })}
-                </Text>
-              }
-              data-testid="client-option"
-              data-client={client.name}
-            >
-              {client.name}
-            </Menu.Item>
-          ))}
-          <Menu.Divider />
-          <Menu.Item
-            leftSection={<IconPlus size={14} />}
-            onClick={() => onDialog({ type: 'create' })}
-            data-testid="btn-client-new"
-          >
-            {t('clients.new')}
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<IconFileImport size={14} />}
-            onClick={onImport}
-            data-testid="btn-client-import"
-          >
-            {t('clients.import')}
-          </Menu.Item>
+          {/* The actions first: the list of the clients can be long, and scrolls by itself. */}
           {state.current && (
             <>
-              <Menu.Divider />
+              <Menu.Label>{state.current.name}</Menu.Label>
               <Menu.Item
                 leftSection={<IconPencil size={14} />}
                 onClick={() => onDialog({ type: 'rename' })}
@@ -150,8 +113,50 @@ export function ClientBar({ archive, unsavedCount, onDialog, onImport }: BarProp
               >
                 {t('clients.delete')}
               </Menu.Item>
+              <Menu.Divider />
             </>
           )}
+          <Menu.Item
+            leftSection={<IconPlus size={14} />}
+            onClick={() => onDialog({ type: 'create' })}
+            data-testid="btn-client-new"
+          >
+            {t('clients.new')}
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconFileImport size={14} />}
+            onClick={onImport}
+            data-testid="btn-client-import"
+          >
+            {t('clients.import')}
+          </Menu.Item>
+          <Menu.Divider />
+          <Menu.Label>{t('clients.title')}</Menu.Label>
+          {state.clients.length === 0 && <Menu.Item disabled>{t('clients.empty')}</Menu.Item>}
+          <ScrollArea.Autosize mah={260} type="auto" data-testid="client-options">
+            {state.clients.map((client) => (
+              <Menu.Item
+                key={client.id}
+                onClick={() => choose(client)}
+                leftSection={
+                  client.id === state.current?.id ? (
+                    <IconCheck size={14} />
+                  ) : (
+                    <span className="ncv-icon-space" />
+                  )
+                }
+                rightSection={
+                  <Text span size="xs" c="dimmed">
+                    {t('clients.fileCount', { count: client.files })}
+                  </Text>
+                }
+                data-testid="client-option"
+                data-client={client.name}
+              >
+                {client.name}
+              </Menu.Item>
+            ))}
+          </ScrollArea.Autosize>
         </Menu.Dropdown>
       </Menu>
       {!state.current && unsavedCount > 0 && (
