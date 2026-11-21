@@ -1,21 +1,28 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
-import { loadFiles, openApp, samplePath, selectFile } from './helpers';
+import { openApp, samplePath, selectFile } from './helpers';
 
-// Screenshots for the documentation, made only from the synthetic samples.
-// Run with: NCV_SCREENSHOTS=1 npm run test:e2e -- screenshots
+// Screenshots for the documentation, made only from the synthetic samples: the example client
+// of samples/, imported in an empty archive. They empty the archive of the server, so they run
+// alone and one at a time: NCV_SCREENSHOTS=1 npm run test:e2e -- screenshots
 const DOCS_IMG = fileURLToPath(new URL('../../../docs/img/', import.meta.url));
 
 test.skip(!process.env.NCV_SCREENSHOTS, 'only when updating the documentation');
+test.describe.configure({ mode: 'serial' });
 test.use({ deviceScaleFactor: 2, viewport: { width: 1440, height: 900 } });
 
-const files = [
-  'fortigate/fgt-hq-100f-fortios-7.2-vdom.conf',
-  'fortigate/fgt-br1-60f-fortios-7.0.conf',
-  'cisco-ios/sw-hq-core-c9300-iosxe-17.12-stack.txt',
-  'cisco-sb/sw-br3-acc-cbs350-48p-3.4-stack.txt',
-  'show/sw-hq-core_show-version.txt',
-];
+/** Empties the archive, then imports the example client and waits for all its files. */
+async function exampleClient(page: Page, request: APIRequestContext) {
+  const { clients } = (await (await request.get('/api/clients')).json()) as {
+    clients: { id: string }[];
+  };
+  for (const client of clients) {
+    await request.delete(`/api/clients/${client.id}`, { headers: { 'x-ncv-request': '1' } });
+  }
+  await openApp(page);
+  await page.getByTestId('client-import-input').setInputFiles(samplePath('cliente-esempio.zip'));
+  await expect(page.locator('[data-testid="file-item"][data-saved="yes"]')).toHaveCount(23);
+}
 
 // Every screenshot in the light theme, and again in the dark one with the "-scuro" suffix.
 for (const [colorScheme, suffix] of [
@@ -25,9 +32,8 @@ for (const [colorScheme, suffix] of [
   test.describe(colorScheme, () => {
     test.use({ colorScheme });
 
-    test('FortiGate policies', async ({ page }) => {
-      await openApp(page);
-      await loadFiles(page, files.map(samplePath), files.length);
+    test('FortiGate policies', async ({ page, request }) => {
+      await exampleClient(page, request);
       await selectFile(page, 'fgt-hq-100f-fortios-7.2-vdom.conf');
       await page.getByTestId('tab-policies').click();
       await page.getByTestId('policy-ip-search').fill('10.10.100.25');
@@ -39,9 +45,8 @@ for (const [colorScheme, suffix] of [
       await page.screenshot({ path: `${DOCS_IMG}app-fortigate${suffix}.png` });
     });
 
-    test('Cisco stack', async ({ page }) => {
-      await openApp(page);
-      await loadFiles(page, files.map(samplePath), files.length);
+    test('Cisco stack', async ({ page, request }) => {
+      await exampleClient(page, request);
       await selectFile(page, 'sw-hq-core-c9300-iosxe-17.12-stack.txt');
       await page.getByTestId('tab-ports').click();
       await page.locator('[data-testid="port"][data-name="TenGigabitEthernet1/1/1"]').click();
@@ -49,14 +54,8 @@ for (const [colorScheme, suffix] of [
       await page.screenshot({ path: `${DOCS_IMG}app-cisco${suffix}.png` });
     });
 
-    test('real state of a switch', async ({ page }) => {
-      const withShows = [
-        'cisco-ios/sw-hq-core-c9300-iosxe-17.12-stack.txt',
-        'show/sw-hq-core_sessione.txt',
-        'show/sw-hq-core_show-cdp-lldp-neighbors.txt',
-      ];
-      await openApp(page);
-      await loadFiles(page, withShows.map(samplePath), withShows.length);
+    test('real state of a switch', async ({ page, request }) => {
+      await exampleClient(page, request);
       await selectFile(page, 'sw-hq-core-c9300-iosxe-17.12-stack.txt');
       await page.getByTestId('tab-ports').click();
       await page.locator('[data-testid="port"][data-name="GigabitEthernet1/0/25"]').click();
@@ -65,9 +64,8 @@ for (const [colorScheme, suffix] of [
       await page.screenshot({ path: `${DOCS_IMG}app-stato${suffix}.png` });
     });
 
-    test('linked config', async ({ page }) => {
-      await openApp(page);
-      await loadFiles(page, files.map(samplePath), files.length);
+    test('linked config', async ({ page, request }) => {
+      await exampleClient(page, request);
       await selectFile(page, 'sw-hq-core-c9300-iosxe-17.12-stack.txt');
       await page.getByTestId('tab-ports').click();
       await page.getByTestId('filter-ports').fill('Vlan70');
@@ -80,9 +78,12 @@ for (const [colorScheme, suffix] of [
       await page.screenshot({ path: `${DOCS_IMG}app-config${suffix}.png` });
     });
 
-    test('start page', async ({ page }) => {
-      await page.setViewportSize({ width: 1200, height: 700 });
-      await openApp(page);
+    test('start page', async ({ page, request }) => {
+      await page.setViewportSize({ width: 1200, height: 760 });
+      await exampleClient(page, request);
+      await page.getByTestId('client-menu').click();
+      await page.getByTestId('btn-client-close').click();
+      await expect(page.getByTestId('client-card')).toHaveCount(1);
       await page.screenshot({ path: `${DOCS_IMG}app-avvio${suffix}.png` });
     });
   });

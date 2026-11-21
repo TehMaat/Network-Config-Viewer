@@ -44,9 +44,22 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
   - stato reale nelle viste, con ogni dato che rimanda alla sua riga dello show: stato, velocità, vicini CDP e LLDP e PoE delle porte; IP di ogni MAC dalla tabella ARP dello stesso apparato; tunnel IPsec con le istanze dei dial-up; tabella di routing reale con la ricerca per IP; sessioni BGP; health check SD-WAN e membro in uso per ogni regola; nomi delle VLAN tenute dal VTP;
   - MAC su ogni porta configurata, secondo la [#6](https://github.com/TehMaat/Network-Config-Viewer/issues/6): indirizzi con VLAN e tipo (dinamico, statico, sticky dalla port security), MAC dei port-channel attribuiti al port-channel e non ai membri, elenco a richiesta sui trunk con molti MAC, segno sul frontale e un solo avviso per apparato per le porte configurate senza MAC e per la tabella MAC non caricata;
   - log di sessione di esempio, sintetici e coerenti con le config: SW-HQ-CORE, SW-BR1-ACC (con fine riga Windows), SW-BR3-ACC (Small Business), FGT-HQ (con le VDOM) e FGT-BR1.
+- Fase 1, archivio dei clienti ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)):
+  - clienti gestiti dall'app: si creano, si aprono, si rinominano, si chiudono e si eliminano; i file caricati con un cliente aperto, anche dentro archivi, si salvano nel suo archivio così come sono, una sola volta anche se caricati di nuovo;
+  - archivio su disco nel volume Docker `ncv-data`, conservato dal nuovo server dell'app (`packages/server`, Node.js con Fastify): resta dopo il riavvio e l'aggiornamento del container e si vede da qualsiasi browser, anche dopo averlo pulito;
+  - file raggruppati per apparato: config attuale, versioni precedenti e show. L'attuale è la più recente per la data scritta nella config, nel nome del file o del file stesso, oppure quella scelta a mano;
+  - correzioni a mano e versione scelta salvate con il cliente;
+  - esportazione di un cliente in un file zip, con i file originali e un indice leggibile, e importazione con il controllo byte per byte di ogni file;
+  - file caricati senza cliente salvabili in un cliente nuovo o in uno esistente; riaperto da solo l'ultimo cliente usato nel browser;
+  - esempi: versioni precedenti del 9300 di sede e del FortiGate della filiale 1, e il cliente di esempio `samples/cliente-esempio.zip` da importare;
+  - test del server, dell'archivio nel browser e, in CI, dell'archivio dopo il riavvio del container.
 
 ### Modificato
 
+- Docker: il container contiene il server dell'app, senza privilegi di amministratore, al posto di nginx, con il volume dei dati in `compose.yaml`; le intestazioni di sicurezza vengono da un'unica fonte, usata anche dai test ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
+- Test nel browser: girano sul server dell'app invece che su `vite preview`, e in CI anche su Firefox e WebKit; il test della copia verifica il testo anche nei browser che non lasciano leggere gli appunti ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
+- Pagina iniziale con l'elenco dei clienti; testi sulla riservatezza della pagina iniziale e del README aggiornati con l'archivio sul PC ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
+- Studio, README e screenshot aggiornati con l'archivio dei clienti; gli screenshot si fanno dal cliente di esempio ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
 - Studio, README e screenshot aggiornati con i driver e le viste della fase 1 già unite: decisioni sull'archivio dei clienti, i browser, la copertura e i default; modello neutro realizzato; viste per apparato; roadmap della fase 1 con le parti fatte e quelle che mancano ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
 - Config di esempio FortiGate arricchite con servizi personalizzati e gruppi di servizi, OSPF verso il centro stella, policy route, prefix-list e route-map per BGP, la VPN del campus e policy che fanno scattare gli avvisi ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
 - Config di esempio Cisco arricchite con OSPF, policy route, ACL applicate a interfacce, VTY e SNMP, object-group, 802.1X e MAB, PoE, port security con MAC sticky, VTP in modalità server con le VLAN solo nello show e modalità `general` dei Small Business; per ogni config c'è il riassunto atteso del modello in `samples/expected-models.json`, verificato dai test ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
@@ -61,8 +74,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
 
 ### Rimosso
 
+- Configurazione di nginx nella cartella `docker/`: la sostituisce il server dell'app ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
 - Anonimizzatore dalla roadmap: le config restano sul PC e devono restare identiche all'originale ([#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4)).
 - Pubblicazione su GitHub Pages e pacchetto offline: l'app si usa solo in locale, con Docker ([#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4)).
+
+### Sicurezza
+
+- Protezioni del server dell'archivio: risponde solo a `localhost`, `127.0.0.1` e `[::1]`, contro il DNS rebinding; accetta modifiche solo con l'intestazione dell'app e mai da altri siti, senza permessi CORS; sceglie lui i nomi dei file sul disco; limiti di dimensione; container senza root e con il filesystem in sola lettura tranne il volume dei dati. Ogni protezione è verificata dai test e, in CI, sul container ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)).
 
 ## [0.0.1] - 2026-11-18
 

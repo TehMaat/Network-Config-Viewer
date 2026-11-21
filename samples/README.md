@@ -31,6 +31,10 @@ Le config descrivono una rete immaginaria: una sede, tre filiali, un campus e un
 | | `sw-br3-acc_sessione.txt` | log di sessione del CBS350 con i formati Small Business: versione, inventario, porte, VLAN, vicini LLDP, tabella MAC e PoE | Small Business 3.4 |
 | | `fgt-hq_sessione.txt` | log di sessione del FortiGate di sede, con i prompt delle VDOM (`config vdom`, `edit OFFICE`): interfacce, tunnel con i peer dial-up, gateway IKE, routing e BGP | FortiOS 7.2 |
 | | `fgt-br1_sessione.txt` | log di sessione della filiale 1: stato, health check e regole SD-WAN, tunnel, routing e BGP | FortiOS 7.0 |
+| `versioni/` | `sw-hq-core-c9300-iosxe-17.12-stack_2025-06-30.txt` | versione precedente del 9300 di sede: data dell'ultima modifica scritta nella config, porte di riserva, altro rack | IOS-XE 17.12 |
+| | `fgt-br1-60f-fortios-7.0_2025-05-12.conf` | versione precedente del FortiGate della filiale 1, senza i profili di sicurezza sulla policy verso Internet: la data è nel nome del file, perché FortiOS non la scrive nella config | FortiOS 7.0 |
+
+[`cliente-esempio.zip`](cliente-esempio.zip) è un cliente esportato dall'app, "Esempio Rete Srl", con tutti questi file: si importa dal menu dei clienti (*Importa da un file zip*) per provare l'app con un cliente completo, ed è anche la base degli screenshot della documentazione. Per rifarlo dopo una modifica agli esempi: crea un cliente nell'app, caricaci i file di questa cartella (le config, `versioni/` e `show/`), esportalo e mettilo qui con questo nome.
 
 Il riconoscimento atteso per ogni file è in [`expected.json`](expected.json); il riassunto atteso del modello di ogni config (porte, VLAN, ACL, routing, copertura) è in [`expected-models.json`](expected-models.json). Entrambi vengono verificati dai test.
 

@@ -89,20 +89,46 @@ export function mergeStates(parts: { file: string; state: DeviceState }[]): Devi
         );
       else out.units.push(u);
     }
-    out.ports.push(...tag(state.ports));
-    out.vlans.push(...tag(state.vlans));
-    out.etherchannels.push(...tag(state.etherchannels));
-    out.neighbors.push(...tag(state.neighbors));
-    out.macs.push(...tag(state.macs));
-    out.arp.push(...tag(state.arp));
-    out.poe.push(...tag(state.poe));
-    out.tunnels.push(...tag(state.tunnels));
-    out.routes.push(...tag(state.routes));
-    out.bgp.push(...tag(state.bgp));
-    out.sla.push(...tag(state.sla));
-    out.sdwanServices.push(...tag(state.sdwanServices));
+    // The same output loaded twice, or the same command in two files: each item once.
+    const ctx = (x: { context?: string }) => x.context ?? '';
+    add(out.ports, tag(state.ports), (p) => p.name);
+    add(out.vlans, tag(state.vlans), (v) => String(v.id));
+    add(out.etherchannels, tag(state.etherchannels), (e) => e.name);
+    add(out.neighbors, tag(state.neighbors), (n) =>
+      [n.protocol, n.local, n.device, n.port ?? ''].join('|'),
+    );
+    add(out.macs, tag(state.macs), (m) => [m.mac, m.vlan ?? '', m.port].join('|'));
+    add(out.arp, tag(state.arp), (a) => [a.ip, a.mac ?? '', a.interface ?? ''].join('|'));
+    add(out.poe, tag(state.poe), (p) => p.port);
+    add(out.tunnels, tag(state.tunnels), (t) => [ctx(t), t.name, t.instance].join('|'));
+    add(out.routes, tag(state.routes), (r) =>
+      [ctx(r), r.code, r.prefix, r.gateway ?? '', r.interface ?? ''].join('|'),
+    );
+    add(out.bgp, tag(state.bgp), (b) => [ctx(b), b.neighbor].join('|'));
+    add(out.sla, tag(state.sla), (x) => [ctx(x), x.healthCheck, x.seq].join('|'));
+    add(out.sdwanServices, tag(state.sdwanServices), (x) => [ctx(x), x.id].join('|'));
     out.commands.push(...tag(state.commands));
   }
   out.units.sort((a, b) => a.member - b.member);
   return out;
+}
+
+/**
+ * Adds the items of one more file: an item already there is kept, with its file and lines,
+ * and only completed with what it lacks.
+ */
+function add<T extends object>(list: T[], items: T[], key: (item: T) => string): void {
+  const index = new Map(list.map((x) => [key(x), x]));
+  for (const item of items) {
+    const k = key(item);
+    const existing = index.get(k) as Record<string, unknown> | undefined;
+    if (!existing) {
+      list.push(item);
+      index.set(k, item);
+      continue;
+    }
+    for (const [name, value] of Object.entries(item)) {
+      if (value !== undefined && existing[name] === undefined) existing[name] = value;
+    }
+  }
 }

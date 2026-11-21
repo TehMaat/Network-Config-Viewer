@@ -234,5 +234,23 @@
       "show power inline",
       "show lldp neighbors detail"
     ]
+  },
+  "versioni/sw-hq-core-c9300-iosxe-17.12-stack_2025-06-30.txt": {
+    "kind": "config",
+    "vendor": "cisco",
+    "os": "ios-xe",
+    "version": "17.12",
+    "model": "C9300-48P",
+    "hostname": "SW-HQ-CORE",
+    "stack": 3
+  },
+  "versioni/fgt-br1-60f-fortios-7.0_2025-05-12.conf": {
+    "kind": "config",
+    "vendor": "fortinet",
+    "os": "fortios",
+    "version": "7.0.15",
+    "build": "0632",
+    "model": "FortiGate-60F",
+    "hostname": "FGT-BR1"
   }
 }

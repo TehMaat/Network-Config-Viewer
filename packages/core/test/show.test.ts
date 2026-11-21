@@ -265,6 +265,10 @@ describe('shows and devices', () => {
       noMac: false,
     });
     expect(port('TenGigabitEthernet2/1/2').channelFlags).toBe('D');
+    // The LLDP neighbours are in both files: once each.
+    expect(
+      port('TenGigabitEthernet1/1/1').neighbors.map((n) => `${n.protocol} ${n.device}`),
+    ).toEqual(['lldp FGT-HQ']);
     expect(port('Port-channel10').macs).toHaveLength(10);
     // The address of a MAC from the ARP table of the same switch.
     expect(

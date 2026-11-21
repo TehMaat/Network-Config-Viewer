@@ -1,0 +1,1308 @@
+Building configuration...
+
+Current configuration : 41877 bytes
+!
+! Last configuration change at 17:42:05 CEST Mon Jun 30 2025 by netadmin
+! NVRAM config last updated at 17:42:05 CEST Mon Jun 30 2025 by netadmin
+!
+version 17.12
+no service pad
+service timestamps debug datetime msec localtime show-timezone
+service timestamps log datetime msec localtime show-timezone
+service password-encryption
+service call-home
+platform punt-keepalive disable-kernel-core
+!
+hostname SW-HQ-CORE
+!
+boot-start-marker
+boot-end-marker
+!
+logging buffered 64000
+enable secret 9 $9$EsempioSWHQCOR$SinteticoNonRealeSWHQCOREenableEsempioSinte
+!
+username netadmin privilege 15 secret 9 $9$EsempioSWHQCOR$SinteticoNonRealeSWHQCOREnetadminEsempioSin
+aaa new-model
+!
+aaa group server tacacs+ TACACS-ESEMPIO
+ server name TACACS-01
+!
+aaa authentication login default group TACACS-ESEMPIO local
+aaa authorization exec default group TACACS-ESEMPIO local
+aaa accounting exec default start-stop group TACACS-ESEMPIO
+!
+aaa session-id common
+clock timezone CET 1 0
+clock summer-time CEST recurring last Sun Mar 2:00 last Sun Oct 3:00
+switch 1 provision c9300-48p
+switch 2 provision c9300-48p
+switch 3 provision c9300-48p
+!
+vrf definition Mgmt-vrf
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+ip routing
+!
+ip domain name esempio.example
+ip name-server 10.40.100.53 10.40.100.54
+login on-success log
+!
+crypto pki trustpoint TP-self-signed-2718281828
+ enrollment selfsigned
+ subject-name cn=IOS-Self-Signed-Certificate-2718281828
+ revocation-check none
+ rsakeypair TP-self-signed-2718281828
+!
+crypto pki certificate chain TP-self-signed-2718281828
+ certificate self-signed 01
+  4553454D 50494F20 53494E54 45544943 4F202D20 4E4F4E20 5245414C 45202D20
+  63657274 69666963 61746F20 66696E74 6F203933 3030202D 20455345 4D50494F
+  2053494E 54455449 434F202D 204E4F4E 20524541 4C45202D 20636572 74696669
+  6361746F 2066696E 746F2039 33303020 2D204553 454D5049 4F205349 4E544554
+  49434F20 2D204E4F 4E205245 414C4520 2D206365 72746966 69636174 6F206669
+  6E746F20 39333030 202D2045 53454D50 494F2053 494E5445 5449434F 202D204E
+  4F4E2052 45414C45 202D2063 65727469 66696361 746F2066 696E746F 20393330
+  30202D20 4553454D 50494F20 53494E54 45544943 4F202D20 4E4F4E20 5245414C
+  45202D20 63657274 69666963 61746F20 66696E74 6F203933 3030202D 20455345
+  4D50494F 2053494E 54455449 434F202D 204E4F4E 20524541 4C45202D 20636572
+  74696669 6361746F 2066696E 746F2039 33303020 2D204553 454D5049 4F205349
+  4E544554 49434F20 2D204E4F 4E205245 414C4520 2D206365 72746966 69636174
+  6F206669 6E746F20 39333030 202D2045 53454D50 494F2053 494E5445 5449434F
+  202D204E 4F4E2052 45414C45 202D2063 65727469 66696361 746F2066 696E746F
+  20393330 30202D20 4553454D 50494F20 53494E54 45544943 4F202D20 4E4F4E20
+  5245414C 45202D20 63657274 69666963 61746F20 66696E74 6F203933 3030202D
+  20455345 4D50494F 2053494E 54455449 434F202D 204E4F4E 20524541 4C45202D
+  20636572 74696669 6361746F 2066696E 746F2039 33303020 2D204553 454D5049
+  	quit
+!
+license boot level network-advantage addon dna-advantage
+memory free low-watermark processor 134320
+diagnostic bootup level minimal
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+spanning-tree vlan 10,20,50,60,99,100 priority 4096
+!
+redundancy
+ mode sso
+crypto engine compliance shield disable
+!
+vlan 10
+ name DATI
+!
+vlan 20
+ name VOCE
+!
+vlan 50
+ name OSPITI
+!
+vlan 60
+ name AP
+!
+vlan 70
+ name WIFI-OSPITI
+!
+vlan 99
+ name GESTIONE
+!
+vlan 100
+ name SERVER
+!
+vlan 900
+ name TRANSITO-FGT
+!
+vlan 999
+ name PARCHEGGIO
+!
+lldp run
+!
+object-group network OG-DC
+ description Servizi del datacenter
+ host 10.40.100.53
+ 10.40.100.0 255.255.255.0
+!
+object-group network OG-RETI-INTERNE
+ description Reti interne di sede e filiali
+ 10.10.0.0 255.255.0.0
+ 10.20.0.0 255.252.0.0
+ group-object OG-DC
+!
+object-group service OG-SERVIZI-WEB
+ tcp eq www
+ tcp eq 443
+ udp eq 443
+!
+interface Port-channel1
+ description FGT-HQ-LAG-CORE
+ switchport trunk allowed vlan 10,20,50,60,99,100,900
+ switchport mode trunk
+!
+interface Port-channel10
+ description SW-HQ-ACC1
+ switchport trunk allowed vlan 10,20,50,60,70,99
+ switchport mode trunk
+!
+interface Port-channel11
+ description SW-HQ-ACC2
+ switchport trunk allowed vlan 10,20,60,70,99
+ switchport mode trunk
+!
+interface GigabitEthernet0/0
+ vrf forwarding Mgmt-vrf
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet1/0/1
+ description SRV-101
+ switchport access vlan 100
+ switchport mode access
+ ip access-group ACL-SERVER-IN in
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/2
+ description SRV-102
+ switchport access vlan 100
+ switchport mode access
+ ip access-group ACL-SERVER-IN in
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/3
+ description SRV-103
+ switchport access vlan 100
+ switchport mode access
+ ip access-group ACL-SERVER-IN in
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/4
+ description SRV-104
+ switchport access vlan 100
+ switchport mode access
+ ip access-group ACL-SERVER-IN in
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/5
+ description SRV-105
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/6
+ description SRV-106
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/7
+ description SRV-107
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/8
+ description SRV-108
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/9
+ description SRV-109
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/10
+ description SRV-110
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/11
+ description SRV-111
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/12
+ description SRV-112
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/13
+ description SRV-113
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/14
+ description SRV-114
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/15
+ description SRV-115
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/16
+ description SRV-116
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/17
+ description SRV-117
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/18
+ description SRV-118
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/19
+ description SRV-119
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/20
+ description SRV-120
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/21
+ description SRV-121
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/22
+ description SRV-122
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/23
+ description SRV-123
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/24
+ description SRV-124
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/25
+ description PDL-025
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/26
+ description PDL-026
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/27
+ description PDL-027
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/28
+ description PDL-028
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/29
+ description PDL-029
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/30
+ description PDL-030
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/31
+ description PDL-031
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/32
+ description PDL-032
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/33
+ description RISERVA
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/34
+ description RISERVA
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/35
+ description RISERVA
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/36
+ description RISERVA
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/37
+ description PDL-037
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/38
+ description PDL-038
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/39
+ description PDL-039
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/40
+ description PDL-040
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/41
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/42
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/43
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/44
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/45
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/46
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/47
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/48
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface TenGigabitEthernet1/1/1
+ description FGT-HQ-x1
+ switchport trunk allowed vlan 10,20,50,60,99,100,900
+ switchport mode trunk
+ channel-group 1 mode active
+!
+interface TenGigabitEthernet1/1/2
+ description SW-HQ-ACC1-Te1/1/1
+ switchport trunk allowed vlan 10,20,50,60,70,99
+ switchport mode trunk
+ channel-group 10 mode active
+!
+interface TenGigabitEthernet1/1/3
+!
+interface TenGigabitEthernet1/1/4
+!
+interface TenGigabitEthernet1/1/5
+!
+interface TenGigabitEthernet1/1/6
+!
+interface TenGigabitEthernet1/1/7
+!
+interface TenGigabitEthernet1/1/8
+!
+interface GigabitEthernet2/0/1
+ description SRV-201
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/2
+ description SRV-202
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/3
+ description SRV-203
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/4
+ description SRV-204
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/5
+ description SRV-205
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/6
+ description SRV-206
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/7
+ description SRV-207
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/8
+ description SRV-208
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/9
+ description SRV-209
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/10
+ description SRV-210
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/11
+ description SRV-211
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/12
+ description SRV-212
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/13
+ description SRV-213
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/14
+ description SRV-214
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/15
+ description SRV-215
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/16
+ description SRV-216
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/17
+ description SRV-217
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/18
+ description SRV-218
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/19
+ description SRV-219
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/20
+ description SRV-220
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/21
+ description SRV-221
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/22
+ description SRV-222
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/23
+ description SRV-223
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/24
+ description SRV-224
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet2/0/25
+ description PDL-073
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/26
+ description PDL-074
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/27
+ description PDL-075
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/28
+ description PDL-076
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/29
+ description PDL-077
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/30
+ description PDL-078
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/31
+ description PDL-079
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/32
+ description PDL-080
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/33
+ description PDL-081
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/34
+ description PDL-082
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/35
+ description PDL-083
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/36
+ description PDL-084
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/37
+ description PDL-085
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/38
+ description PDL-086
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/39
+ description PDL-087
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/40
+ description PDL-088
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/41
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/42
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/43
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/44
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/45
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/46
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/47
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet2/0/48
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface TenGigabitEthernet2/1/1
+ description FGT-HQ-x2
+ switchport trunk allowed vlan 10,20,50,60,99,100,900
+ switchport mode trunk
+ channel-group 1 mode active
+!
+interface TenGigabitEthernet2/1/2
+ description SW-HQ-ACC1-Te2/1/1
+ switchport trunk allowed vlan 10,20,50,60,70,99
+ switchport mode trunk
+ channel-group 10 mode active
+!
+interface TenGigabitEthernet2/1/3
+!
+interface TenGigabitEthernet2/1/4
+!
+interface TenGigabitEthernet2/1/5
+!
+interface TenGigabitEthernet2/1/6
+!
+interface TenGigabitEthernet2/1/7
+!
+interface TenGigabitEthernet2/1/8
+!
+interface GigabitEthernet3/0/1
+ description SRV-301
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/2
+ description SRV-302
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/3
+ description SRV-303
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/4
+ description SRV-304
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/5
+ description SRV-305
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/6
+ description SRV-306
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/7
+ description SRV-307
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/8
+ description SRV-308
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/9
+ description SRV-309
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/10
+ description SRV-310
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/11
+ description SRV-311
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/12
+ description SRV-312
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/13
+ description SRV-313
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/14
+ description SRV-314
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/15
+ description SRV-315
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/16
+ description SRV-316
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/17
+ description SRV-317
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/18
+ description SRV-318
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/19
+ description SRV-319
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/20
+ description SRV-320
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/21
+ description SRV-321
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/22
+ description SRV-322
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/23
+ description SRV-323
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/24
+ description SRV-324
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+!
+interface GigabitEthernet3/0/25
+ description PDL-121
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/26
+ description PDL-122
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/27
+ description PDL-123
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/28
+ description PDL-124
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/29
+ description PDL-125
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/30
+ description PDL-126
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/31
+ description PDL-127
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/32
+ description PDL-128
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/33
+ description PDL-129
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/34
+ description PDL-130
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/35
+ description PDL-131
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/36
+ description PDL-132
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/37
+ description PDL-133
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/38
+ description PDL-134
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/39
+ description PDL-135
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/40
+ description PDL-136
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/41
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/42
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/43
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/44
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/45
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/46
+ description LIBERA
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet3/0/47
+ description SW-HQ-ACC2-Gi1/1/1
+ switchport trunk allowed vlan 10,20,60,70,99
+ switchport mode trunk
+ channel-group 11 mode active
+!
+interface GigabitEthernet3/0/48
+ description SW-HQ-ACC2-Gi1/1/2
+ switchport trunk allowed vlan 10,20,60,70,99
+ switchport mode trunk
+ channel-group 11 mode active
+!
+interface TenGigabitEthernet3/1/1
+!
+interface TenGigabitEthernet3/1/2
+!
+interface TenGigabitEthernet3/1/3
+!
+interface TenGigabitEthernet3/1/4
+!
+interface TenGigabitEthernet3/1/5
+!
+interface TenGigabitEthernet3/1/6
+!
+interface TenGigabitEthernet3/1/7
+!
+interface TenGigabitEthernet3/1/8
+!
+interface AppGigabitEthernet1/0/1
+!
+interface AppGigabitEthernet2/0/1
+!
+interface AppGigabitEthernet3/0/1
+!
+interface Loopback0
+ description ROUTER-ID
+ ip address 10.10.255.2 255.255.255.255
+ ip ospf 1 area 0
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan60
+ description AP
+ ip address 10.10.60.1 255.255.255.0
+ ip helper-address 10.40.100.67
+!
+interface Vlan70
+ description WIFI-OSPITI
+ ip address 10.10.70.1 255.255.255.0
+ ip helper-address 10.40.100.67
+ ip access-group ACL-OSPITI-IN in
+ ip policy route-map PBR-OSPITI
+!
+interface Vlan99
+ description GESTIONE
+ ip address 10.10.99.2 255.255.255.0
+!
+interface Vlan900
+ description TRANSITO-FGT-HQ
+ ip address 10.10.254.2 255.255.255.248
+ ip ospf cost 10
+!
+router ospf 1
+ router-id 10.10.255.2
+ passive-interface default
+ no passive-interface Vlan900
+ network 10.10.60.0 0.0.0.255 area 0
+ network 10.10.70.0 0.0.0.255 area 0
+ network 10.10.254.0 0.0.0.7 area 0
+ redistribute static subnets route-map RM-STATICHE-OSPF
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 10.10.254.1 250 name DEFAULT-RISERVA
+ip route 10.99.0.0 255.255.0.0 Null0 name LABORATORIO-SCARTATO
+!
+ip access-list extended ACL-OSPITI-IN
+ 10 permit udp 10.10.70.0 0.0.0.255 host 10.40.100.53 eq domain
+ 20 deny   ip 10.10.70.0 0.0.0.255 object-group OG-RETI-INTERNE log
+ 30 permit object-group OG-SERVIZI-WEB 10.10.70.0 0.0.0.255 any
+ 40 deny   ip any any log
+ip access-list extended ACL-PBR-OSPITI
+ 10 permit ip 10.10.70.0 0.0.0.255 any
+ip access-list extended ACL-SERVER-IN
+ 10 permit tcp 10.10.100.0 0.0.0.255 eq 443 10.10.0.0 0.0.255.255
+ 20 permit tcp 10.10.100.0 0.0.0.255 eq 445 10.10.0.0 0.0.255.255
+ 30 permit udp 10.10.100.0 0.0.0.255 host 10.40.100.53 eq domain
+ 40 deny   ip any any log
+!
+ip prefix-list PL-STATICHE-OSPF seq 10 permit 10.99.0.0/16
+!
+route-map PBR-OSPITI permit 10
+ match ip address ACL-PBR-OSPITI
+ set ip next-hop 10.10.254.1
+!
+route-map RM-STATICHE-OSPF permit 10
+ match ip address prefix-list PL-STATICHE-OSPF
+!
+banner exec ^C
+SW-HQ-CORE - centro stella sede (stack di 3 C9300-48P)
+^C
+ip ssh version 2
+ip ssh source-interface Vlan99
+!
+ip access-list standard MGMT-ACCESS
+ 10 permit 10.10.99.0 0.0.0.255
+ 20 permit 10.10.99.0 0.0.0.255
+ 30 deny   any log
+!
+logging trap informational
+logging source-interface Vlan99
+logging host 10.40.100.30
+!
+snmp-server community ESEMPIO-RO RO MGMT-ACCESS
+snmp-server location Sede - CED piano terra - rack R1
+snmp-server contact noc@esempio.example
+snmp-server enable traps snmp linkdown linkup
+snmp-server host 10.40.100.20 version 2c ESEMPIO-RO
+tacacs server TACACS-01
+ address ipv4 10.40.100.40
+ key 7 08045F4B04090C18210202102F3F2D2B3C
+!
+banner motd ^C
+*******************************************************************
+*  Accesso consentito solo al personale autorizzato.              *
+*  Ogni attivita' viene registrata.                                *
+*******************************************************************
+^C
+!
+line con 0
+ exec-timeout 15 0
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ access-class MGMT-ACCESS in
+ exec-timeout 15 0
+ transport input ssh
+line vty 5 15
+ access-class MGMT-ACCESS in
+ exec-timeout 15 0
+ transport input ssh
+!
+ntp source Vlan99
+ntp server 10.40.100.53
+ntp server 10.40.100.54
+!
+!
+end
+

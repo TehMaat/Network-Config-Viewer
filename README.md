@@ -1,18 +1,23 @@
 # Network Config Viewer
 
-Strumento per vedere l'infrastruttura di rete di un cliente partendo dai backup di configurazione degli apparati. Gira tutto sul tuo PC: le config vengono lette nel browser e non vengono mai inviate da nessuna parte.
+Strumento per vedere l'infrastruttura di rete di un cliente partendo dai backup di configurazione degli apparati. Gira tutto sul tuo PC: le config vengono lette nel browser, conservate nell'archivio dell'app sul PC e non vengono mai inviate altrove.
 
 ![Le policy di un FortiGate con VDOM multiple: ricerca di un IP, che trova le regole tramite subnet, gruppi e VIP](docs/img/app-fortigate.png)
 
 ## Stato del progetto
 
-Versione 0.0.1, con la fase 0 della roadmap e buona parte della fase 1: trascini un backup FortiGate o Cisco e l'app lo legge e lo mostra in forma grafica, apparato per apparato, sempre collegato alla config originale, identica al file. Se aggiungi gli output dei comandi show, le viste mostrano anche lo stato reale.
+Versione 0.0.1, con la fase 0 della roadmap e buona parte della fase 1: trascini un backup FortiGate o Cisco e l'app lo legge e lo mostra in forma grafica, apparato per apparato, sempre collegato alla config originale, identica al file. Se aggiungi gli output dei comandi show, le viste mostrano anche lo stato reale. I file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato.
 
-Della fase 1 mancano ancora l'archivio dei clienti sul PC e l'export Excel. Le fasi successive (mappa dell'infrastruttura, analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
+Della fase 1 manca ancora l'export Excel. Le fasi successive (mappa dell'infrastruttura, analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
 
 ## Cosa fa oggi
 
 - **Carica più file insieme**, anche dentro archivi zip, tar, tar.gz e gz, anche uno dentro l'altro. Si può trascinare anche una cartella intera.
+- **Conserva i file di ogni cliente** nell'archivio dell'app, sul PC: crei un cliente e ci carichi config, show e versioni precedenti, anche in più volte. L'app li ritrova sempre, da qualsiasi browser, anche dopo averlo pulito o dopo aver aggiornato l'app, e li tiene identici all'originale.
+  - Raggruppa i file per apparato: la config attuale, le versioni precedenti e gli show. L'attuale è la più recente, per la data scritta nella config, nel nome del file o del file stesso; se serve, si sceglie a mano.
+  - Le correzioni a mano restano salvate con il cliente.
+  - Un cliente si esporta in un file zip, come copia di sicurezza o per passarlo a un collega, e si reimporta. Per provare l'app c'è un cliente di esempio da importare: [`samples/cliente-esempio.zip`](samples/cliente-esempio.zip).
+  - Senza un cliente aperto i file restano solo nella scheda del browser: va bene per un'occhiata veloce.
 - **Riconosce** marca, sistema operativo, versione, modello, hostname, stack e VDOM, e per ogni dato mostra la riga da cui viene. Se sbaglia, si corregge a mano.
   - FortiGate (FortiOS) e FortiSwitch, Cisco IOS e IOS-XE, Cisco Small Business. Cisco NX-OS e ASA vengono riconosciuti, ma non ancora letti.
   - Output dei comandi show, con o senza prompt.
@@ -50,14 +55,21 @@ La prima volta Docker scarica il necessario e costruisce l'immagine: serve inter
 
 | Per… | Comando |
 |---|---|
-| aggiornare | `git pull`, poi `docker compose up -d --build` |
+| aggiornare | `git pull`, poi `docker compose up -d --build` (l'archivio dei clienti resta) |
 | fermare | `docker compose down` |
 | usare un'altra porta | `NCV_PORT=9090 docker compose up -d` (in PowerShell: `$env:NCV_PORT=9090; docker compose up -d`) |
 
+### L'archivio dei clienti
+
+- I clienti stanno nel volume Docker `ncv-data`, sul PC: restano quando fermi, riavvii o aggiorni l'app.
+- **Non usare mai `docker compose down -v`**: `-v` cancella il volume e con lui tutti i clienti. Lo stesso succede ripristinando Docker Desktop ai valori di fabbrica o cancellandone i dati.
+- Su Windows e macOS il volume sta dentro Docker e non si apre come una cartella normale. Per avere i file a portata di mano, e come copia di sicurezza, esporta il cliente dall'app: menu del cliente, *Esporta in un file zip*.
+
 ## Riservatezza
 
-- I file vengono letti ed elaborati nel browser: non arrivano a nessun server, nemmeno al container, che contiene solo un web server con i file dell'app.
+- I file vengono letti ed elaborati nel browser. Quando li salvi in un cliente vanno al container, sul tuo PC, che li conserva nel suo volume così come sono: non arrivano a nessun altro server.
 - L'app risponde solo al tuo PC (`127.0.0.1`): gli altri computer della rete non la raggiungono.
+- Il server dell'archivio accetta solo richieste indirizzate a `localhost` o `127.0.0.1` e modifiche che arrivano dall'app: una pagina di un altro sito aperta nel browser non può leggere né cambiare l'archivio. Gira senza privilegi di amministratore, con il filesystem in sola lettura tranne il volume dei dati, e sceglie lui i nomi dei file sul disco.
 - Il browser riceve una regola di sicurezza (Content Security Policy) che blocca qualsiasi collegamento ad altri siti. I test automatici lo verificano.
 - Nessuna telemetria, nessun font o script scaricato da fuori.
 - Nella repo, nei test, nella documentazione e negli screenshot ci sono solo dati inventati: vedi [`samples/`](samples/README.md).
@@ -69,27 +81,29 @@ Serve Node.js 22.12 o successivo (i test automatici usano la versione 24).
 | Comando | Cosa fa |
 |---|---|
 | `npm install` | Installa le dipendenze |
-| `npm run dev` | Avvia l'app in sviluppo su http://localhost:5173 |
+| `npm run dev` | Avvia l'app in sviluppo su http://localhost:5173, senza l'archivio dei clienti |
+| `npm start` | Avvia il server dell'app sulla build, su http://localhost:8080, con l'archivio in `packages/server/data` |
 | `npm test` | Test unitari (Vitest) |
 | `npm run lint`, `npm run typecheck`, `npm run format:check` | Controlli del codice |
-| `npm run build` | Costruisce l'app in `packages/web/dist` |
-| `npm run test:e2e` | Test nel browser (Playwright) sulla build, servita con le stesse regole di sicurezza del container. Con `NCV_BASE_URL=http://127.0.0.1:8080` li esegue sul container |
+| `npm run build` | Costruisce l'app in `packages/web/dist` e il server in `packages/server/dist` |
+| `npm run test:e2e` | Test nel browser (Playwright) sul server dell'app, con un archivio vuoto in una cartella temporanea (prima `npm run build`). Con `NCV_BASE_URL=http://127.0.0.1:8080` li esegue sul container; con `NCV_ALL_BROWSERS=1` anche su Firefox e WebKit |
 
-La prima volta, per i test nel browser: `npx playwright install chromium`.
+La prima volta, per i test nel browser: `npx playwright install chromium`, e con `NCV_ALL_BROWSERS=1` anche `firefox webkit`.
 
 Struttura del codice:
 - `packages/core`: lettura dei file e degli archivi, riconoscimento, parser, driver di marca, modello neutro e funzioni di ricerca sul modello. TypeScript senza dipendenze dal browser, così potrà girare anche sul server.
-- `packages/web`: interfaccia React con Mantine, CodeMirror, TanStack Table e i18next. Le viste degli apparati sono in `packages/web/src/views`, le traduzioni in `packages/web/src/i18n`.
-- `samples`: config di esempio sintetiche, con il riconoscimento atteso in `expected.json` e il riassunto atteso del modello in `expected-models.json`.
-- `docker`: configurazione di nginx e delle regole di sicurezza; `Dockerfile` e `compose.yaml` sono nella radice.
+- `packages/web`: interfaccia React con Mantine, CodeMirror, TanStack Table e i18next. Le viste degli apparati sono in `packages/web/src/views`, i clienti e l'archivio in `packages/web/src/archive`, le traduzioni in `packages/web/src/i18n`.
+- `packages/server`: il server dell'app, con Fastify: serve l'app e conserva l'archivio dei clienti. Le regole di sicurezza inviate al browser sono in `packages/server/src/security-headers.json`, unica fonte anche per i test.
+- `samples`: config di esempio sintetiche, con il riconoscimento atteso in `expected.json`, il riassunto atteso del modello in `expected-models.json` e il cliente di esempio `cliente-esempio.zip`.
+- `Dockerfile` e `compose.yaml` sono nella radice.
 
-Gli screenshot in `docs/img/app-*.png`, in tema chiaro e in tema scuro (`-scuro`), si rigenerano con `NCV_SCREENSHOTS=1 npm run test:e2e -- screenshots`.
+Gli screenshot in `docs/img/app-*.png`, in tema chiaro e in tema scuro (`-scuro`), si rigenerano con `NCV_SCREENSHOTS=1 npm run test:e2e -- screenshots`, da soli: svuotano l'archivio del server di prova e importano il cliente di esempio.
 
 ## Come si lavora
 
 - Ogni proposta viene analizzata e diventa un'issue; il lavoro parte solo dopo l'okay. Le regole complete sono in [CLAUDE.md](CLAUDE.md).
 - Tutte le modifiche sono annotate nel [registro delle modifiche](CHANGELOG.md), con le versioni secondo il Semantic Versioning.
-- A ogni pull request GitHub Actions esegue lint, controllo dei tipi, test, build, immagine Docker e test nel browser sul container. Non si pubblica niente.
+- A ogni pull request GitHub Actions esegue lint, controllo dei tipi, test, build, immagine Docker e test nel browser sul container, con Chromium, Firefox e WebKit, compreso l'archivio che resta dopo il riavvio e l'aggiornamento del container. Non si pubblica niente.
 
 ## Licenza
 
