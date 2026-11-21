@@ -12,9 +12,21 @@ import type {
   TextEncodingName,
 } from '@ncv/core';
 
+/** A file to read; those of the archive keep their path and their id there. */
+export interface LoadInput {
+  name: string;
+  buffer: ArrayBuffer;
+  /** Where the file was when first loaded, for the files of the archive. */
+  path?: string[];
+  /** Id of the file in the archive of the client. */
+  archiveId?: string;
+  /** Date of the file on the user's computer, in milliseconds. */
+  lastModified?: number;
+}
+
 /** Messages from the page to the worker. */
 export type WorkerRequest =
-  | { type: 'load'; batch: number; files: { name: string; buffer: ArrayBuffer }[] }
+  | { type: 'load'; batch: number; files: LoadInput[] }
   | { type: 'structure'; id: string; family: SyntaxFamily; os?: OsId; hints: ModelHints }
   | { type: 'forget'; ids: string[] };
 
@@ -46,6 +58,10 @@ export interface TextFileMessage {
   lineCount: number;
   detection: Detection;
   structure: StructureData;
+  /** When the configuration was last changed, if written in it. */
+  configDate?: string;
+  archiveId?: string;
+  lastModified?: number;
 }
 
 export interface IssueMessage {
@@ -55,6 +71,7 @@ export interface IssueMessage {
   path: string[];
   size?: number;
   code: LoadIssueCode;
+  archiveId?: string;
 }
 
 /** Messages from the worker to the page. */

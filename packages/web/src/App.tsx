@@ -1,11 +1,13 @@
-import { AppShell, Center, Stack, Text } from '@mantine/core';
+import { AppShell, Button, Center, Group, Modal, Stack, Text } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import { useDisclosure } from '@mantine/hooks';
 import { IconUpload } from '@tabler/icons-react';
 import { DEFAULT_LIMITS, type ModelHints } from '@ncv/core';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useArchive } from './archive/useArchive';
 import { AppHeader } from './components/AppHeader';
+import { ClientBar, ClientDialogs, type ClientDialog } from './components/ClientBar';
 import { EmptyState } from './components/EmptyState';
 import { FileList } from './components/FileList';
 import { FileView } from './components/FileView';
@@ -13,7 +15,14 @@ import { normalizeDroppedPath } from './format';
 import { contentStore } from './state/content';
 import { deviceState, linkShows } from './state/devices';
 import { effectiveDetection, effectiveFamily } from './state/effective';
-import { filesReducer, initialFilesState, type Overrides, type TextEntry } from './state/files';
+import {
+  filesReducer,
+  initialFilesState,
+  type FileEntry,
+  type Overrides,
+  type TextEntry,
+} from './state/files';
+import { deviceGroups } from './state/groups';
 import { AnalyzerClient } from './worker/client';
 import type { WorkerMessage } from './worker/protocol';
 
@@ -25,81 +34,136 @@ export function App() {
   const [navOpened, { toggle: toggleNav, close: closeNav }] = useDisclosure(false);
   const client = useRef<AnalyzerClient | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const importInput = useRef<HTMLInputElement>(null);
+  // The files on the page, for the callbacks of the archive and of the worker.
+  const files = useRef<readonly FileEntry[]>([]);
+  useEffect(() => {
+    files.current = state.files;
+  }, [state.files]);
 
-  const handleMessage = useCallback((message: WorkerMessage) => {
-    switch (message.type) {
-      case 'text': {
-        contentStore.set(message.id, {
-          text: message.text,
-          bytes: new Uint8Array(message.bytes),
-          folds: message.structure.folds,
-          outline: message.structure.outline,
-          model: message.structure.model,
-          show: message.structure.show,
-        });
-        const entry: TextEntry = {
-          type: 'text',
-          id: message.id,
-          path: message.path,
-          name: message.name,
-          size: message.size,
-          encoding: message.encoding,
-          bom: message.bom,
-          eol: message.eol,
-          lineCount: message.lineCount,
-          detection: message.detection,
-          overrides: {},
-          family: message.structure.family,
-          diagnostics: message.structure.diagnostics,
-          structureVersion: 0,
-        };
-        dispatch({ type: 'added', entry });
-        break;
-      }
-      case 'issue':
-        dispatch({
-          type: 'added',
-          entry: {
-            type: 'issue',
+  /** Removes every file from the page; the archive of the client is not touched. */
+  const closeFiles = useCallback(() => {
+    client.current?.forget(files.current.map((f) => f.id));
+    files.current = [];
+    contentStore.clear();
+    dispatch({ type: 'clear' });
+  }, []);
+
+  const archive = useArchive({ dispatch, analyzer: client, files, closeFiles });
+  const { take, save } = archive;
+  const [dialog, setDialog] = useState<ClientDialog>(null);
+  const [confirmDelete, setConfirmDelete] = useState<TextEntry | null>(null);
+
+  /**
+   * Every correction can change the structure (syntax family, Small Business dialect) or the
+   * model (kind, system, version, model, hostname): the worker rebuilds both.
+   */
+  const restructure = useCallback((entry: TextEntry, overrides: Overrides) => {
+    const effective = effectiveDetection(entry.detection, overrides);
+    const family = effectiveFamily(effective);
+    const os = effective.os.value;
+    const hints: ModelHints = {
+      ...(effective.kind.value ? { kind: effective.kind.value } : {}),
+      ...(os && !effective.encrypted ? { os } : {}),
+      ...(effective.version.value ? { version: effective.version.value } : {}),
+      ...(effective.model.value ? { model: effective.model.value } : {}),
+      ...(effective.hostname.value ? { hostname: effective.hostname.value } : {}),
+    };
+    client.current?.restructure(entry.id, family, hints, os);
+  }, []);
+
+  const handleMessage = useCallback(
+    (message: WorkerMessage) => {
+      switch (message.type) {
+        case 'text': {
+          contentStore.set(message.id, {
+            text: message.text,
+            bytes: new Uint8Array(message.bytes),
+            folds: message.structure.folds,
+            outline: message.structure.outline,
+            model: message.structure.model,
+            show: message.structure.show,
+          });
+          // A file of the archive comes back with its corrections.
+          const record = take(message.archiveId);
+          const entry: TextEntry = {
+            type: 'text',
             id: message.id,
             path: message.path,
+            name: message.name,
             size: message.size,
-            code: message.code,
-          },
-        });
-        break;
-      case 'structure':
-        contentStore.update(message.id, {
-          folds: message.structure.folds,
-          outline: message.structure.outline,
-          model: message.structure.model,
-          show: message.structure.show,
-        });
-        dispatch({
-          type: 'structure',
-          id: message.id,
-          family: message.structure.family,
-          diagnostics: message.structure.diagnostics,
-        });
-        break;
-      case 'done':
-        dispatch({ type: 'batch-done', batch: message.batch });
-        break;
-      case 'error':
-        dispatch({
-          type: 'added',
-          entry: {
-            type: 'issue',
-            id: `error-${++localIssueCounter}`,
-            path: ['—'],
-            code: 'worker-error',
-            message: message.message,
-          },
-        });
-        if (message.batch !== undefined) dispatch({ type: 'batch-done', batch: message.batch });
-        break;
-    }
-  }, []);
+            encoding: message.encoding,
+            bom: message.bom,
+            eol: message.eol,
+            lineCount: message.lineCount,
+            detection: message.detection,
+            overrides: (record?.overrides as Overrides | undefined) ?? {},
+            family: message.structure.family,
+            diagnostics: message.structure.diagnostics,
+            structureVersion: 0,
+            ...(message.configDate ? { configDate: message.configDate } : {}),
+            ...(message.lastModified
+              ? { modifiedAt: new Date(message.lastModified).toISOString() }
+              : {}),
+            ...(record ? { archived: { fileId: record.id, addedAt: record.addedAt } } : {}),
+            ...(record?.pinnedAt ? { pinnedAt: record.pinnedAt } : {}),
+          };
+          files.current = [...files.current, entry];
+          dispatch({ type: 'added', entry });
+          if (record && Object.keys(record.overrides).length > 0) {
+            restructure(entry, entry.overrides);
+          }
+          // Just loaded: saved in the open client.
+          if (!record) void save(entry);
+          break;
+        }
+        case 'issue':
+          take(message.archiveId);
+          dispatch({
+            type: 'added',
+            entry: {
+              type: 'issue',
+              id: message.id,
+              path: message.path,
+              size: message.size,
+              code: message.code,
+            },
+          });
+          break;
+        case 'structure':
+          contentStore.update(message.id, {
+            folds: message.structure.folds,
+            outline: message.structure.outline,
+            model: message.structure.model,
+            show: message.structure.show,
+          });
+          dispatch({
+            type: 'structure',
+            id: message.id,
+            family: message.structure.family,
+            diagnostics: message.structure.diagnostics,
+          });
+          break;
+        case 'done':
+          dispatch({ type: 'batch-done', batch: message.batch });
+          break;
+        case 'error':
+          dispatch({
+            type: 'added',
+            entry: {
+              type: 'issue',
+              id: `error-${++localIssueCounter}`,
+              path: ['—'],
+              code: 'worker-error',
+              message: message.message,
+            },
+          });
+          if (message.batch !== undefined) dispatch({ type: 'batch-done', batch: message.batch });
+          break;
+      }
+    },
+    [restructure, save, take],
+  );
 
   useEffect(() => {
     const instance = new AnalyzerClient(handleMessage);
@@ -110,10 +174,10 @@ export function App() {
     };
   }, [handleMessage]);
 
-  const addFiles = useCallback(async (files: File[]) => {
-    if (files.length === 0 || !client.current) return;
-    const readable: { name: string; buffer: ArrayBuffer }[] = [];
-    for (const file of files) {
+  const addFiles = useCallback(async (picked: File[]) => {
+    if (picked.length === 0 || !client.current) return;
+    const readable: { name: string; buffer: ArrayBuffer; lastModified?: number }[] = [];
+    for (const file of picked) {
       const relative =
         (file as File & { path?: string }).path || file.webkitRelativePath || file.name;
       const name = normalizeDroppedPath(relative) || file.name;
@@ -130,7 +194,11 @@ export function App() {
         });
         continue;
       }
-      readable.push({ name, buffer: await file.arrayBuffer() });
+      readable.push({
+        name,
+        buffer: await file.arrayBuffer(),
+        ...(file.lastModified ? { lastModified: file.lastModified } : {}),
+      });
     }
     if (readable.length === 0) return;
     const batch = client.current.load(readable);
@@ -138,48 +206,48 @@ export function App() {
   }, []);
 
   const openPicker = () => fileInput.current?.click();
+  const openImport = () => importInput.current?.click();
 
   const select = (id: string) => {
     dispatch({ type: 'select', id });
     closeNav();
   };
 
-  const remove = (id: string) => {
+  const removeFromPage = (id: string) => {
     contentStore.delete(id);
     client.current?.forget([id]);
     dispatch({ type: 'remove', id });
   };
 
-  const clear = () => {
-    client.current?.forget(state.files.map((f) => f.id));
-    contentStore.clear();
-    dispatch({ type: 'clear' });
+  // A file of a client is deleted from its archive: the user confirms first.
+  const remove = (id: string) => {
+    const entry = state.files.find((f) => f.id === id);
+    if (entry?.type === 'text' && entry.archived && archive.state.current) {
+      setConfirmDelete(entry);
+    } else {
+      removeFromPage(id);
+    }
   };
 
   const override = (id: string, overrides: Overrides) => {
     const entry = state.files.find((f) => f.id === id);
     if (!entry || entry.type !== 'text') return;
     dispatch({ type: 'override', id, overrides });
-    const effective = effectiveDetection(entry.detection, overrides);
-    const family = effectiveFamily(effective);
-    const os = effective.os.value;
-    // Every correction can change the structure (syntax family, Small Business dialect) or
-    // the model (kind, system, version, model, hostname): the worker rebuilds both.
-    const hints: ModelHints = {
-      ...(effective.kind.value ? { kind: effective.kind.value } : {}),
-      ...(os && !effective.encrypted ? { os } : {}),
-      ...(effective.version.value ? { version: effective.version.value } : {}),
-      ...(effective.model.value ? { model: effective.model.value } : {}),
-      ...(effective.hostname.value ? { hostname: effective.hostname.value } : {}),
-    };
-    client.current?.restructure(id, family, hints, os);
+    restructure(entry, overrides);
+    archive.saveOverrides(entry, overrides);
   };
 
   const selected = state.files.find((f) => f.id === state.selectedId) ?? null;
   const hasFiles = state.files.length > 0 || state.pendingBatches.length > 0;
+  const clientOpen = archive.state.current !== null;
+  const showNav = hasFiles || clientOpen;
+  const unsavedCount = state.files.filter((f) => f.type === 'text' && !f.archived).length;
 
+  // Configurations grouped by device: only the current version of each gets the shows.
+  const groups = useMemo(() => deviceGroups(state.files), [state.files]);
+  const currentIds = useMemo(() => new Set(groups.map((g) => g.current.id)), [groups]);
   // Files of shows go with the device they describe: its views show the real state.
-  const links = useMemo(() => linkShows(state.files), [state.files]);
+  const links = useMemo(() => linkShows(state.files, currentIds), [state.files, currentIds]);
   const { linkedShows, selectedState } = useMemo(() => {
     const shows = state.selectedId ? links.showsOf.get(state.selectedId) : undefined;
     return { linkedShows: shows, selectedState: deviceState(shows) };
@@ -206,15 +274,27 @@ export function App() {
         hidden
         data-testid="file-input"
         onChange={(event) => {
-          const files = Array.from(event.currentTarget.files ?? []);
+          const picked = Array.from(event.currentTarget.files ?? []);
           event.currentTarget.value = '';
-          void addFiles(files);
+          void addFiles(picked);
+        }}
+      />
+      <input
+        ref={importInput}
+        type="file"
+        accept=".zip,application/zip"
+        hidden
+        data-testid="client-import-input"
+        onChange={(event) => {
+          const zip = event.currentTarget.files?.[0];
+          event.currentTarget.value = '';
+          if (zip) void archive.importZip(zip);
         }}
       />
       <AppShell
         header={{ height: 56 }}
         navbar={
-          hasFiles ? { width: 320, breakpoint: 'sm', collapsed: { mobile: !navOpened } } : undefined
+          showNav ? { width: 320, breakpoint: 'sm', collapsed: { mobile: !navOpened } } : undefined
         }
         padding={0}
       >
@@ -223,19 +303,31 @@ export function App() {
             navOpened={navOpened}
             onToggleNav={toggleNav}
             onAddFiles={openPicker}
-            hasFiles={hasFiles}
+            hasFiles={showNav}
           />
         </AppShell.Header>
-        {hasFiles && (
+        {showNav && (
           <AppShell.Navbar>
-            <FileList
-              files={state.files}
-              selectedId={state.selectedId}
-              processing={state.pendingBatches.length > 0}
-              onSelect={select}
-              onRemove={remove}
-              onClear={clear}
-            />
+            <Stack gap={0} h="100%">
+              <ClientBar
+                archive={archive}
+                unsavedCount={unsavedCount}
+                onDialog={setDialog}
+                onImport={openImport}
+              />
+              <FileList
+                files={state.files}
+                groups={groups}
+                deviceOf={links.deviceOf}
+                selectedId={state.selectedId}
+                processing={state.pendingBatches.length > 0}
+                clientOpen={clientOpen}
+                onSelect={select}
+                onRemove={remove}
+                onClear={closeFiles}
+                onPin={archive.pin}
+              />
+            </Stack>
           </AppShell.Navbar>
         )}
         <AppShell.Main>
@@ -253,21 +345,69 @@ export function App() {
               onGoToDone={() => setGoTo(null)}
             />
           ) : (
-            !hasFiles && <EmptyState onChoose={openPicker} />
+            !hasFiles && (
+              <EmptyState
+                onChoose={openPicker}
+                archive={archive}
+                onDialog={setDialog}
+                onImport={openImport}
+              />
+            )
           )}
         </AppShell.Main>
       </AppShell>
+      <ClientDialogs
+        archive={archive}
+        dialog={dialog}
+        unsavedCount={unsavedCount}
+        onClose={() => setDialog(null)}
+      />
+      <Modal
+        opened={confirmDelete !== null}
+        onClose={() => setConfirmDelete(null)}
+        title={t('files.deleteTitle')}
+      >
+        <Stack>
+          <Text size="sm">
+            {t('files.deleteText', {
+              name: confirmDelete?.name ?? '',
+              client: archive.state.current?.name ?? '',
+            })}
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setConfirmDelete(null)}>
+              {t('detection.cancel')}
+            </Button>
+            <Button
+              color="red"
+              data-testid="btn-file-delete-confirm"
+              onClick={() => {
+                const entry = confirmDelete;
+                setConfirmDelete(null);
+                if (!entry) return;
+                void archive.removeFile(entry).then((ok) => {
+                  if (ok) removeFromPage(entry.id);
+                });
+              }}
+            >
+              {t('files.deleteConfirm')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
       <Dropzone.FullScreen
         active
         multiple
-        onDrop={(files) => void addFiles(files)}
+        onDrop={(dropped) => void addFiles(dropped)}
         data-testid="dropzone"
       >
         <Center h="100%">
           <Stack align="center" gap="xs">
             <IconUpload size={48} />
             <Text size="xl" fw={600}>
-              {t('drop.overlay')}
+              {archive.state.current
+                ? t('drop.overlayClient', { name: archive.state.current.name })
+                : t('drop.overlay')}
             </Text>
           </Stack>
         </Center>

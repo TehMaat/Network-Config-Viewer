@@ -7,19 +7,13 @@ const rootPackage = JSON.parse(
 ) as { version: string };
 
 /**
- * The security headers of the Docker image (nginx), applied also to "vite preview":
- * the browser tests then check the same Content Security Policy used in production.
- * The file is not needed to build the app (and is not copied in the Docker build stage).
+ * The security headers of the server, from their single source, applied also to
+ * "vite preview": a quick look at the build follows the same Content Security Policy.
  */
 function securityHeaders(): Record<string, string> {
-  const file = new URL('../../docker/security-headers.conf', import.meta.url);
+  const file = new URL('../server/src/security-headers.json', import.meta.url);
   if (!existsSync(file)) return {};
-  const conf = readFileSync(file, 'utf8');
-  const headers: Record<string, string> = {};
-  for (const match of conf.matchAll(/^add_header\s+(\S+)\s+"([^"]*)"\s+always;/gm)) {
-    headers[match[1]!] = match[2]!;
-  }
-  return headers;
+  return JSON.parse(readFileSync(file, 'utf8')) as Record<string, string>;
 }
 
 export default defineConfig({

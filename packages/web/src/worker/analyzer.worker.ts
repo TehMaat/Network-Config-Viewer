@@ -3,6 +3,7 @@
 import {
   analyzeLines,
   buildModel,
+  configDate,
   loadFile,
   modelHints,
   readShowFile,
@@ -12,7 +13,7 @@ import {
   type OsId,
   type Structure,
 } from '@ncv/core';
-import type { StructureData, WorkerMessage, WorkerRequest } from './protocol';
+import type { LoadInput, StructureData, WorkerMessage, WorkerRequest } from './protocol';
 
 interface WorkerScope {
   postMessage(message: WorkerMessage, transfer?: Transferable[]): void;
@@ -52,7 +53,7 @@ function structureData(lines: string[], structure: Structure, hints: ModelHints)
   };
 }
 
-function load(batch: number, files: { name: string; buffer: ArrayBuffer }[]) {
+function load(batch: number, files: LoadInput[]) {
   for (const file of files) {
     try {
       loadFile(
@@ -65,12 +66,13 @@ function load(batch: number, files: { name: string; buffer: ArrayBuffer }[]) {
             texts.set(id, lines);
             // A standalone copy: the bytes may be a view into a larger archive buffer.
             const bytes = loaded.bytes.slice().buffer;
+            const date = configDate(lines);
             scope.postMessage(
               {
                 type: 'text',
                 batch,
                 id,
-                path: loaded.path,
+                path: file.path ?? loaded.path,
                 name: loaded.name,
                 size: loaded.bytes.length,
                 text: loaded.decoded.text,
@@ -81,12 +83,22 @@ function load(batch: number, files: { name: string; buffer: ArrayBuffer }[]) {
                 lineCount: analysis.lineCount,
                 detection: analysis.detection,
                 structure: structureData(lines, analysis, modelHints(analysis.detection)),
+                ...(date ? { configDate: date } : {}),
+                ...(file.archiveId ? { archiveId: file.archiveId } : {}),
+                ...(file.lastModified ? { lastModified: file.lastModified } : {}),
               },
               [bytes, analysis.folds.buffer],
             );
           },
           issue: (issue) => {
-            scope.postMessage({ type: 'issue', batch, id: nextId(), ...issue });
+            scope.postMessage({
+              type: 'issue',
+              batch,
+              id: nextId(),
+              ...issue,
+              ...(file.path ? { path: file.path } : {}),
+              ...(file.archiveId ? { archiveId: file.archiveId } : {}),
+            });
           },
         },
       );

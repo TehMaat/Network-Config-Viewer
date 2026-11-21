@@ -1,0 +1,17 @@
+{
+  "name": "@ncv/server",
+  "private": true,
+  "description": "Serve l'app e conserva sul PC l'archivio dei clienti, con i file identici all'originale.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/main.js",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fastify/static": "^10.1.12",
+    "fastify": "^5.12.8",
+    "fflate": "^0.8.3"
+  }
+}

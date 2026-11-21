@@ -1,4 +1,4 @@
-import { assignShows, mergeStates, type AssignReason, type DeviceState } from '@ncv/core';
+import { assignShows, hostKey, mergeStates, type AssignReason, type DeviceState } from '@ncv/core';
 import { contentStore } from './content';
 import { effectiveDetection } from './effective';
 import type { FileEntry, TextEntry } from './files';
@@ -17,11 +17,13 @@ export interface ShowLinks {
 
 /**
  * Which files of shows belong to which configuration: by hostname, serial number or file
- * name, or by the hostname corrected by hand on the file of shows.
+ * name, or by the hostname corrected by hand on the file of shows. With several versions of
+ * a device, only the current one (in `current`) gets the shows.
  */
-export function linkShows(files: readonly FileEntry[]): ShowLinks {
+export function linkShows(files: readonly FileEntry[], current?: ReadonlySet<string>): ShowLinks {
   const texts = files.filter((f): f is TextEntry => f.type === 'text');
   const devices = texts.flatMap((entry) => {
+    if (current && !current.has(entry.id) && isVersioned(entry, texts, current)) return [];
     const model = contentStore.get(entry.id)?.model;
     if (!model) return [];
     const hostname =
@@ -66,4 +68,20 @@ export function deviceState(shows: readonly LinkedShow[] | undefined): DeviceSta
     return state ? [{ file: entry.id, state }] : [];
   });
   return parts.length > 0 ? mergeStates(parts) : null;
+}
+
+/** A configuration with the same hostname as a current one: a previous version. */
+function isVersioned(
+  entry: TextEntry,
+  texts: readonly TextEntry[],
+  current: ReadonlySet<string>,
+): boolean {
+  const name = effectiveDetection(entry.detection, entry.overrides).hostname.value;
+  if (!name) return false;
+  const key = hostKey(name);
+  return texts.some((t) => {
+    if (!current.has(t.id)) return false;
+    const other = effectiveDetection(t.detection, t.overrides).hostname.value;
+    return other !== undefined && hostKey(other) === key;
+  });
 }

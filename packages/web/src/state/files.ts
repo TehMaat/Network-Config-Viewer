@@ -34,6 +34,16 @@ export interface TextEntry {
   diagnostics: SyntaxDiagnostic[];
   /** Incremented every time the structure (folds, outline) changes. */
   structureVersion: number;
+  /** When the configuration was last changed, if written in it. */
+  configDate?: string;
+  /** Date of the file on the user's computer, as an ISO string. */
+  modifiedAt?: string;
+  /** The file in the archive of the open client; missing while it is being saved. */
+  archived?: { fileId: string; addedAt: string };
+  /** Saving in the archive failed: the code of the error. */
+  saveError?: string;
+  /** When the user chose this file as the current configuration of its device. */
+  pinnedAt?: string;
 }
 
 export interface IssueEntry {
@@ -63,7 +73,10 @@ export type FilesAction =
   | { type: 'select'; id: string }
   | { type: 'remove'; id: string }
   | { type: 'clear' }
-  | { type: 'override'; id: string; overrides: Overrides };
+  | { type: 'override'; id: string; overrides: Overrides }
+  | { type: 'archived'; id: string; archived: { fileId: string; addedAt: string } }
+  | { type: 'save-failed'; id: string; code: string }
+  | { type: 'pin'; id: string; pinnedAt: string | undefined };
 
 export function filesReducer(state: FilesState, action: FilesAction): FilesState {
   switch (action.type) {
@@ -105,11 +118,29 @@ export function filesReducer(state: FilesState, action: FilesAction): FilesState
     case 'clear':
       return { ...state, files: [], selectedId: null };
     case 'override':
-      return {
-        ...state,
-        files: state.files.map((f) =>
-          f.id === action.id && f.type === 'text' ? { ...f, overrides: action.overrides } : f,
-        ),
-      };
+      return updateText(state, action.id, (f) => ({ ...f, overrides: action.overrides }));
+    case 'archived':
+      return updateText(state, action.id, (f) => {
+        const { saveError: _saveError, ...rest } = f;
+        return { ...rest, archived: action.archived };
+      });
+    case 'save-failed':
+      return updateText(state, action.id, (f) => ({ ...f, saveError: action.code }));
+    case 'pin':
+      return updateText(state, action.id, (f) => {
+        const { pinnedAt: _pinnedAt, ...rest } = f;
+        return action.pinnedAt ? { ...rest, pinnedAt: action.pinnedAt } : rest;
+      });
   }
+}
+
+function updateText(
+  state: FilesState,
+  id: string,
+  change: (entry: TextEntry) => TextEntry,
+): FilesState {
+  return {
+    ...state,
+    files: state.files.map((f) => (f.id === id && f.type === 'text' ? change(f) : f)),
+  };
 }

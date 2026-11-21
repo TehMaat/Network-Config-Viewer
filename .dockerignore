@@ -7,3 +7,4 @@ samples
 playwright-report
 test-results
 **/*.log
+**/data

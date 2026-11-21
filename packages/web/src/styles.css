@@ -338,3 +338,44 @@ body {
   stroke: #ffffff;
   stroke-width: 0.7;
 }
+
+/* Archive of the clients and files grouped by device (#10). */
+.ncv-client-bar {
+  border-bottom: 1px solid var(--app-shell-border-color);
+}
+
+.ncv-icon-space {
+  display: inline-block;
+  width: 14px;
+}
+
+.ncv-device-group + .ncv-device-group {
+  border-top: 1px solid var(--app-shell-border-color);
+}
+
+.ncv-device-header {
+  display: block;
+  width: 100%;
+  color: var(--mantine-color-dimmed);
+}
+
+.ncv-device-header:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.ncv-file-version {
+  padding-left: 12px;
+  opacity: 0.85;
+}
+
+.ncv-file-show {
+  padding-left: 12px;
+}
+
+.ncv-client-card {
+  transition: border-color 120ms ease;
+}
+
+.ncv-client-card:hover {
+  border-color: var(--mantine-primary-color-filled);
+}
