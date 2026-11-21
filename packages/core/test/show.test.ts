@@ -266,6 +266,12 @@ describe('shows and devices', () => {
     });
     expect(port('TenGigabitEthernet2/1/2').channelFlags).toBe('D');
     expect(port('Port-channel10').macs).toHaveLength(10);
+    // The address of a MAC from the ARP table of the same switch.
+    expect(
+      port('Port-channel10')
+        .macs.find((x) => x.mac === '00:00:5e:00:53:30')!
+        .arp.map((a) => a.ip),
+    ).toEqual(['10.10.99.11']);
     expect(port('TenGigabitEthernet1/1/2').neighbors[0]).toMatchObject({
       protocol: 'cdp',
       device: 'SW-HQ-ACC1',

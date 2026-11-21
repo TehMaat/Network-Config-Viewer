@@ -670,6 +670,14 @@ function LiveDetail({
                 })}
               </Text>
               <ShowSourceButton item={m} />
+              {m.arp.map((a) => (
+                <Group key={a.ip} gap={2} wrap="nowrap" data-testid="mac-ip">
+                  <Text size="sm" ff="monospace">
+                    {a.ip}
+                  </Text>
+                  <ShowSourceButton item={a} />
+                </Group>
+              ))}
             </Group>
           ))}
         </Stack>

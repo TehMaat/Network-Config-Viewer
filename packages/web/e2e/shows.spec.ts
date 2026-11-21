@@ -130,6 +130,8 @@ test('shows the real state of the ports and the MACs of every configured port (#
   await expect(page.getByTestId('port-macs')).toContainText('10 MAC');
   await page.getByTestId('btn-all-macs').click();
   await expect(page.getByTestId('btn-all-macs')).toHaveCount(0);
+  // The IP of a MAC, from the ARP table of the same switch.
+  await expect(page.getByTestId('mac-ip')).toContainText(['10.10.99.11']);
 
   // The source of a MAC is the line of the show.
   await page.getByTestId('port-macs').getByTestId('btn-show-source').first().click();

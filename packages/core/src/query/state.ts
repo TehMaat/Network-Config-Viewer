@@ -3,7 +3,15 @@
 
 import { normalizeInterfaceName } from '../model/names';
 import type { DeviceModel, Interface } from '../model/types';
-import type { DeviceState, MacEntry, MacType, Neighbor, PoeState, PortState } from '../show/types';
+import type {
+  ArpEntry,
+  DeviceState,
+  MacEntry,
+  MacType,
+  Neighbor,
+  PoeState,
+  PortState,
+} from '../show/types';
 
 /** A port with a configuration of its own: description, explicit mode, address or LAG. */
 export function isConfiguredPort(iface: Interface): boolean {
@@ -26,10 +34,15 @@ export function expectsMacs(iface: Interface): boolean {
   );
 }
 
+/** A MAC learned on a port, with its addresses in the ARP table of the same device. */
+export interface PortMac extends MacEntry {
+  arp: ArpEntry[];
+}
+
 export interface PortLive {
   status?: PortState;
   /** MACs learned on the port, with the sticky ones of the config marked as such. */
-  macs: MacEntry[];
+  macs: PortMac[];
   /** Member of a port-channel: the MACs are on the port-channel. */
   macsOn?: string;
   neighbors: Neighbor[];
@@ -54,9 +67,15 @@ export function portLive(iface: Interface, state: DeviceState | null | undefined
   const sticky = new Set(
     (iface.portSecurity?.macs ?? []).filter((m) => m.sticky).map((m) => m.mac),
   );
+  // The IP of a MAC comes from the ARP table of the same device, when it has one; matching
+  // MACs and IPs across devices is out of this phase (#6).
   live.macs = state.macs
     .filter((m) => same(m.port))
-    .map((m) => (sticky.has(m.mac) ? { ...m, type: 'sticky' as MacType } : m));
+    .map((m) => ({
+      ...m,
+      ...(sticky.has(m.mac) ? { type: 'sticky' as MacType } : {}),
+      arp: state.arp.filter((a) => a.mac === m.mac),
+    }));
   if (iface.lag) live.macsOn = iface.lag.group;
   live.neighbors = state.neighbors.filter((n) => same(n.local));
   const poe = state.poe.find((p) => same(p.port));

@@ -342,7 +342,7 @@ Disegno del frontale, con un riquadro per ogni membro dello stack:
 Con gli show, sempre nella fase 1:
 
 - una barra sulla porta per lo stato reale (attiva, non collegata, in errore) e le colonne dello stato e dei MAC nella tabella; per il FortiGate lo stato e la velocità da `get system interface physical`;
-- nel dettaglio della porta: stato, velocità e duplex, flag del port-channel, vicini CDP e LLDP, PoE e MAC con VLAN e tipo (quelli della port security sono segnati sticky). Sui trunk con più di 4 MAC si vede il numero e l'elenco si apre a richiesta; sui membri di un port-channel c'è il rimando al `Po`;
+- nel dettaglio della porta: stato, velocità e duplex, flag del port-channel, vicini CDP e LLDP, PoE e MAC con VLAN e tipo (quelli della port security sono segnati sticky) e con l'IP, se lo stesso switch ha la tabella ARP; l'abbinamento tra MAC e IP di apparati diversi resta fuori dalla fase 1. Sui trunk con più di 4 MAC si vede il numero e l'elenco si apre a richiesta; sui membri di un port-channel c'è il rimando al `Po`;
 - il segno per le porte configurate senza MAC vale per tutte le porte configurate e non spente, collegate o no. Riguarda solo porte fisiche e port-channel: SVI, loopback e porte L3 non imparano MAC e non hanno il segno;
 - senza `show mac address-table` ogni porta configurata dice "tabella MAC non caricata", e il riepilogo ha un solo avviso per tutto lo switch.
 
