@@ -1,6 +1,6 @@
 # Studio preliminare: Network Config Viewer
 
-> **Stato:** novembre 2026. La [fase 0](#fase-0-fondamenta-realizzata) è realizzata: l'app si avvia in locale con Docker, riconosce le config FortiGate e Cisco e le mostra navigabili. La [fase 1](#fase-1-lettura-dei-singoli-apparati-fortigate-cisco-iosios-xe-e-cisco-small-business-mvp) è in corso: i driver FortiOS, Cisco IOS/IOS-XE e Small Business leggono le config e l'app mostra le viste di ogni apparato (vedi il [README](../README.md)); gli output dei comandi show vanno con il loro apparato e aggiungono lo stato reale alle viste; i file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato. Manca l'export Excel. Il resto del documento raccoglie le decisioni prese e il piano delle fasi successive. Il [mockup](mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scarica il file e aprilo nel browser.
+> **Stato:** novembre 2026. La [fase 0](#fase-0-fondamenta-realizzata) è realizzata: l'app si avvia in locale con Docker, riconosce le config FortiGate e Cisco e le mostra navigabili. Anche la [fase 1](#fase-1-lettura-dei-singoli-apparati-fortigate-cisco-iosios-xe-e-cisco-small-business-mvp-realizzata) è realizzata: i driver FortiOS, Cisco IOS/IOS-XE e Small Business leggono le config e l'app mostra le viste di ogni apparato (vedi il [README](../README.md)); gli output dei comandi show vanno con il loro apparato e aggiungono lo stato reale alle viste; i file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato; ogni apparato e ogni tabella si esportano in Excel. Il resto del documento raccoglie le decisioni prese e il piano delle fasi successive. Il [mockup](mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scarica il file e aprilo nel browser.
 
 ## 1. In breve
 
@@ -49,6 +49,7 @@
 | Collegamenti tra apparati | Verificati con LLDP/CDP, dedotti da descrizioni e indirizzi, oppure inseriti a mano; le differenze tra le fonti vengono segnalate |
 | Indirizzi MAC sulle porte | Ogni porta configurata degli switch riporta i MAC dei dispositivi collegati, con la VLAN, letti dalla tabella MAC dello switch (`show mac address-table`), non dalla config. Lo strumento li mostra e segnala le porte senza MAC e lo show mancante (vedi [5.5](#55-pannello-porte-dello-switch)) |
 | Show e apparati | Ogni file di show va con il suo apparato: per hostname (dal prompt o dall'output), poi per numero di serie, poi per nome del file; se serve, si corregge a mano l'hostname del file di show. Un log di sessione si divide per prompt, anche dentro le VDOM del FortiGate, oppure dalla forma degli output. Lo stato reale si mostra accanto alla config, mai al suo posto, e ogni dato rimanda alla sua riga dello show |
+| Export Excel | Nel browser, con ExcelJS caricato solo al primo export. Per ogni apparato un file con un foglio per vista, con le stesse colonne delle tabelle dell'app: porte, VLAN, ACL, routing e MAC degli switch; interfacce e VLAN del FortiGate, e policy, oggetti, routing, VPN e SD-WAN di ogni VDOM; con gli show anche lo stato reale. Su ogni tabella un pulsante la esporta così come è filtrata e ordinata. I valori restano valori: nessun testo diventa una formula |
 | VPN | Anche ADVPN: ruoli, controlli e scorciatoie tra filiali |
 | Migrazioni switch | Pianificate sul rack con i patch panel, per gestire i cablaggi da remoto; arrivano dopo la visualizzazione |
 | Prese e patch panel | Oggi i clienti non li documentano: si parte da un rilievo in sede guidato dallo strumento, che poi resta come documentazione |
@@ -63,7 +64,7 @@
 | Documentazione e screenshot | Solo con dati sintetici, generati dalle config di esempio in `samples/` |
 | Licenza | Open source, MIT |
 | Codice | Scritto da Claude: lo stack si sceglie per semplicità d'uso, non per familiarità |
-| Strumenti | TypeScript, npm workspaces, React + Vite, Mantine, i18next, CodeMirror 6, TanStack Table e TanStack Virtual, fflate, Vitest, Playwright (vedi [capitolo 8](#8-scelte-tecniche)) |
+| Strumenti | TypeScript, npm workspaces, React + Vite, Mantine, i18next, CodeMirror 6, TanStack Table e TanStack Virtual, fflate, ExcelJS, Fastify, Vitest, Playwright (vedi [capitolo 8](#8-scelte-tecniche)) |
 | Test automatici | Su GitHub Actions a ogni pull request: lint, tipi, test, build, immagine Docker e test nel browser sul container, su Chromium, Firefox e WebKit, anche dopo il riavvio del container. Non si pubblica niente |
 | Metodo di lavoro | Ogni proposta viene analizzata e diventa un'issue; si lavora solo dopo l'okay. Registro delle modifiche in `CHANGELOG.md`, documentazione sempre aggiornata, Semantic Versioning. Regole complete in [`CLAUDE.md`](../CLAUDE.md) |
 
@@ -510,7 +511,7 @@ Il punto forte di Python (librerie SSH come Netmiko) serve solo per la lettura l
 | Elaborazione | Web Worker, così l'interfaccia non si blocca sui file grandi |
 | Archivi zip, tar, tar.gz e gz | fflate per zip e gzip, lettore tar scritto nel progetto; archivi annidati, con limiti di profondità e dimensione |
 | Clienti e archivio | Archivio locale su disco, in un volume Docker, gestito dal server dell'app in `packages/server`: Node.js con Fastify e @fastify/static (MIT), zip con fflate. La lettura delle config resta nel browser |
-| Export | Excel (ExcelJS), report HTML stampabile in PDF |
+| Export | Excel con ExcelJS (MIT), caricato solo al primo export; più avanti il report HTML stampabile in PDF |
 | Test | Vitest (parser, logica e server), Playwright (interfaccia, su Chromium, Firefox e WebKit) |
 | Struttura del codice | Monorepo: `core` (modello, parser, driver di marca, funzioni di ricerca sul modello, poi correlazione, generatori e analisi, senza dipendenze dal browser), `web` (interfaccia), `server` (serve l'app e conserva l'archivio dei clienti) |
 | Avvio | Docker: build in tre passaggi (build dell'app e del server, poi le sole dipendenze del server, poi il server Node.js senza privilegi) e `compose.yaml` con la porta aperta solo su `127.0.0.1`, il volume dei dati e il filesystem in sola lettura |
@@ -564,8 +565,8 @@ Issue [#4](https://github.com/TehMaat/Network-Config-Viewer/issues/4).
 - Config di esempio sintetiche: FortiOS 7.0–8.0 (anche con VDOM multiple), Catalyst 2960, 3850, 9200 e 9300 (anche in stack), Cisco Small Business SG350, CBS350 e Catalyst 1300.
 - **Risultato**: avvii l'app con Docker, trascini un backup FortiGate o Cisco e l'app lo riconosce e mostra la config navigabile, identica all'originale.
 
-### Fase 1: lettura dei singoli apparati FortiGate, Cisco IOS/IOS-XE e Cisco Small Business (MVP)
-Issue [#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10), in corso.
+### Fase 1: lettura dei singoli apparati FortiGate, Cisco IOS/IOS-XE e Cisco Small Business (MVP, realizzata)
+Issue [#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10).
 - **Realizzato** ([#11](https://github.com/TehMaat/Network-Config-Viewer/pull/11)):
   - modello neutro, con le righe d'origine di ogni elemento, i default indicati e la copertura riga per riga;
   - FortiGate: interfacce e zone, oggetti, policy (con VDOM), VIP e IP pool, routing (statiche, policy route, BGP, OSPF), VPN IPsec, SD-WAN;
@@ -575,9 +576,8 @@ Issue [#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10), in cors
   - output dei comandi show di Cisco IOS/IOS-XE, Cisco Small Business e FortiOS, da file singoli e da log di sessione, ognuno con il suo apparato e la correzione a mano;
   - stato reale nelle viste: porte, vicini, PoE, tunnel, routing, BGP, SD-WAN, nomi delle VLAN del VTP; MAC su ogni porta configurata con i loro avvisi ([#6](https://github.com/TehMaat/Network-Config-Viewer/issues/6));
   - clienti nell'archivio locale su disco, con il server dell'app nel container al posto di nginx: file conservati per cliente e raggruppati per apparato con versioni precedenti e show, correzioni salvate, esportazione e importazione in zip, cliente di esempio;
-  - test nel browser anche su Firefox e WebKit, e dell'archivio dopo il riavvio del container.
-- **Da completare**:
-  - export Excel.
+  - test nel browser anche su Firefox e WebKit, e dell'archivio dopo il riavvio del container;
+  - export Excel nel browser: per ogni apparato un foglio per vista, e ogni tabella così come è filtrata e ordinata.
 - **Risultato**: ogni FortiGate e ogni Catalyst leggibile in forma grafica, con i file di ogni cliente conservati sul PC.
 
 ### Fase 2: mappa dell'infrastruttura

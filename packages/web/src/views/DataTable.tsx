@@ -1,5 +1,15 @@
-import { Box, CloseButton, Group, Table, Text, TextInput, UnstyledButton } from '@mantine/core';
-import { IconArrowDown, IconArrowUp, IconFilter } from '@tabler/icons-react';
+import {
+  ActionIcon,
+  Box,
+  CloseButton,
+  Group,
+  Table,
+  Text,
+  TextInput,
+  Tooltip,
+  UnstyledButton,
+} from '@mantine/core';
+import { IconArrowDown, IconArrowUp, IconFileSpreadsheet, IconFilter } from '@tabler/icons-react';
 import {
   flexRender,
   getCoreRowModel,
@@ -14,6 +24,9 @@ import {
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { saveBlob } from '../export/download';
+import type { Cell } from '../export/xlsx';
+import { useDeviceView } from './source';
 
 export interface DataTableProps<T> {
   /** Name used for the test ids ("table-<name>", "row-<name>"). */
@@ -35,6 +48,14 @@ export interface DataTableProps<T> {
 }
 
 const ROW_HEIGHT = 32;
+
+/** A value of a column as a cell of the Excel file. */
+function excelCell(value: unknown): Cell {
+  if (value === undefined || value === null) return '';
+  if (typeof value === 'number' || typeof value === 'string') return value;
+  if (Array.isArray(value)) return value.join(', ');
+  return String(value);
+}
 
 /** The text of every cell, for the filter: the values that the columns show. */
 const textFilter: FilterFn<unknown> = (row, columnId, value: string) => {
@@ -60,6 +81,7 @@ export function DataTable<T>({
   empty,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
+  const { exportName } = useDeviceView();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [query, setQuery] = useState('');
   const scroller = useRef<HTMLDivElement>(null);
@@ -149,39 +171,66 @@ export function DataTable<T>({
     [table, sorting, columns, t],
   );
 
+  // The table as it is shown, filtered and sorted, in an Excel file (#10).
+  const exportTable = async () => {
+    const shown = table
+      .getVisibleLeafColumns()
+      .filter((c) => typeof c.columnDef.header === 'string' && c.columnDef.header !== '');
+    const { workbookBlob } = await import('../export/xlsx');
+    const blob = await workbookBlob([
+      {
+        name,
+        columns: shown.map((c) => c.columnDef.header as string),
+        rows: rows.map((row) => shown.map((c) => excelCell(row.getValue(c.id)))),
+      },
+    ]);
+    saveBlob(blob, `${exportName}-${name}.xlsx`);
+  };
+
   return (
     <Box data-testid={`table-${name}`} data-rows={rows.length} className="ncv-table">
-      {(filter || toolbar) && (
-        <Group gap="xs" mb="xs" wrap="wrap">
-          {filter && (
-            <TextInput
-              size="xs"
-              w={240}
-              leftSection={<IconFilter size={14} />}
-              placeholder={t('table.filter')}
-              aria-label={t('table.filter')}
-              value={query}
-              onChange={(e) => setQuery(e.currentTarget.value)}
-              rightSection={
-                query ? (
-                  <CloseButton
-                    size="xs"
-                    aria-label={t('viewer.clearFilter')}
-                    onClick={() => setQuery('')}
-                  />
-                ) : null
-              }
-              data-testid={`filter-${name}`}
-            />
-          )}
-          {toolbar}
-          <Text size="xs" c="dimmed">
-            {query
-              ? t('table.countFiltered', { count: rows.length, total: data.length })
-              : t('table.count', { count: data.length })}
-          </Text>
-        </Group>
-      )}
+      <Group gap="xs" mb="xs" wrap="wrap">
+        {filter && (
+          <TextInput
+            size="xs"
+            w={240}
+            leftSection={<IconFilter size={14} />}
+            placeholder={t('table.filter')}
+            aria-label={t('table.filter')}
+            value={query}
+            onChange={(e) => setQuery(e.currentTarget.value)}
+            rightSection={
+              query ? (
+                <CloseButton
+                  size="xs"
+                  aria-label={t('viewer.clearFilter')}
+                  onClick={() => setQuery('')}
+                />
+              ) : null
+            }
+            data-testid={`filter-${name}`}
+          />
+        )}
+        {toolbar}
+        <Text size="xs" c="dimmed">
+          {query
+            ? t('table.countFiltered', { count: rows.length, total: data.length })
+            : t('table.count', { count: data.length })}
+        </Text>
+        <Tooltip label={t('export.table')}>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="sm"
+            ml="auto"
+            aria-label={t('export.table')}
+            onClick={() => void exportTable()}
+            data-testid={`export-${name}`}
+          >
+            <IconFileSpreadsheet size={16} />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
       <Box ref={scroller} className="ncv-table-scroll" style={{ maxHeight: height }}>
         <Table
           striped={false}

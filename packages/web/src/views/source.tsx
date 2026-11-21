@@ -12,6 +12,8 @@ export interface DeviceViewApi {
   /** Opens another file (a file of shows) at a line. */
   openFile(id: string, line?: number): void;
   fileName(id: string): string;
+  /** Base of the names of the files exported from the views: the hostname of the device. */
+  exportName: string;
 }
 
 export const DeviceViewContext = createContext<DeviceViewApi>({
@@ -19,6 +21,7 @@ export const DeviceViewContext = createContext<DeviceViewApi>({
   state: null,
   openFile: () => undefined,
   fileName: (id) => id,
+  exportName: 'export',
 });
 
 export const useDeviceView = () => useContext(DeviceViewContext);

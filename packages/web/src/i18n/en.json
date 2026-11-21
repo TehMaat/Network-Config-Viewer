@@ -822,6 +822,40 @@
       "corrupt-file": "A file in the zip file differs from the original: the client was not imported."
     }
   },
+  "export": {
+    "device": "Excel",
+    "deviceHelp": "Export the device to an Excel file, with a sheet for every view",
+    "table": "Export the table to Excel, filtered and sorted as it is",
+    "failed": "The Excel file was not made. Try again.",
+    "sheet": {
+      "ports": "Ports",
+      "vlans": "VLANs",
+      "acls": "ACLs",
+      "routes": "Routing",
+      "liveRoutes": "Real routing",
+      "macs": "MACs",
+      "interfaces": "Interfaces",
+      "policies": "Policies",
+      "objects": "Objects",
+      "vpn": "VPN",
+      "sdwanMembers": "SD-WAN members",
+      "sdwanHealth": "SD-WAN health checks",
+      "sdwanRules": "SD-WAN rules"
+    },
+    "col": {
+      "macType": "Type",
+      "category": "Category",
+      "used": "In use"
+    },
+    "objectKind": {
+      "addresses": "Address",
+      "groups": "Address group",
+      "services": "Service",
+      "serviceGroups": "Service group",
+      "vips": "VIP",
+      "ippools": "IP pool"
+    }
+  },
   "codemirror": {
     "Find": "Find",
     "Replace": "Replace",

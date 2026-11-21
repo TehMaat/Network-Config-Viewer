@@ -53,6 +53,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
   - file caricati senza cliente salvabili in un cliente nuovo o in uno esistente; riaperto da solo l'ultimo cliente usato nel browser;
   - esempi: versioni precedenti del 9300 di sede e del FortiGate della filiale 1, e il cliente di esempio `samples/cliente-esempio.zip` da importare;
   - test del server, dell'archivio nel browser e, in CI, dell'archivio dopo il riavvio del container.
+- Fase 1, export Excel ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)):
+  - per ogni apparato un file Excel con un foglio per vista e le stesse colonne delle tabelle dell'app: porte, VLAN, ACL, routing e MAC degli switch; interfacce e VLAN del FortiGate, e policy, oggetti, routing, VPN e SD-WAN di ogni VDOM; con gli show anche lo stato reale, il routing reale e il membro SD-WAN in uso;
+  - su ogni tabella un pulsante che la esporta così come è filtrata e ordinata;
+  - file creato nel browser con ExcelJS (MIT), caricato solo al primo export; i valori restano valori, senza formule.
 
 ### Modificato
 

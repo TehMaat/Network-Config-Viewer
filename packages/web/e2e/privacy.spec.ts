@@ -39,6 +39,8 @@ test('never contacts another site, and cannot', async ({ page, baseURL }) => {
     const tabs = page.locator('[data-testid^="tab-"]');
     for (let i = 0; i < (await tabs.count()); i++) await tabs.nth(i).click();
   }
+  // The Excel file is made in the page: nothing is fetched from outside.
+  await Promise.all([page.waitForEvent('download'), page.getByTestId('btn-export-device').click()]);
   await openConfigTab(page);
   await page.getByTestId('btn-search').click();
   await page.getByTestId('language-switch').getByText('EN').click();

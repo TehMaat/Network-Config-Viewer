@@ -21,14 +21,13 @@ import {
   type PortLive,
 } from '@ncv/core';
 import type { ColumnDef } from '@tanstack/react-table';
-import type { TFunction } from 'i18next';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { vlanColors } from './colors';
 import { DataTable } from './DataTable';
 import { PortPanel } from './PortPanel';
 import { ShowSourceButton, SourceButton, useDeviceView, Value } from './source';
-import { formatVlans, shortInterfaceName, FULL_LABEL } from './values';
+import { formatVlans, FULL_LABEL, shortInterfaceName, vlanText } from './values';
 
 export function PortsView({ model }: { model: DeviceModel }) {
   const { t } = useTranslation();
@@ -255,26 +254,6 @@ export function PortsView({ model }: { model: DeviceModel }) {
       </Box>
     </Stack>
   );
-}
-
-function vlanText(i: Interface, t: TFunction): string {
-  const sp = i.switchport;
-  if (!sp || sp.mode === 'routed') return '';
-  if (sp.mode === 'trunk') {
-    const allowed = formatVlans(sp.allowed) || t('ports.detail.none');
-    return sp.nativeVlan !== undefined
-      ? t('ports.trunkVlans', { vlans: allowed, native: sp.nativeVlan })
-      : allowed;
-  }
-  if (sp.mode === 'general') {
-    return [
-      formatVlans(sp.untagged) && t('ports.untaggedShort', { vlans: formatVlans(sp.untagged) }),
-      formatVlans(sp.allowed) && t('ports.taggedShort', { vlans: formatVlans(sp.allowed) }),
-    ]
-      .filter(Boolean)
-      .join(' · ');
-  }
-  return String(sp.accessVlan ?? '');
 }
 
 /** Small marks on the ports: CSS class and text of the legend. */

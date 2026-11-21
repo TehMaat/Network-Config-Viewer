@@ -18,6 +18,7 @@ import {
   IconArrowBackUp,
   IconCopy,
   IconDownload,
+  IconFileSpreadsheet,
   IconFold,
   IconFoldDown,
   IconLayoutSidebarLeftCollapse,
@@ -28,6 +29,7 @@ import {
 import type { AssignReason, DeviceModel, DeviceState, Src } from '@ncv/core';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { saveBlob, safeFileName } from '../export/download';
 import { baseName, formatBytes, formatOrigin, formatPath } from '../format';
 import { contentStore, type FileContent } from '../state/content';
 import { effectiveDetection } from '../state/effective';
@@ -190,6 +192,8 @@ function TextView({
     return () => cancelAnimationFrame(frame);
   }, [tab, pending]);
 
+  // The exported files are named after the device, or after the file without its extension.
+  const exportName = safeFileName(model?.hostname ?? entry.name.replace(/\.[^.]+$/, ''));
   const api = useMemo<DeviceViewApi>(
     () => ({
       showSource: (src: Src) => {
@@ -199,9 +203,29 @@ function TextView({
       state,
       openFile: onOpenFile,
       fileName,
+      exportName,
     }),
-    [showLines, state, onOpenFile, fileName],
+    [showLines, state, onOpenFile, fileName, exportName],
   );
+  const [exporting, setExporting] = useState(false);
+  const [exportFailed, setExportFailed] = useState(false);
+  /** The Excel file of the device: one sheet for every view (#10). */
+  const exportDevice = async () => {
+    if (!model) return;
+    setExporting(true);
+    setExportFailed(false);
+    try {
+      const [{ deviceSheets }, { workbookBlob }] = await Promise.all([
+        import('../export/device'),
+        import('../export/xlsx'),
+      ]);
+      saveBlob(await workbookBlob(deviceSheets(model, state, t)), `${exportName}.xlsx`);
+    } catch {
+      setExportFailed(true);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // A line asked by another file (for example a value of the real state of a device).
   useEffect(() => {
@@ -402,6 +426,22 @@ function TextView({
               </Tabs.Tab>
             ))}
             {vdomSelector}
+            <Tooltip label={exportFailed ? t('export.failed') : t('export.deviceHelp')}>
+              <Button
+                size="compact-xs"
+                variant="light"
+                color={exportFailed ? 'red' : undefined}
+                my="auto"
+                ml={vdomSelector ? 'xs' : 'auto'}
+                mr="xs"
+                leftSection={<IconFileSpreadsheet size={14} />}
+                loading={exporting}
+                onClick={() => void exportDevice()}
+                data-testid="btn-export-device"
+              >
+                {t('export.device')}
+              </Button>
+            </Tooltip>
           </Tabs.List>
           {tabs
             .filter((name) => name !== 'config')
@@ -455,14 +495,7 @@ function ConfigPane({ entry, content, editor, onGoToLine }: ConfigPaneProps) {
     const blob = new Blob([content.bytes as Uint8Array<ArrayBuffer>], {
       type: 'application/octet-stream',
     });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = entry.name;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    saveBlob(blob, entry.name);
   };
 
   const outlineAvailable = entry.family !== 'plain';

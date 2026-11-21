@@ -15,19 +15,17 @@ import {
   expandObjectGroup,
   isIpv4,
   type Acl,
-  type AclBinding,
   type AclEntry,
   type DeviceModel,
   type IpMatch,
   type ObjectGroup,
 } from '@ncv/core';
 import type { ColumnDef } from '@tanstack/react-table';
-import type { TFunction } from 'i18next';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from './DataTable';
 import { SourceButton, useDeviceView } from './source';
-import { formatAddress, formatGroupEntry, formatPorts, shortInterfaceName } from './values';
+import { bindingText, formatAddress, formatGroupEntry, formatPorts } from './values';
 
 type EntryMatch = { source: IpMatch | null; destination: IpMatch | null };
 
@@ -156,24 +154,6 @@ export function AclsView({ model }: { model: DeviceModel }) {
       {ctx.objectGroups.length > 0 && <ObjectGroups groups={ctx.objectGroups} acls={ctx.acls} />}
     </Stack>
   );
-}
-
-function bindingText(b: AclBinding, t: TFunction): string {
-  switch (b.kind) {
-    case 'interface':
-      return t('acls.binding.interface', {
-        name: shortInterfaceName(b.interface),
-        direction: t(`acls.direction.${b.direction}`),
-      });
-    case 'line':
-      return t('acls.binding.line', { line: b.line });
-    case 'snmp':
-      return t('acls.binding.snmp');
-    case 'route-map':
-      return t('acls.binding.routeMap', { name: b.name });
-    case 'management':
-      return t('acls.binding.management');
-  }
 }
 
 function MatchBadge({ match }: { match: IpMatch | null }) {

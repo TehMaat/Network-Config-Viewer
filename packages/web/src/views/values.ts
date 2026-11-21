@@ -6,8 +6,10 @@ import {
   formatVlanSet,
   prefixToMask,
   shortInterfaceName,
+  type AclBinding,
   type AddressMatch,
   type AddressObject,
+  type Interface,
   type ObjectGroupEntry,
   type PortMatch,
   type Prefix,
@@ -94,3 +96,43 @@ export function addressText(a: AddressObject, t: TFunction): string {
  * instead of hiding the end of the text.
  */
 export const FULL_LABEL = { label: { overflow: 'visible' } } as const;
+
+/** The VLANs of a port as the table shows them: access, trunk with the native one, general. */
+export function vlanText(i: Interface, t: TFunction): string {
+  const sp = i.switchport;
+  if (!sp || sp.mode === 'routed') return '';
+  if (sp.mode === 'trunk') {
+    const allowed = formatVlans(sp.allowed) || t('ports.detail.none');
+    return sp.nativeVlan !== undefined
+      ? t('ports.trunkVlans', { vlans: allowed, native: sp.nativeVlan })
+      : allowed;
+  }
+  if (sp.mode === 'general') {
+    return [
+      formatVlans(sp.untagged) && t('ports.untaggedShort', { vlans: formatVlans(sp.untagged) }),
+      formatVlans(sp.allowed) && t('ports.taggedShort', { vlans: formatVlans(sp.allowed) }),
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  }
+  return String(sp.accessVlan ?? '');
+}
+
+/** Where an ACL is applied, in words. */
+export function bindingText(b: AclBinding, t: TFunction): string {
+  switch (b.kind) {
+    case 'interface':
+      return t('acls.binding.interface', {
+        name: shortInterfaceName(b.interface),
+        direction: t(`acls.direction.${b.direction}`),
+      });
+    case 'line':
+      return t('acls.binding.line', { line: b.line });
+    case 'snmp':
+      return t('acls.binding.snmp');
+    case 'route-map':
+      return t('acls.binding.routeMap', { name: b.name });
+    case 'management':
+      return t('acls.binding.management');
+  }
+}
