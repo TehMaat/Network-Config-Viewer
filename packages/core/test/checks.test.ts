@@ -336,7 +336,7 @@ end`),
       ),
     ]);
     expect(infra.problems).toMatchObject([
-      { code: 'mtu', values: { valueA: '9000', valueB: '1500 (default)' } },
+      { code: 'mtu', values: { valueA: '9000', valueB: '1500', defaultB: 'yes' } },
     ]);
   });
 

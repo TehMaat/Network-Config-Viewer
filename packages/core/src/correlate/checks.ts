@@ -490,9 +490,12 @@ function checkCable(link: Link, byKey: ReadonlyMap<string, DeviceInfo>, out: Pro
   const mtuA = ia.mtu;
   const mtuB = ib.mtu;
   if ((mtuA !== undefined || mtuB !== undefined) && (mtuA ?? 1500) !== (mtuB ?? 1500)) {
+    // A side without an MTU in its configuration has the default one, and says so.
     add('mtu', 'warning', {
-      valueA: mtuA !== undefined ? String(mtuA) : '1500 (default)',
-      valueB: mtuB !== undefined ? String(mtuB) : '1500 (default)',
+      valueA: String(mtuA ?? 1500),
+      valueB: String(mtuB ?? 1500),
+      ...(mtuA === undefined ? { defaultA: 'yes' } : {}),
+      ...(mtuB === undefined ? { defaultB: 'yes' } : {}),
     });
   }
 }

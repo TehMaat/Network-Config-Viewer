@@ -1225,6 +1225,7 @@ router ospf 1
  no passive-interface Vlan900
  network 10.10.60.0 0.0.0.255 area 0
  network 10.10.70.0 0.0.0.255 area 0
+ network 10.10.99.0 0.0.0.255 area 0
  network 10.10.254.0 0.0.0.7 area 0
  redistribute static subnets route-map RM-STATICHE-OSPF
 !

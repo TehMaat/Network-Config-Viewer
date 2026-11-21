@@ -389,7 +389,7 @@
         "Vlan70 route-map PBR-OSPITI"
       ],
       "ospf": [
-        "1 networks 10.10.60.0/24 area 0, 10.10.70.0/24 area 0, 10.10.254.0/29 area 0; interfaces Loopback0 passive, Vlan60 passive, Vlan70 passive, Vlan900"
+        "1 networks 10.10.60.0/24 area 0, 10.10.70.0/24 area 0, 10.10.99.0/24 area 0, 10.10.254.0/29 area 0; interfaces Loopback0 passive, Vlan60 passive, Vlan70 passive, Vlan99 passive, Vlan900"
       ],
       "bgp": null,
       "routeMaps": [
@@ -402,8 +402,8 @@
     },
     "references": 167,
     "coverage": {
-      "total": 1307,
-      "understood": 976,
+      "total": 1308,
+      "understood": 977,
       "ignored": 266,
       "unknown": 65
     }
@@ -479,8 +479,8 @@
     },
     "references": 22,
     "coverage": {
-      "total": 225,
-      "understood": 143,
+      "total": 227,
+      "understood": 145,
       "ignored": 56,
       "unknown": 26
     }
@@ -791,12 +791,12 @@
     "interfaces": {
       "kinds": {
         "hard-switch": 1,
-        "physical": 2,
+        "physical": 3,
         "subinterface": 2,
         "tunnel": 2
       },
       "byContext": {
-        "root": 7
+        "root": 8
       },
       "shutdown": 0,
       "lags": [
@@ -804,6 +804,7 @@
       ],
       "layer3": [
         "wan1 192.0.2.38/30",
+        "dmz 10.10.10.1/24",
         "internal 10.22.10.1/24",
         "VL20-VOICE 10.22.20.1/24",
         "VL99-MGMT 10.22.99.1/24",
@@ -875,9 +876,9 @@
     ],
     "references": 46,
     "coverage": {
-      "total": 449,
-      "understood": 326,
-      "ignored": 26,
+      "total": 457,
+      "understood": 333,
+      "ignored": 27,
       "unknown": 97
     }
   },
@@ -943,7 +944,7 @@
         "policies": [
           "1. #1 LAN-verso-Internet VL10-DATA,VL20-VOICE,VL70-WIFI-CORP>wan1,wan2 LAN-CAMPUS>all ALL accept nat log all",
           "2. #2 Ospiti-verso-Internet VL71-WIFI-GUEST>wan1 all>all HTTP,HTTPS,DNS accept nat log all",
-          "3. #3 Campus-verso-Corporate VL10-DATA,VL99-MGMT>HUB-WAN1 LAN-CAMPUS>GRP-CORPORATE ALL accept log all"
+          "3. #3 Campus-verso-Corporate VL10-DATA,VL99-MGMT>HUB-WAN1 LAN-CAMPUS>LAN-HQ,LAN-DC ALL accept log all"
         ],
         "vips": [],
         "ippools": [],
@@ -963,7 +964,7 @@
         "sdwan": null
       }
     ],
-    "references": 31,
+    "references": 32,
     "coverage": {
       "total": 952,
       "understood": 223,
@@ -1235,7 +1236,7 @@
             "VL50-GUEST 10.10.50.0/24 -> 0.0.0.0/0 via 198.51.100.9 wan2"
           ],
           "ospf": [
-            "10.10.255.1 networks 10.10.254.0/29 area 0.0.0.0; interfaces VL900-CORE"
+            "10.10.255.1 networks 10.10.254.0/29 area 0.0.0.0, 10.10.99.0/24 area 0.0.0.0; interfaces VL900-CORE, VL99-MGMT"
           ],
           "bgp": "65000 neighbors 0 groups 2 ranges 2 networks 2",
           "routeMaps": [
@@ -1280,8 +1281,8 @@
     ],
     "references": 97,
     "coverage": {
-      "total": 730,
-      "understood": 627,
+      "total": 733,
+      "understood": 630,
       "ignored": 45,
       "unknown": 58
     }
