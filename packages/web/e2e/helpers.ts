@@ -51,11 +51,20 @@ export async function openApp(page: Page) {
   await expect(start).not.toHaveAttribute('data-archive', 'checking');
 }
 
-/** Loads files through the hidden file input and waits until the worker has finished. */
-export async function loadFiles(page: Page, files: Upload, expectedItems: number) {
+/**
+ * Loads files through the hidden file input and waits until the worker has finished; a timeout
+ * for many files, where reading them is not what the test measures.
+ */
+export async function loadFiles(
+  page: Page,
+  files: Upload,
+  expectedItems: number,
+  timeout?: number,
+) {
+  const options = timeout ? { timeout } : undefined;
   await page.getByTestId('file-input').setInputFiles(files);
-  await expect(page.getByTestId('file-item')).toHaveCount(expectedItems);
-  await expect(page.getByTestId('processing')).toHaveCount(0);
+  await expect(page.getByTestId('file-item')).toHaveCount(expectedItems, options);
+  await expect(page.getByTestId('processing')).toHaveCount(0, options);
 }
 
 export function fileItem(page: Page, name: string) {
