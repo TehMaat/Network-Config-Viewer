@@ -8,7 +8,7 @@ Strumento per vedere l'infrastruttura di rete di un cliente partendo dai backup 
 
 Le fasi 0 e 1 della roadmap sono realizzate: trascini un backup FortiGate o Cisco e l'app lo legge e lo mostra in forma grafica, apparato per apparato, sempre collegato alla config originale, identica al file. Se aggiungi gli output dei comandi show, le viste mostrano anche lo stato reale. I file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato, e ogni apparato si esporta in Excel.
 
-La fase 2 è in corso: gli apparati di un cliente si vedono insieme nella **mappa dell'infrastruttura**, con i **problemi** trovati confrontandoli tra loro, e nella **vista VPN** del cliente, con ADVPN. La mappa si **corregge a mano** e si **esporta** in draw.io, PNG e SVG. La parte che manca (FortiSwitch e FortiAP gestiti) e le altre fasi (analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
+Anche la fase 2 è realizzata: gli apparati di un cliente si vedono insieme nella **mappa dell'infrastruttura**, con i **problemi** trovati confrontandoli tra loro, e nella **vista VPN** del cliente, con ADVPN. La mappa si **corregge a mano** e si **esporta** in draw.io, PNG e SVG. I **FortiSwitch e i FortiAP gestiti dal FortiGate** sono apparati del cliente, con le loro viste e sulla mappa. Le fasi successive (analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
 
 ## Cosa fa oggi
 
@@ -19,18 +19,22 @@ La fase 2 è in corso: gli apparati di un cliente si vedono insieme nella **mapp
   - Un cliente si esporta in un file zip, come copia di sicurezza o per passarlo a un collega, e si reimporta. Per provare l'app c'è un cliente di esempio da importare: [`samples/cliente-esempio.zip`](samples/cliente-esempio.zip).
   - Senza un cliente aperto i file restano solo nella scheda del browser: va bene per un'occhiata veloce.
 - **Riconosce** marca, sistema operativo, versione, modello, hostname, stack e VDOM, e per ogni dato mostra la riga da cui viene. Se sbaglia, si corregge a mano.
-  - FortiGate (FortiOS) e FortiSwitch, Cisco IOS e IOS-XE, Cisco Small Business. Cisco NX-OS e ASA vengono riconosciuti, ma non ancora letti.
+  - FortiGate (FortiOS) e FortiSwitch, Cisco IOS e IOS-XE, Cisco Small Business. Cisco NX-OS e ASA vengono riconosciuti, ma non ancora letti. I FortiSwitch autonomi vengono riconosciuti; quelli gestiti dal FortiGate si leggono dalla sua config.
   - Output dei comandi show, con o senza prompt.
 - **Legge le config** di FortiGate (FortiOS 7.0–8.0, anche con VDOM multiple), Cisco IOS e IOS-XE e Cisco Small Business, e per ogni apparato mostra le sue viste:
   - **riepilogo**: IP di gestione, stack o VDOM, conteggi, funzioni in uso, avvisi e copertura della lettura, con le sezioni non interpretate;
   - **switch**: pannello delle porte di ogni membro dello stack (colori per VLAN, trunk a strisce, porte spente, L3, PoE, 802.1X/MAB, VLAN voce, port-channel), VLAN con porte e gateway, ACL con la ricerca per IP, routing;
-  - **FortiGate**: interfacce e zone, VLAN, policy nell'ordine reale (lista unica o per coppia di interfacce) con la ricerca per IP anche tramite subnet, gruppi, VIP e "all", oggetti con "dove è usato", routing, VPN IPsec, SD-WAN.
+  - **FortiGate**: interfacce e zone, VLAN, policy nell'ordine reale (lista unica o per coppia di interfacce) con la ricerca per IP anche tramite subnet, gruppi, VIP e "all", oggetti con "dove è usato", routing, VPN IPsec, SD-WAN;
+  - **FortiSwitch gestiti dal FortiGate**: l'elenco degli switch con la coppia MCLAG (l'ICL e i trunk su tutti e due gli switch), e per ogni switch la sua pagina, sotto il FortiGate nell'elenco a sinistra: riepilogo, pannello delle porte e VLAN, con i colori delle VLAN del FortiGate e le righe della config del FortiGate;
+  - **FortiAP gestiti dal FortiGate**: SSID con sicurezza, server RADIUS, VLAN e traffico, access point con modello, profilo e SSID, profili con le radio.
 - **Legge gli output dei comandi show** di Cisco IOS e IOS-XE, Cisco Small Business e FortiGate, da file singoli o da log di sessione, e li abbina da solo al loro apparato: per hostname, numero di serie o nome del file, con la correzione a mano. Le viste mostrano lo stato reale accanto alla config, e ogni dato porta alla sua riga dello show:
   - **switch**: stato delle porte, vicini CDP e LLDP, PoE, nomi delle VLAN tenute dal VTP e i **MAC dei dispositivi collegati** a ogni porta configurata (con l'IP, se lo switch ha la tabella ARP), con un segno sulle porte configurate senza MAC: forse non sono usate;
-  - **FortiGate**: stato delle interfacce e dei tunnel IPsec (anche dial-up), tabella di routing reale, sessioni BGP, health check SD-WAN e membro in uso da ogni regola.
+  - **FortiGate**: stato delle interfacce e dei tunnel IPsec (anche dial-up), tabella di routing reale, sessioni BGP, health check SD-WAN e membro in uso da ogni regola;
+  - **FortiSwitch gestiti**: dallo show del FortiGate lo stato di ogni switch, e i MAC sulle sue porte, con lo stesso segno sulle porte configurate senza MAC. I formati di questi due comandi sono da verificare con un output reale.
 - **Mette insieme gli apparati di un cliente nella mappa dell'infrastruttura**, che si apre dall'elenco a sinistra, sopra gli apparati raggruppati per sito:
   - i siti vengono dalla location SNMP, dal codice nell'hostname (FGT-BR1, SW-BR1-ACC) o dai cavi;
   - i collegamenti: cavi e LAG dai vicini LLDP e CDP o dalle descrizioni delle porte, subnet condivise, uscite Internet, tunnel IPsec (anche verso hub dial-up), sessioni BGP (anche nei `neighbor-range` dell'hub), adiacenze OSPF e scorciatoie ADVPN viste negli show; ognuno dice se è **verificato** da uno show o **dedotto** dalla config;
+  - i FortiSwitch gestiti, collegati al loro FortiGate con la FortiLink, i due switch di una coppia MCLAG uniti dall'ICL, e i FortiAP come un gruppo sotto il FortiGate;
   - livelli che si accendono e si spengono; il clic su un collegamento mostra i due lati affiancati, parametro per parametro, con i pulsanti che aprono la config o lo show alla riga, e il clic su un apparato apre le sue viste;
   - con gli show, lo stato reale dei due lati: porte, tunnel, sessioni BGP, health check SD-WAN;
   - sotto la mappa, l'elenco dei collegamenti con filtro ed export Excel; nelle viste di ogni apparato, l'altro estremo di porte, tunnel e sessioni BGP porta all'altro apparato.
@@ -66,6 +70,8 @@ La fase 2 è in corso: gli apparati di un cliente si vedono insieme nella **mapp
 ![Il pannello delle porte di uno stack Catalyst 9300 in tema scuro, con il dettaglio di un uplink in port-channel](docs/img/app-cisco-scuro.png)
 
 ![Lo stesso stack con gli show caricati: stato reale sulle porte, segno sulle porte configurate senza MAC e dettaglio di una porta con telefono e PC](docs/img/app-stato.png)
+
+![Un FortiSwitch gestito dal FortiGate del campus: porte con i colori delle VLAN del FortiGate e il dettaglio di una porta con il MAC preso dagli show del FortiGate](docs/img/app-fortiswitch.png)
 
 ## Come avviarlo
 

@@ -68,6 +68,17 @@ for (const [colorScheme, suffix] of [
       await page.screenshot({ path: `${DOCS_IMG}app-stato${suffix}.png`, style });
     });
 
+    test('FortiSwitch managed by the FortiGate', async ({ page, request }) => {
+      await exampleClient(page, request);
+      // A switch of the campus, as a device of its own: its ports with the colours of the VLANs
+      // of the FortiGate, and a port with its MAC from the shows of the FortiGate.
+      await page.locator('[data-testid="managed-item"][data-device="FSW-CAMPUS-01"]').click();
+      await expect(page.getByTestId('managed-switch-view')).toBeVisible();
+      await page.locator('[data-testid="port"][data-name="port1"]').click();
+      await expect(page.getByTestId('port-macs')).toBeVisible();
+      await page.screenshot({ path: `${DOCS_IMG}app-fortiswitch${suffix}.png`, style });
+    });
+
     test('linked config', async ({ page, request }) => {
       await exampleClient(page, request);
       await selectFile(page, 'sw-hq-core-c9300-iosxe-17.12-stack.txt');

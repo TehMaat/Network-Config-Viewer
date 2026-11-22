@@ -1,6 +1,6 @@
 # Studio preliminare: Network Config Viewer
 
-> **Stato:** novembre 2026. La [fase 0](#fase-0-fondamenta-realizzata) è realizzata: l'app si avvia in locale con Docker, riconosce le config FortiGate e Cisco e le mostra navigabili. Anche la [fase 1](#fase-1-lettura-dei-singoli-apparati-fortigate-cisco-iosios-xe-e-cisco-small-business-mvp-realizzata) è realizzata: i driver FortiOS, Cisco IOS/IOS-XE e Small Business leggono le config e l'app mostra le viste di ogni apparato (vedi il [README](../README.md)); gli output dei comandi show vanno con il loro apparato e aggiungono lo stato reale alle viste; i file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato; ogni apparato e ogni tabella si esportano in Excel. La [fase 2](#fase-2-mappa-dellinfrastruttura) è in corso ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)): con la prima parte gli apparati di un cliente si vedono insieme nella mappa dell'infrastruttura, con i siti, i cavi e i LAG, le subnet condivise, le uscite Internet, i tunnel IPsec, le sessioni BGP e le adiacenze OSPF, ognuno con i due lati affiancati e le righe da cui viene. Con la seconda parte gli apparati si controllano a vicenda: quello che non torna tra i due lati di un collegamento (tunnel IPsec, BGP, trunk, LAG, MTU, OSPF, indirizzi, rotte attese, descrizioni, LLDP e CDP, ADVPN) è segnato sulla mappa, in un elenco e nel riepilogo di ogni apparato; la vista VPN del cliente mostra tutti i tunnel con ADVPN, e la vista VLAN trova il gateway anche su un altro apparato. Con la terza parte la mappa si corregge a mano (siti, posizioni, collegamenti e nodi aggiunti, collegamenti dedotti confermati, scartati o corretti), le modifiche restano nel cliente in `map.json`, e la mappa si esporta in draw.io, PNG e SVG. Il resto del documento raccoglie le decisioni prese e il piano delle fasi successive. Il [mockup](mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scarica il file e aprilo nel browser.
+> **Stato:** novembre 2026. La [fase 0](#fase-0-fondamenta-realizzata) è realizzata: l'app si avvia in locale con Docker, riconosce le config FortiGate e Cisco e le mostra navigabili. Anche la [fase 1](#fase-1-lettura-dei-singoli-apparati-fortigate-cisco-iosios-xe-e-cisco-small-business-mvp-realizzata) è realizzata: i driver FortiOS, Cisco IOS/IOS-XE e Small Business leggono le config e l'app mostra le viste di ogni apparato (vedi il [README](../README.md)); gli output dei comandi show vanno con il loro apparato e aggiungono lo stato reale alle viste; i file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato; ogni apparato e ogni tabella si esportano in Excel. Anche la [fase 2](#fase-2-mappa-dellinfrastruttura-realizzata) è realizzata ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)), in quattro parti. Con la prima parte gli apparati di un cliente si vedono insieme nella mappa dell'infrastruttura, con i siti, i cavi e i LAG, le subnet condivise, le uscite Internet, i tunnel IPsec, le sessioni BGP e le adiacenze OSPF, ognuno con i due lati affiancati e le righe da cui viene. Con la seconda parte gli apparati si controllano a vicenda: quello che non torna tra i due lati di un collegamento (tunnel IPsec, BGP, trunk, LAG, MTU, OSPF, indirizzi, rotte attese, descrizioni, LLDP e CDP, ADVPN) è segnato sulla mappa, in un elenco e nel riepilogo di ogni apparato; la vista VPN del cliente mostra tutti i tunnel con ADVPN, e la vista VLAN trova il gateway anche su un altro apparato. Con la terza parte la mappa si corregge a mano (siti, posizioni, collegamenti e nodi aggiunti, collegamenti dedotti confermati, scartati o corretti), le modifiche restano nel cliente in `map.json`, e la mappa si esporta in draw.io, PNG e SVG. Con la quarta parte i FortiSwitch e i FortiAP gestiti dal FortiGate sono apparati del cliente: ogni switch ha la sua pagina con porte e VLAN, con i colori delle VLAN del FortiGate e i MAC dagli show del FortiGate; la coppia MCLAG ha la sua vista; access point e SSID sono elencati; sulla mappa gli switch sono collegati al FortiGate con la FortiLink e gli access point sono un gruppo. Il resto del documento raccoglie le decisioni prese e il piano delle fasi successive. Il [mockup](mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scarica il file e aprilo nel browser.
 
 ## 1. In breve
 
@@ -49,14 +49,14 @@
 | Collegamenti tra apparati | Verificati con LLDP/CDP, dedotti da descrizioni e indirizzi, oppure inseriti a mano; le differenze tra le fonti vengono segnalate |
 | Correlazione | In `packages/core`, senza dipendenze dal browser: dalla versione attuale di ogni apparato di un cliente e dai suoi show ricava siti, collegamenti e nodi fuori dal cliente (Internet, provider, peer, vicini non caricati). Ogni collegamento dice da dove viene: *verificato* da uno show (LLDP, CDP, tunnel, BGP) o *dedotto* dalla config (descrizioni, indirizzi, `remote-gw`, DDNS, neighbor), con le righe di config e show dei due lati |
 | Siti | Proposti dalla location SNMP (la parte prima del primo separatore: `Sede - CED piano terra` → "Sede"), poi dal codice nell'hostname (`FGT-BR1` e `SW-BR1-ACC` → "BR1"), poi dai cavi: due apparati collegati da un cavo stanno nello stesso sito. Si correggono a mano: si rinominano, si uniscono dando lo stesso nome, e un apparato si sposta in un altro sito. Le correzioni valgono prima dei controlli: una subnet di due siti uniti è nello stesso sito |
-| Mappa | React Flow con la disposizione automatica di dagre, caricati solo quando si apre la mappa. Dentro ogni sito gli apparati dall'alto in basso lungo i cavi (firewall, centro stella, accesso), i siti intorno a Internet. Livelli che si accendono e si spengono, con la scelta salvata nel browser. La stessa subnet in siti diversi è una sovrapposizione di indirizzi, non un collegamento, salvo le reti punto-punto (/30, /31). Le VDOM link restano dentro l'apparato |
+| Mappa | React Flow con la disposizione automatica di dagre, caricati solo quando si apre la mappa. Dentro ogni sito gli apparati dall'alto in basso lungo i cavi (firewall, centro stella, accesso), i siti intorno a Internet. Livelli che si accendono e si spengono, con la scelta salvata nel browser. La stessa subnet in siti diversi è una sovrapposizione di indirizzi, non un collegamento, salvo le reti punto-punto (/30, /31). Le VDOM link restano dentro l'apparato. Due apparati alla stessa altezza collegati tra loro, come i due switch di una coppia MCLAG, restano affiancati. I testi troppo lunghi dei riquadri finiscono con i puntini: il dettaglio completo è nel pannello |
 | Controlli di coerenza | In `packages/core`, dopo la correlazione: confrontano i due lati dei collegamenti e gli apparati tra loro (vedi [capitolo 6](#6-analisi)). Ogni problema ha un codice, la gravità, gli apparati, il collegamento se c'è, i valori che non tornano e le righe di config e show dei due lati; il perché e il suggerimento per sistemarlo sono testi dell'app, in italiano e in inglese. I problemi sono segnati sulla mappa, sugli apparati e sui collegamenti, in un elenco con export Excel e nel riepilogo di ogni apparato |
 | Gravità dei problemi | Errore, avviso, informazione. Un valore che viene da un default non confermato non dà mai errore, ma un avviso "da verificare". La chiave condivisa dei tunnel non si confronta: nella config è cifrata, e la stessa chiave risulta diversa su ogni apparato |
 | Dati della mappa | Siti corretti, nodi e collegamenti aggiunti a mano, decisioni sui collegamenti dedotti (per id del collegamento) e posizioni stanno in `map.json`, nella cartella del cliente accanto a `client.json`, in JSON leggibile a mano. Apparati e porte si indicano per hostname e interfaccia, così una nuova versione della config li tiene. Un collegamento a mano verso un apparato che non c'è più resta, ed è segnalato come problema. Le posizioni si contano dall'angolo del sito nella disposizione automatica, così seguono il loro sito. Il server controlla `map.json` campo per campo, con le stesse protezioni degli altri file; l'export del cliente lo comprende, con lo sha256, e i clienti esportati prima si importano ancora. Senza un cliente aperto le modifiche restano nella scheda, lo dice un avviso, e vanno nel cliente con i file quando questi si salvano. Due schede che modificano la stessa mappa: vale l'ultima scrittura |
 | Export della mappa | draw.io scritto nel progetto, senza librerie: i siti come contenitori, apparati e nodi nelle posizioni della mappa, i collegamenti dei livelli accesi con le loro etichette. PNG e SVG di tutta la mappa così come è disegnata, con html-to-image (MIT), caricato solo all'export. Tutto nel browser |
-| FortiSwitch e FortiAP gestiti | Apparati del cliente ricavati dalla config del FortiGate, sotto il loro FortiGate (fase 2, parte 4) |
-| Fase 2 in quattro parti | Ognuna con la sua pull request e la sua versione: mappa e collegamenti (0.2.0), controlli e VPN (0.3.0), modifiche a mano ed export (0.4.0), FortiSwitch e FortiAP gestiti ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)) |
-| Indirizzi MAC sulle porte | Ogni porta configurata degli switch riporta i MAC dei dispositivi collegati, con la VLAN, letti dalla tabella MAC dello switch (`show mac address-table`), non dalla config. Lo strumento li mostra e segnala le porte senza MAC e lo show mancante (vedi [5.5](#55-pannello-porte-dello-switch)) |
+| FortiSwitch e FortiAP gestiti | Apparati del cliente ricavati dalla config del FortiGate, senza file in più. Ogni FortiSwitch gestito è un apparato con la sua pagina, sotto il suo FortiGate nell'elenco: riepilogo, porte e VLAN, con le righe della config del FortiGate. Ha tutte le VLAN del suo FortiGate, quindi gli stessi colori; modello e numero di porte vengono dal numero di serie. Una porta con VLAN con tag oltre alla nativa è un trunk, come in FortiSwitch (`vlan` è la nativa, `allowed-vlans` le VLAN con tag); una porta che permette solo la sua nativa è di accesso. La coppia MCLAG si riconosce dall'ICL. I FortiAP sono un elenco con profilo e SSID; gli SSID hanno sicurezza, server RADIUS, VLAN e dove va il traffico. La chiave degli SSID resta solo nella config originale. Sulla mappa: la FortiLink tra il FortiGate e ogni switch, verificata quando gli show dicono che lo switch è su; l'ICL come LAG tra i due switch della coppia; i FortiAP come un gruppo sotto il FortiGate |
+| Fase 2 in quattro parti | Ognuna con la sua pull request e la sua versione: mappa e collegamenti (0.2.0), controlli e VPN (0.3.0), modifiche a mano ed export (0.4.0), FortiSwitch e FortiAP gestiti (0.5.0) ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)) |
+| Indirizzi MAC sulle porte | Ogni porta configurata degli switch riporta i MAC dei dispositivi collegati, con la VLAN, letti dalla tabella MAC dello switch (`show mac address-table`), non dalla config; per i FortiSwitch gestiti, dalla tabella degli switch negli show del FortiGate (`diagnose switch-controller switch-info mac-table`). Lo strumento li mostra e segnala le porte senza MAC e lo show mancante (vedi [5.5](#55-pannello-porte-dello-switch)) |
 | Show e apparati | Ogni file di show va con il suo apparato: per hostname (dal prompt o dall'output), poi per numero di serie, poi per nome del file; se serve, si corregge a mano l'hostname del file di show. Un log di sessione si divide per prompt, anche dentro le VDOM del FortiGate, oppure dalla forma degli output. Lo stato reale si mostra accanto alla config, mai al suo posto, e ogni dato rimanda alla sua riga dello show |
 | Export Excel | Nel browser, con ExcelJS caricato solo al primo export. Per ogni apparato un file con un foglio per vista, con le stesse colonne delle tabelle dell'app: porte, VLAN, ACL, routing e MAC degli switch; interfacce e VLAN del FortiGate, e policy, oggetti, routing, VPN e SD-WAN di ogni VDOM; con gli show anche lo stato reale. Su ogni tabella un pulsante la esporta così come è filtrata e ordinata. I valori restano valori: nessun testo diventa una formula |
 | VPN | Vista VPN del cliente: tutti i tunnel con i due estremi abbinati, il tipo, lo stato e l'esito del confronto dei due lati. Anche ADVPN: ruoli, controlli e, per ogni coppia di filiali, scorciatoia attiva, possibile o non possibile, e perché |
@@ -198,7 +198,14 @@ Senza show la mappa mostra la configurazione, cioè cosa *dovrebbe* succedere. C
 | `show ip arp` | L'IP che corrisponde a ogni MAC, letto sul router o sullo switch L3 |
 | `show power inline` | Consumo PoE per porta |
 
-Per FortiSwitch gestiti dal FortiGate la tabella MAC si legge dal FortiGate con `diagnose switch-controller switch-info mac-table` (fase 2).
+Per i FortiSwitch gestiti dal FortiGate stato e MAC si leggono dal FortiGate (fase 2, parte 4):
+
+| Comando FortiGate | Cosa aggiunge |
+|---|---|
+| `execute switch-controller get-conn-status` | Stato di ogni switch gestito (per esempio `Authorized/Up`), versione e indirizzo |
+| `diagnose switch-controller switch-info mac-table` | I MAC sulle porte di ogni switch gestito, con la VLAN: è la tabella MAC dello switch |
+
+I due lettori sono scritti su output sintetici: i formati **sono da verificare** con un output reale. Accettano piccole differenze (la colonna dei flag, il tipo del MAC), e quando un output reale non viene letto si correggono con le righe che servono, con i valori cambiati a mano.
 
 **La tabella MAC sulle porte.** Ogni porta configurata riporta i MAC dei dispositivi collegati. Senza `show mac address-table` le porte indicano "tabella MAC non caricata". Alcuni casi da gestire:
 
@@ -251,7 +258,8 @@ Cliente (nell'archivio dell'app, sul PC)
 │   │     tabella MAC per porta (MAC, VLAN, tipo dinamico/statico/sticky)
 │   └── Diagnostica: righe non comprese, avvisi del parser
 └── Collegamenti tra apparati: tipo (cavo, LAG, subnet, IPsec, overlay SD-WAN, scorciatoia ADVPN,
-      BGP, OSPF), estremi, fonte (LLDP/CDP, descrizione, inserito a mano), affidabilità
+      BGP, OSPF, FortiLink, FortiAP), estremi, fonte (LLDP/CDP, descrizione, inserito a mano),
+      affidabilità
 ```
 
 - Ogni elemento porta con sé i riferimenti alle righe sorgente.
@@ -286,7 +294,15 @@ Ogni elemento ha le righe da cui proviene e l'elenco dei campi che vengono da un
 
 I driver leggono in più LLDP e CDP accesi o spenti, in generale e su ogni porta (Cisco IOS e Small Business, FortiOS), e per i tunnel IPsec la modalità IKEv1, l'autenticazione, local-id e peer-id, network-id, NAT traversal e durata della chiave di fase 1. Il gateway di una VLAN su un altro apparato si cerca lungo cavi e LAG (`packages/core/src/correlate/gateways.ts`).
 
-Rack, servizi di gestione, apparati gestiti e wireless arrivano nelle fasi successive.
+**Cosa c'è già (fase 2, parte 4).** Gli apparati gestiti dal FortiGate, nel modello del FortiGate (`packages/core/src/model/types.ts`):
+
+- gli switch gestiti (`ManagedSwitch`): numero di serie, nome, modello, interfaccia FortiLink e porte come interfacce, con VLAN, PoE, porte spente e trunk; il ruolo di un trunk dice se è l'ICL della coppia MCLAG, la FortiLink verso il FortiGate o un trunk MCLAG verso il basso;
+- il wireless controller: SSID (sicurezza, server RADIUS, VLAN, traffico sulla LAN dell'access point o nel tunnel verso il FortiGate), profili degli access point con le radio e i loro SSID, access point con profilo e modello;
+- dagli show del FortiGate, lo stato degli switch e i MAC sulle loro porte.
+
+Uno switch gestito diventa un apparato con il suo modello e il suo stato (`packages/core/src/model/managed.ts`). Nella correlazione (`packages/core/src/correlate/managed.ts`) gli switch sono apparati del cliente nel sito del loro FortiGate, con i collegamenti FortiLink e l'ICL, e i FortiAP sono un nodo di gruppo sotto il FortiGate, collegato con CAPWAP.
+
+Rack, servizi di gestione e il wireless degli altri produttori arrivano nelle fasi successive.
 
 ## 5. Le viste grafiche
 
@@ -335,7 +351,12 @@ Il [mockup](mockup/index.html) contiene le viste 5.1–5.7, 5.9 e 5.11, con un c
 - **"Esporta"**: la mappa in draw.io, da ritoccare, e come immagine PNG o SVG;
 - senza un cliente aperto le modifiche restano nella scheda, e un avviso lo dice; quando i file si salvano in un cliente, le modifiche vanno con loro.
 
-I FortiSwitch e i FortiAP gestiti arrivano con la parte 4.
+**Nella fase 2, parte 4** sulla mappa ci sono anche gli apparati gestiti dal FortiGate:
+
+- ogni FortiSwitch gestito è un apparato, nel sito del suo FortiGate, collegato con la **FortiLink**; il collegamento è verificato quando gli show del FortiGate dicono che lo switch è su;
+- i due switch di una coppia MCLAG stanno affiancati, uniti dall'**ICL**, un LAG con i suoi cavi;
+- i **FortiAP** sono un gruppo sotto il FortiGate, con il numero e i nomi degli access point;
+- il clic su uno switch apre la sua pagina, con porte e VLAN.
 
 ![La mappa del cliente di esempio con i nodi e i collegamenti aggiunti a mano: il cavo verso lo switch del vecchio magazzino, che non è più nel cliente, resta ed è segnalato](img/app-mappa-mano.png)
 
@@ -432,6 +453,14 @@ Con gli show, sempre nella fase 1:
 
 ![Lo stack Catalyst 9300 degli esempi con gli show caricati: barra dello stato reale sulle porte, segno sulle porte configurate senza MAC e dettaglio di una porta con telefono e PC](img/app-stato.png)
 
+**Nella fase 2, parte 4** il pannello vale anche per i FortiSwitch gestiti dal FortiGate, nella pagina di ogni switch (vedi [5.12](#512-fortiswitch-e-fortiap-gestiti-dal-fortigate)):
+
+- le porte vengono dalla config del FortiGate, e ogni porta apre le sue righe lì; uplink a parte, secondo il modello ricavato dal numero di serie;
+- i colori sono quelli delle VLAN del FortiGate, perché lo switch ha tutte le VLAN del suo FortiGate: la stessa VLAN ha lo stesso colore sul FortiGate e su ogni suo switch;
+- una porta con VLAN con tag oltre alla nativa è a strisce, come un trunk: in FortiSwitch `vlan` è la VLAN nativa e `allowed-vlans` quelle con tag, anche sulle porte dei telefoni. Una porta che permette solo la sua VLAN nativa è di accesso;
+- i trunk del FortiSwitch sono port-channel, con le porte membro: l'ICL della coppia MCLAG, la FortiLink verso il FortiGate e i trunk MCLAG verso il basso;
+- con gli show del FortiGate, i MAC di ogni porta e il segno sulle porte configurate senza MAC, come sugli altri switch.
+
 ### 5.6 VLAN
 
 Per ogni VLAN: nome, **gateway** (anche se si trova su un altro apparato del progetto, per esempio la sotto-interfaccia del FortiGate), numero di porte access, voce e trunk, e una striscia con tutte le porte nell'ordine del frontale. È il riferimento principale nelle migrazioni switch.
@@ -439,6 +468,8 @@ Per ogni VLAN: nome, **gateway** (anche se si trova su un altro apparato del pro
 **Nella fase 1**: nome, gateway se sta sullo stesso apparato, porte access, voce, untagged e tagged (i membri dei port-channel contano nel `Po`); per il FortiGate, le interfacce VLAN con ID, interfaccia padre, indirizzo e VDOM. Con `show vlan brief`, o `show vlan` dei Small Business, compaiono i nomi delle VLAN tenute dal VTP, segnati come presi dallo show.
 
 **Nella fase 2, parte 2** il gateway si trova anche su un altro apparato del cliente: la VLAN si segue lungo i cavi e i LAG che la portano fino all'apparato con un'interfaccia con indirizzo in quella VLAN, una SVI o una sotto-interfaccia del FortiGate. Nel dettaglio della VLAN c'è il percorso (per esempio SW-HQ-ACC1 → SW-HQ-CORE → FGT-HQ) e il pulsante che apre l'apparato del gateway.
+
+**Nella fase 2, parte 4** le VLAN del FortiGate hanno i colori delle porte dei suoi switch, e un FortiSwitch gestito trova il gateway delle sue VLAN sul FortiGate, attraverso la FortiLink (per esempio FSW-CAMPUS-01 → FGT-CAMPUS).
 
 ### 5.7 Policy firewall
 
@@ -496,6 +527,17 @@ Hostname, modello, versione, IP di gestione, conteggi (interfacce, VLAN, policy,
   - il rilievo resta nell'archivio del cliente come documentazione per le volte successive.
 - Quando esistono, si possono importare anche file dell'installatore (CSV o Excel) o dati da NetBox.
 - È la base per le migrazioni switch pianificate da remoto (vedi 7.3).
+
+### 5.12 FortiSwitch e FortiAP gestiti dal FortiGate
+
+Con FortiLink e il wireless controller, la configurazione di switch e access point sta in quella del FortiGate (vedi [Come ottenere l'input](#come-ottenere-linput-per-ogni-marca)). **Nella fase 2, parte 4**:
+
+- nel FortiGate, la scheda **FortiSwitch** elenca gli switch gestiti: nome, numero di serie, modello, interfaccia FortiLink, porte, porte PoE e, con gli show, lo stato. La **coppia MCLAG** ha il suo riquadro: i due switch, l'ICL che li unisce e i trunk che usano porte di tutti e due, con le porte di ogni switch;
+- ogni switch è anche nell'elenco a sinistra, sotto il suo FortiGate, e ha la sua pagina: riepilogo (numero di serie, modello, FortiLink, versione e indirizzo dagli show, porte, trunk), porte e VLAN; un pulsante apre il FortiGate;
+- la scheda **Wi-Fi** elenca gli SSID, con sicurezza, server RADIUS, VLAN e traffico (sulla LAN dell'access point o nel tunnel verso il FortiGate), gli access point, con modello, profilo e SSID, e i profili, con le radio. La chiave degli SSID non è in nessuna vista: resta nella config originale;
+- ogni elemento apre le sue righe nella config del FortiGate.
+
+![La pagina di FSW-CAMPUS-01, uno switch gestito dal FortiGate del campus degli esempi: porte con i colori delle VLAN del FortiGate, trunk a strisce, PoE, porte configurate senza MAC e il dettaglio di una porta con il MAC preso dagli show del FortiGate](img/app-fortiswitch.png)
 
 ## 6. Analisi
 
@@ -681,8 +723,8 @@ Issue [#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10).
   - export Excel nel browser: per ogni apparato un foglio per vista, e ogni tabella così come è filtrata e ordinata.
 - **Risultato**: ogni FortiGate e ogni Catalyst leggibile in forma grafica, con i file di ogni cliente conservati sul PC.
 
-### Fase 2: mappa dell'infrastruttura
-Issue [#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15), in corso, in quattro parti con una pull request e una versione ciascuna.
+### Fase 2: mappa dell'infrastruttura (realizzata)
+Issue [#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15), realizzata in quattro parti con una pull request e una versione ciascuna.
 - Progetto con più apparati e siti; correlazione (cavi, LAG, subnet, IPsec, overlay SD-WAN, BGP).
 - Mappa a livelli, vista VPN con ADVPN, dettaglio dei collegamenti, controlli di coerenza, stato reale dagli show.
 - Verifica dei cavi con LLDP/CDP e collegamenti inseriti a mano.
@@ -692,7 +734,7 @@ Issue [#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15), in cors
   1. **Mappa e collegamenti** (realizzata, versione 0.2.0): correlazione nel core, siti, mappa a livelli con il dettaglio dei due lati di ogni collegamento, stato reale dagli show, elenco dei collegamenti con export Excel, altro estremo nelle viste dell'apparato;
   2. **Controlli e VPN** (realizzata, versione 0.3.0): controlli di coerenza con i problemi sulla mappa, in un elenco con export Excel e nel riepilogo degli apparati; vista VPN del cliente con ADVPN; gateway delle VLAN su altri apparati; rotte attese che mancano; un problema voluto per ogni controllo negli esempi;
   3. **Modifiche a mano ed export** (realizzata, versione 0.4.0): siti, posizioni, nodi e collegamenti a mano e decisioni sui collegamenti dedotti, salvati nel cliente in `map.json` e compresi nel suo export; collegamenti orfani segnalati; export della mappa in draw.io, PNG e SVG; nel cliente di esempio, qualche collegamento a mano;
-  4. **FortiSwitch e FortiAP gestiti**: driver, viste, mappa e show degli apparati gestiti dal FortiGate.
+  4. **FortiSwitch e FortiAP gestiti** (realizzata, versione 0.5.0): nel driver FortiOS i FortiSwitch gestiti (porte, VLAN, PoE, trunk, MCLAG) e i FortiAP (access point, profili, radio, SSID); ogni switch è un apparato con la sua pagina, porte e VLAN con i colori del FortiGate; viste della coppia MCLAG, dei FortiAP e degli SSID; stato e MAC degli switch dagli show del FortiGate, con formati da verificare; sulla mappa FortiLink, ICL e il gruppo dei FortiAP; nel cliente di esempio lo show del campus.
 - **Risultato**: carichi le config di sede e filiali e vedi la rete del cliente, con i problemi evidenziati.
 
 ### Fase 3: analisi e rack
@@ -722,6 +764,8 @@ Issue [#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15), in cors
 ## 12. Domande aperte
 
 Nessuna domanda aperta. Durante la fase 1, quando un parser sbaglia su una config reale, serviranno le righe che danno problemi, passate in chat con i valori sensibili cambiati a mano.
+
+Per i FortiSwitch gestiti (fase 2, parte 4) i formati di `execute switch-controller get-conn-status` e `diagnose switch-controller switch-info mac-table` sono da verificare: appena capita, servono poche righe reali di ciascuno, con numeri di serie, MAC e indirizzi cambiati a mano.
 
 Deciso nella fase 1 ([#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10)): l'archivio dei clienti sta su disco, in un volume Docker gestito da un programma lato server nel container, e si vede da qualsiasi browser.
 
