@@ -118,6 +118,54 @@ describe('IPsec tunnels', () => {
     expect(codes(other.problems)).toEqual(['error ipsec-selectors']);
   });
 
+  it('finds a different IKEv1 mode and authentication, and phase 2 DH groups apart', () => {
+    const infra = tunnelPair(
+      {
+        p1: '        set ike-version 1\n        set mode aggressive\n        set proposal aes256-sha256\n        set dhgrp 14',
+        p2: '        set proposal aes256-sha256\n        set dhgrp 19',
+      },
+      {
+        p1: '        set ike-version 1\n        set authmethod signature\n        set proposal aes256-sha256\n        set dhgrp 14',
+        p2: '        set proposal aes256-sha256\n        set dhgrp 14',
+      },
+    );
+    expect(codes(infra.problems)).toEqual([
+      'error ipsec-auth',
+      'error ipsec-mode',
+      'error ipsec-p2-dhgrp',
+    ]);
+    // Written on one side, the default on the other.
+    expect(find(infra.problems, 'ipsec-mode')[0]!.values).toMatchObject({
+      valueA: 'aggressive',
+      valueB: 'main',
+    });
+    expect(find(infra.problems, 'ipsec-auth')[0]!.values).toMatchObject({
+      valueA: 'psk',
+      valueB: 'signature',
+    });
+    expect(find(infra.problems, 'ipsec-p2-dhgrp')[0]!.values).toMatchObject({
+      valueA: '19',
+      valueB: '14',
+    });
+    // IKE, mode, authentication, proposals, DH; selectors, proposals, PFS and DH of phase 2.
+    expect(infra.links.find((l) => l.kind === 'ipsec')?.comparison).toEqual({
+      compared: 9,
+      issues: 3,
+    });
+  });
+
+  it('finds ADVPN roles that cannot work: a receiver towards a side that does not send', () => {
+    const infra = tunnelPair(
+      {
+        p1: '        set ike-version 2\n        set proposal aes256-sha256\n        set dhgrp 14\n        set auto-discovery-receiver enable',
+      },
+      {},
+    );
+    expect(infra.problems).toMatchObject([
+      { code: 'ipsec-advpn', severity: 'warning', values: { valueA: 'receiver', valueB: '—' } },
+    ]);
+  });
+
   it('never makes an error of a default that is not confirmed: it is to be checked', () => {
     // No DH groups written on side B: the default of FortiOS, not confirmed yet.
     const infra = tunnelPair(
@@ -464,7 +512,7 @@ end`,
 });
 
 describe('ADVPN', () => {
-  const hub = (extra: string) =>
+  const hub = (extra: string, reflector = true) =>
     forti(`config system global
     set hostname "FGT-HUB"
 end
@@ -497,7 +545,7 @@ config router bgp
     config neighbor-group
         edit "SPOKES"
             set remote-as 65000
-            set route-reflector-client enable
+${reflector ? '            set route-reflector-client enable' : ''}
 ${extra}
         next
     end
@@ -584,6 +632,13 @@ end`);
     expect(infra.advpn.hubs).toEqual([{ device: 'fgt-hub', context: 'root', tunnels: ['ADVPN'] }]);
     expect(infra.advpn.pairs).toMatchObject([{ a: 'fgt-s1', b: 'fgt-s2', status: 'impossible' }]);
     expect(infra.advpn.pairs[0]!.reasons).toHaveLength(2);
+  });
+
+  it('finds a hub that does not reflect the routes of the branches to each other', () => {
+    const infra = correlate([hub('', false), spoke(1, true), spoke(2, true)]);
+    expect(codes(infra.problems)).toEqual(['warning advpn-hub-policy', 'warning advpn-no-rr']);
+    expect(find(infra.problems, 'advpn-no-rr')[0]!.values).toEqual({ hub: 'FGT-HUB' });
+    expect(infra.advpn.pairs[0]!.reasons).toContain(find(infra.problems, 'advpn-no-rr')[0]!.id);
   });
 
   it('finds a branch without a policy towards the other branches', () => {
