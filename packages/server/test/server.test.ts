@@ -404,7 +404,12 @@ describe('the map changed by hand', () => {
     readFileSync(new URL('../../../samples/mappa-esempio.json', import.meta.url), 'utf8'),
   ) as MapFile;
 
-  const putMap = (app: FastifyInstance, client: string, map: unknown, headers = CHANGE) =>
+  const putMap = (
+    app: FastifyInstance,
+    client: string,
+    map: unknown,
+    headers: Record<string, string> = CHANGE,
+  ) =>
     app.inject({
       method: 'PUT',
       url: `/api/clients/${client}/map`,
@@ -450,9 +455,7 @@ describe('the map changed by hand', () => {
   it('accepts changes of the map only from the app, and only for a client that exists', async () => {
     const { app } = await start();
     const client = await createClient(app);
-    expect(
-      (await putMap(app, client.id, EXAMPLE, { host: HOST } as typeof CHANGE)).statusCode,
-    ).toBe(403);
+    expect((await putMap(app, client.id, EXAMPLE, { host: HOST })).statusCode).toBe(403);
     expect(
       (await putMap(app, client.id, EXAMPLE, { ...CHANGE, origin: 'http://evil.example' }))
         .statusCode,

@@ -95,6 +95,17 @@ for (const [colorScheme, suffix] of [
       await page.screenshot({ path: `${DOCS_IMG}app-mappa${suffix}.png`, style });
     });
 
+    test('map changed by hand', async ({ page, request }) => {
+      await exampleClient(page, request);
+      await page.getByTestId('nav-map').click();
+      await expect(page.getByTestId('map-device')).toHaveCount(12);
+      // The cable added by hand towards the switch of the old warehouse, no longer there.
+      await page.locator('[data-testid="row-problems"]').filter({ hasText: 'SW-HQ-MAG' }).click();
+      await expect(page.getByTestId('map-link-manual')).toBeVisible();
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: `${DOCS_IMG}app-mappa-mano${suffix}.png`, style });
+    });
+
     test('VPN of the client', async ({ page, request }) => {
       await exampleClient(page, request);
       await page.getByTestId('nav-vpn').click();

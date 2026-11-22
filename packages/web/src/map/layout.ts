@@ -95,10 +95,13 @@ export function visibleLinks(links: readonly Link[], layers: ReadonlySet<Layer>)
   return links.filter((l) => layers.has(LAYER_OF[l.kind]));
 }
 
-/** External nodes with at least one link shown: the others are not drawn. */
+/**
+ * External nodes with at least one link shown: the others are not drawn. A node added by hand
+ * is always drawn, also before it has a link.
+ */
 export function visibleExternals(infra: Infrastructure, links: readonly Link[]): ExternalNode[] {
   const used = new Set(links.flatMap((l) => [l.a.node, l.b.node]));
-  return infra.externals.filter((e) => used.has(e.id));
+  return infra.externals.filter((e) => used.has(e.id) || e.kind === 'manual');
 }
 
 const CABLE: ReadonlySet<LinkKind> = new Set(['cable', 'lag']);
