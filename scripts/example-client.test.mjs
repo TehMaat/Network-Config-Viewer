@@ -1,8 +1,13 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { strFromU8, unzipSync } from 'fflate';
+import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
-import { EXAMPLE_MAP, EXAMPLE_ZIP, sampleFilesByName } from './example-client.mjs';
+import {
+  EXAMPLE_MAP,
+  EXAMPLE_ZIP,
+  rebuildExampleClient,
+  sampleFilesByName,
+} from './example-client.mjs';
 
 // The example client must always be the samples as they are: after a change to a sample or to
 // the map of the example, it is made again with "node scripts/example-client.mjs".
@@ -22,6 +27,17 @@ describe('the example client', () => {
       expect(item.size, item.entry).toBe(sample.length);
       expect(item.sha256, item.entry).toBe(sha256(sample));
     }
+  });
+
+  it('adds a sample that is not in it yet after the others, with its bytes', () => {
+    const last = manifest.files.at(-1);
+    const fewer = { ...manifest, files: manifest.files.slice(0, -1) };
+    const { [last.entry]: _left, ...rest } = entries;
+    const zip = zipSync({ ...rest, 'client.json': strToU8(JSON.stringify(fewer)) });
+    const again = unzipSync(rebuildExampleClient(zip));
+    const added = JSON.parse(strFromU8(again['client.json'])).files.at(-1);
+    expect(added).toEqual({ ...last, addedAt: manifest.exportedAt });
+    expect(again[last.entry]).toEqual(entries[last.entry]);
   });
 
   it('has the map of the example, with its size and sha256', () => {

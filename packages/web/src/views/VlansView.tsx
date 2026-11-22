@@ -56,6 +56,8 @@ export function VlansView({ model }: { model: DeviceModel }) {
               w={10}
               h={10}
               style={{ background: colors.get(c.row.original.vlan.id), borderRadius: 2 }}
+              data-testid="vlan-color"
+              data-vlan={c.row.original.vlan.id}
             />
             <Text span size="sm" fw={600}>
               {c.getValue<number>()}

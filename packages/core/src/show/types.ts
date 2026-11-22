@@ -245,6 +245,11 @@ export interface DeviceState {
   /** FortiSwitches managed by the FortiGate, and the MAC addresses on their ports. */
   managedSwitches: ManagedSwitchState[];
   switchMacs: SwitchMacEntry[];
+  /**
+   * The state of a FortiSwitch managed by a FortiGate, taken from the shows of the FortiGate
+   * (#15, part 4): the table of the MACs of the switches is the MAC table of the switch.
+   */
+  managed?: boolean;
   /** Commands read, for the summary: "show mac address-table" and where it is. */
   commands: { id: ShowCommandId; line: number; context?: string; file?: string }[];
 }

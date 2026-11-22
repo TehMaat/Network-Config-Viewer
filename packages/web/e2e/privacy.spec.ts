@@ -41,6 +41,10 @@ test('never contacts another site, and cannot', async ({ page, baseURL }) => {
   }
   // The Excel file is made in the page: nothing is fetched from outside.
   await Promise.all([page.waitForEvent('download'), page.getByTestId('btn-export-device').click()]);
+  // A FortiSwitch managed by the campus FortiGate, as a device of its own (#15, part 4).
+  await page.locator('[data-testid="managed-item"][data-device="FSW-CAMPUS-01"]').click();
+  const managed = page.getByTestId('managed-switch-view').locator('[data-testid^="tab-"]');
+  for (let i = 0; i < (await managed.count()); i++) await managed.nth(i).click();
   // The map, loaded only now with its libraries, and the detail of a link (#15).
   await page.getByTestId('nav-map').click();
   await expect(page.getByTestId('map-canvas')).toBeVisible();

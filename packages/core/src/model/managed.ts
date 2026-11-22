@@ -52,6 +52,7 @@ export function managedSwitchState(
   const status = state.managedSwitches.find((s) => s.serial === sw.serial);
   if (macs.length === 0 && !status) return null;
   const out = emptyState();
+  out.managed = true;
   out.hostname = sw.name;
   out.serials = [sw.serial];
   if (status?.version) out.version = status.version;

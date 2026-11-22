@@ -558,21 +558,23 @@ class FortiosReader {
         this.get(e, key);
       }
       const ports: ManagedSwitch['ports'] = [];
+      // The LACP mode of every trunk: its members have it, as the members of an aggregate.
+      const modes = new Map<string, string>();
       const table = e.configs.get('ports');
       const downlinks = switchDownlinks(e.name);
       if (table) {
         this.structure(table);
         for (const p of this.entries(table)) {
           this.begin(p);
-          ports.push(this.readSwitchPort(p, downlinks));
+          ports.push(this.readSwitchPort(p, downlinks, modes));
         }
       }
       // Members of a trunk: the trunk they are in, as for an aggregate.
       for (const trunk of ports.filter((p) => p.kind === 'lag')) {
+        const mode = modes.get(trunk.name);
         for (const member of trunk.members ?? []) {
           const port = ports.find((p) => p.name === member);
-          if (port)
-            port.lag = { group: trunk.name, ...(trunk.lag?.mode ? { mode: trunk.lag.mode } : {}) };
+          if (port) port.lag = { group: trunk.name, ...(mode ? { mode } : {}) };
         }
       }
       this.managedSwitches.push({
@@ -589,7 +591,11 @@ class FortiosReader {
     }
   }
 
-  private readSwitchPort(p: Entry, downlinks: number): ManagedSwitch['ports'][number] {
+  private readSwitchPort(
+    p: Entry,
+    downlinks: number,
+    modes: Map<string, string>,
+  ): ManagedSwitch['ports'][number] {
     const trunk = this.one(p, 'type') === 'trunk';
     const vlan = this.one(p, 'vlan');
     this.refs(p, 'vlan', 'interface', '');
@@ -626,6 +632,7 @@ class FortiosReader {
     ]) {
       this.get(p, key);
     }
+    if (trunk && mode) modes.set(p.name, mode);
     const number = /^port(\d+)$/.exec(p.name)?.[1];
     const port: ManagedSwitch['ports'][number] = {
       name: p.name,
@@ -636,7 +643,6 @@ class FortiosReader {
       ...(description ? { description } : {}),
       ...(poe ? { poe: { mode: poe === 'enable' ? 'auto' : 'never' } } : {}),
       ...(members ? { members } : {}),
-      ...(trunk && mode ? { lag: { group: p.name, mode } } : {}),
       ...(role ? { trunkRole: role } : {}),
       ...(number
         ? {
@@ -666,8 +672,11 @@ class FortiosReader {
       const tagged = allowed.map(id).filter((v): v is number => v !== undefined);
       const plain = untagged.map(id).filter((v): v is number => v !== undefined);
       const ranges = (list: number[]) => list.map((v) => ({ from: v, to: v }));
+      // A trunk carries another VLAN than its native one: a port that allows only its native
+      // VLAN carries that VLAN alone, untagged, as an access port.
+      const others = [...tagged, ...plain].some((v) => v !== native);
       port.switchport =
-        all || tagged.length > 0 || plain.length > 0
+        all || others
           ? {
               mode: 'trunk',
               ...(native !== undefined ? { nativeVlan: native } : {}),

@@ -53,8 +53,17 @@ export interface PortLive {
   noMac: boolean;
 }
 
+/**
+ * Whether the shows have the MAC table of the device: "show mac address-table", or for a
+ * FortiSwitch managed by a FortiGate the table of the switches in the shows of the FortiGate.
+ * For the FortiGate itself, that table is not its own.
+ */
 export const hasMacTable = (state: DeviceState | null | undefined): boolean =>
-  !!state?.commands.some((c) => c.id === 'show mac address-table');
+  !!state?.commands.some(
+    (c) =>
+      c.id === 'show mac address-table' ||
+      (!!state.managed && c.id === 'diagnose switch-controller switch-info mac-table'),
+  );
 
 /** Everything the shows say about one port of a switch or one interface of a firewall. */
 export function portLive(iface: Interface, state: DeviceState | null | undefined): PortLive {

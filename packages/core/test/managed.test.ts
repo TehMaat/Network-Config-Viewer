@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   correlate,
+  hasMacTable,
   managedSwitchModel,
   managedSwitchState,
+  portsWithoutMac,
   readShowFile,
   splitLines,
   vlanGateways,
@@ -36,6 +38,11 @@ describe('managed FortiSwitches', () => {
       switchport: { mode: 'trunk', nativeVlan: 10 },
     });
     expect(vlanSetIds(port1.switchport!.allowed!)).toEqual([20]);
+    // A port that allows only its native VLAN carries it alone, untagged: an access port.
+    expect(sw.ports.find((p) => p.name === 'port5')?.switchport).toEqual({
+      mode: 'access',
+      accessVlan: 20,
+    });
     expect(sw.ports.find((p) => p.name === 'port52')).toMatchObject({
       shutdown: true,
       position: { uplink: true },
@@ -127,6 +134,13 @@ describe('managed FortiSwitches', () => {
       'port24 60',
     ]);
     expect(state.serials).toEqual(['S248EPTF20000002']);
+    // The table of the switches is the MAC table of the switch, not of the FortiGate: the
+    // configured ports without a MAC are marked on the switch only.
+    expect(hasMacTable(state)).toBe(true);
+    expect(hasMacTable(shows)).toBe(false);
+    expect(portsWithoutMac(model, state)).toContain('port2');
+    expect(portsWithoutMac(model, state)).not.toContain('port1');
+    expect(portsWithoutMac(campus, shows)).toEqual([]);
     expect(managedSwitchState(null, sw)).toBeNull();
   });
 });
