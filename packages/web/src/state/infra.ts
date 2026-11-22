@@ -7,6 +7,7 @@ import {
   type CorrelationInput,
   type Infrastructure,
   type Link,
+  type MapEdits,
   type Problem,
   type Severity,
 } from '@ncv/core';
@@ -33,11 +34,14 @@ export const EMPTY_INFRASTRUCTURE: Infrastructure = {
   links: [],
   problems: [],
   advpn: { hubs: [], spokes: [], pairs: [] },
+  discarded: [],
 };
 
+/** The devices of the page put together, with the changes made by hand to the map (#15). */
 export function buildInfrastructure(
   groups: readonly DeviceGroup[],
   links: ShowLinks,
+  edits?: MapEdits,
 ): Infrastructure {
   const inputs: CorrelationInput[] = [];
   for (const group of groups) {
@@ -55,7 +59,7 @@ export function buildInfrastructure(
       state: deviceState(links.showsOf.get(entry.id)),
     });
   }
-  return inputs.length > 0 ? correlate(inputs) : EMPTY_INFRASTRUCTURE;
+  return inputs.length > 0 ? correlate(inputs, edits) : EMPTY_INFRASTRUCTURE;
 }
 
 /** The other side of the links of a device, for its views: ports, tunnels, BGP sessions. */

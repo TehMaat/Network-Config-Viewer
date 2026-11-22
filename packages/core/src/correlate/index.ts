@@ -4,6 +4,7 @@
 import { findCables } from './cables';
 import { findProblems } from './checks';
 import { AddressIndex, DeviceInfo } from './devices';
+import { editLinks, editSites, type MapEdits } from './edits';
 import { findInternet, findOspf, findSubnets } from './l3';
 import { LinkSet } from './links';
 import { assignSites } from './sites';
@@ -17,15 +18,20 @@ import {
 import { findBgp, findShortcuts, findTunnels } from './vpn';
 
 export * from './types';
+export * from './edits';
 export { vlanGateways, type RemoteGateway } from './gateways';
 export { linkId } from './links';
 export { siteCode, siteFromLocation } from './sites';
 
 /**
  * The infrastructure of a client from the current configuration of each of its devices and
- * their shows. A device appears once, by hostname: the first one given wins.
+ * their shows, with the changes made by hand to its map. A device appears once, by hostname:
+ * the first one given wins.
  */
-export function correlate(inputs: readonly CorrelationInput[]): Infrastructure {
+export function correlate(
+  inputs: readonly CorrelationInput[],
+  edits?: MapEdits | null,
+): Infrastructure {
   const byKey = new Map<string, DeviceInfo>();
   for (const input of inputs) {
     const d = new DeviceInfo(input);
@@ -40,16 +46,20 @@ export function correlate(inputs: readonly CorrelationInput[]): Infrastructure {
   for (const link of cables.links) set.add(link);
   for (const e of cables.externals) externals.set(e.id, e);
 
-  const { sites, siteOf } = assignSites(
-    [
-      ...devices.map((d) => ({
-        key: d.key,
-        hostname: d.input.hostname,
-        ...(d.model.location ? { location: d.model.location.text } : {}),
-      })),
-      ...cables.externals.map((e) => ({ key: e.id, hostname: e.label })),
-    ],
-    cables.pairs,
+  const siteNodes = [
+    ...devices.map((d) => ({
+      key: d.key,
+      hostname: d.input.hostname,
+      ...(d.model.location ? { location: d.model.location.text } : {}),
+    })),
+    ...cables.externals.map((e) => ({ key: e.id, hostname: e.label })),
+  ];
+  // The sites changed by hand count already for the subnets: a subnet in two sites merged is
+  // in one site.
+  const { sites, siteOf } = editSites(
+    siteNodes,
+    assignSites(siteNodes, cables.pairs),
+    edits ?? undefined,
   );
 
   const subnets = findSubnets(
@@ -99,17 +109,26 @@ export function correlate(inputs: readonly CorrelationInput[]): Infrastructure {
     };
   });
 
+  // The links confirmed, discarded and added by hand, before the checks: a cable added by hand
+  // is checked like the others.
+  const siteIdOf = (name: string | undefined) => {
+    const wanted = name?.trim().toLowerCase();
+    return wanted ? used.find((s) => s.name.toLowerCase() === wanted)?.id : undefined;
+  };
+  const edited = editLinks(set.all(), [...externals.values()], byKey, siteIdOf, edits ?? undefined);
   const graph = {
     devices: infraDevices,
     sites: used,
-    externals: [...externals.values()].sort((x, y) => x.id.localeCompare(y.id)),
-    links: set.all().sort((x, y) => x.id.localeCompare(y.id)),
+    externals: edited.externals.sort((x, y) => x.id.localeCompare(y.id)),
+    links: edited.links.sort((x, y) => x.id.localeCompare(y.id)),
   };
   const { problems, advpn } = findProblems({
     infra: graph,
     byKey,
     mismatches: cables.mismatches,
     subnets,
+    orphans: edited.orphans,
+    unknownPorts: edited.unknownPorts,
   });
-  return { ...graph, problems, advpn };
+  return { ...graph, problems, advpn, discarded: edited.discarded };
 }

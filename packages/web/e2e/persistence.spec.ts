@@ -14,7 +14,10 @@ const MODEL = 'WS-C2960X-PROVA';
 
 test.skip(!step, 'only around a restart of the container');
 
-test('before the restart: a client with its files and a correction', async ({ page }) => {
+/** A node added by hand to the map of the client (#15, part 3). */
+const NODE = 'NAS dopo il riavvio';
+
+test('before the restart: a client with its files, a correction and its map', async ({ page }) => {
   test.skip(step !== 'prepare', 'first step');
   await openApp(page);
   await page.getByTestId('btn-start-new').click();
@@ -28,6 +31,15 @@ test('before the restart: a client with its files and a correction', async ({ pa
   const saved = page.waitForResponse((r) => r.request().method() === 'PATCH');
   await page.getByTestId('btn-apply').click();
   expect((await saved).ok()).toBe(true);
+
+  await page.getByTestId('nav-map').click();
+  await page.getByTestId('btn-map-add-node').click();
+  await page.getByTestId('input-external-label').fill(NODE);
+  const mapSaved = page.waitForResponse(
+    (r) => r.request().method() === 'PUT' && r.url().endsWith('/map'),
+  );
+  await page.getByTestId('btn-external-save').click();
+  expect((await mapSaved).ok()).toBe(true);
 });
 
 test('after the restart: everything is still there, byte for byte', async ({ page, request }) => {
@@ -51,4 +63,14 @@ test('after the restart: everything is still there, byte for byte', async ({ pag
     const bytes = await (await request.get(`/api/clients/${client.id}/files/${file.id}`)).body();
     expect(bytes.equals(Buffer.from(sampleBytes(rel))), rel).toBe(true);
   }
+
+  // The map changed by hand is there too.
+  const map = (await (await request.get(`/api/clients/${client.id}/map`)).json()) as {
+    externals?: { label: string }[];
+  };
+  expect(map.externals?.map((e) => e.label)).toEqual([NODE]);
+  await page.getByTestId('nav-map').click();
+  await expect(
+    page.locator('[data-testid="map-external"]').filter({ hasText: NODE }),
+  ).toBeVisible();
 });

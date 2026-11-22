@@ -1,6 +1,17 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  analyzeText,
+  assignShows,
+  buildModel,
+  mergeStates,
+  modelHints,
+  readShowFile,
+  splitLines,
+  type CorrelationInput,
+  type DeviceState,
+} from '../src';
 
 export const SAMPLES_DIR = fileURLToPath(new URL('../../../samples', import.meta.url));
 
@@ -11,8 +22,13 @@ export function sampleFiles(): string[] {
     for (const name of readdirSync(dir)) {
       const full = join(dir, name);
       if (statSync(full).isDirectory()) walk(full);
-      // The exported example client is an archive of the app, not a sample to read.
-      else if (name !== 'README.md' && !/^expected.*\.json$/.test(name) && !name.endsWith('.zip')) {
+      // The exported example client is an archive of the app, and its map is a file of the
+      // app too: not samples to read.
+      else if (
+        name !== 'README.md' &&
+        !/^(expected|mappa).*\.json$/.test(name) &&
+        !name.endsWith('.zip')
+      ) {
         out.push(relative(SAMPLES_DIR, full).split(sep).join('/'));
       }
     }
@@ -100,4 +116,51 @@ export function paxPathRecord(path: string): string {
   let length = body.length + 1;
   while (String(length).length + body.length !== length) length++;
   return `${length}${body}`;
+}
+
+/** The client of the samples, as the app gives it: current configurations with their shows. */
+export function sampleClient(): CorrelationInput[] {
+  const configs: { id: string; hostname: string; input: Omit<CorrelationInput, 'state'> }[] = [];
+  const shows: {
+    id: string;
+    hostname?: string;
+    serials: string[];
+    fileName: string;
+    state: DeviceState;
+  }[] = [];
+  for (const rel of sampleFiles()) {
+    if (rel.startsWith('versioni/')) continue;
+    const text = readSampleText(rel);
+    const analysis = analyzeText(text);
+    const lines = splitLines(text);
+    if (analysis.detection.kind.value === 'config') {
+      const model = buildModel(lines, analysis.tree, modelHints(analysis.detection));
+      if (model?.hostname) {
+        configs.push({
+          id: rel,
+          hostname: model.hostname,
+          input: { hostname: model.hostname, file: rel, model },
+        });
+      }
+    } else if (analysis.detection.kind.value === 'show') {
+      const show = readShowFile(lines);
+      shows.push({
+        id: rel,
+        ...(show.hostname ? { hostname: show.hostname } : {}),
+        serials: show.state.serials,
+        fileName: rel.split('/').at(-1)!,
+        state: show.state,
+      });
+    }
+  }
+  const assigned = assignShows(
+    configs.map((c) => ({ id: c.id, hostname: c.hostname })),
+    shows,
+  );
+  return configs.map((c) => {
+    const parts = shows
+      .filter((s) => assigned.get(s.id)?.device === c.id)
+      .map((s) => ({ file: s.id, state: s.state }));
+    return { ...c.input, state: parts.length > 0 ? mergeStates(parts) : null };
+  });
 }

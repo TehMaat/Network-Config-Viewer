@@ -2,6 +2,8 @@
 
 import { Badge, Group, Text } from '@mantine/core';
 import {
+  IconAlertTriangle,
+  IconBox,
   IconBuildingBroadcastTower,
   IconNetwork,
   IconPlugConnected,
@@ -143,6 +145,8 @@ const EXTERNAL_ICON = {
   peer: IconPlugConnected,
   neighbor: IconQuestionMark,
   segment: IconNetwork,
+  manual: IconBox,
+  missing: IconAlertTriangle,
 } as const;
 
 function ExternalBox({ data }: NodeProps<ExternalMapNode>) {
@@ -177,6 +181,7 @@ export const NODE_TYPES = { site: SiteBox, device: DeviceBox, external: External
 const STYLE: Record<LinkKind, { color: string; dash?: string; width: number }> = {
   cable: { color: 'var(--ncv-map-cable)', width: 1.6 },
   lag: { color: 'var(--ncv-map-cable)', width: 3.2 },
+  wan: { color: 'var(--ncv-map-wan)', dash: '12 4', width: 2.4 },
   internet: { color: 'var(--ncv-map-wan)', width: 1.4 },
   subnet: { color: 'var(--ncv-map-subnet)', dash: '2 3', width: 1.2 },
   ipsec: { color: 'var(--ncv-map-vpn)', dash: '7 4', width: 1.8 },

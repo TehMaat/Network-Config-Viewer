@@ -6,8 +6,10 @@ import '@xyflow/react/dist/style.css';
 import {
   Badge,
   Box,
+  Button,
   Chip,
   Group,
+  Menu,
   Paper,
   ScrollArea,
   Stack,
@@ -15,6 +17,7 @@ import {
   Title,
   useComputedColorScheme,
 } from '@mantine/core';
+import { IconBox, IconDownload, IconLayoutGrid, IconMapPin, IconPlus } from '@tabler/icons-react';
 import {
   Background,
   Controls,
@@ -24,11 +27,22 @@ import {
   useNodesState,
   useReactFlow,
 } from '@xyflow/react';
-import type { Infrastructure, Link, Problem, Severity } from '@ncv/core';
+import type {
+  Infrastructure,
+  Link,
+  ManualExternal,
+  ManualLink,
+  MapEdits,
+  Problem,
+  Severity,
+} from '@ncv/core';
 import type { ColumnDef } from '@tanstack/react-table';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { MapSaveState } from '../archive/useMapEdits';
+import { safeFileName, saveBlob } from '../export/download';
 import type { MapFocus } from '../state/infra';
+import { withoutPositions, withPosition } from '../state/mapEdits';
 import { DataTable } from '../views/DataTable';
 import {
   problemsSummary,
@@ -39,6 +53,15 @@ import {
 } from '../views/problems';
 import { DeviceViewContext, type DeviceViewApi } from '../views/source';
 import { endLabel, kindLabel, linkTitle, side, type ModelOf } from './details';
+import {
+  DiscardedLinks,
+  ExternalForm,
+  LinkForm,
+  SitesForm,
+  type EditMap,
+  type MapEditing,
+} from './editing';
+import { drawioXml, mapPicture } from './exporting';
 import {
   EDGE_TYPES,
   linkStyle,
@@ -56,10 +79,12 @@ import {
   LAYER_OF,
   LAYERS,
   parallelOffsets,
+  savedPositions,
   siteNodeId,
   visibleExternals,
   visibleLinks,
   type Layer,
+  type MapLayout,
 } from './layout';
 import { LinkPanel, NodePanel } from './panels';
 
@@ -71,6 +96,21 @@ export interface MapViewProps {
   exportName: string;
   /** What to show when the map opens: a link or a device, from a problem elsewhere. */
   focus?: MapFocus | null;
+  /** The changes made by hand (#15, part 3); without them the map can only be looked at. */
+  edits?: MapEdits;
+  onEdit?: EditMap;
+  saveState?: MapSaveState;
+}
+
+/** Where the changes made by hand are: in the client, being written, or only in this tab. */
+function SaveState({ state }: { state: MapSaveState }) {
+  const { t } = useTranslation();
+  const color = { tab: 'orange', loading: 'dimmed', saving: 'dimmed', saved: 'teal', error: 'red' };
+  return (
+    <Text size="xs" c={color[state]} data-testid="map-save-state" data-state={state}>
+      {t(`mapEdit.save.${state}`)}
+    </Text>
+  );
 }
 
 type Selection = MapFocus | null;
@@ -110,6 +150,8 @@ function edgeLabel(link: Link, t: ReturnType<typeof useTranslation>['t']): strin
   switch (link.kind) {
     case 'lag':
       return t('map.edge.lag', { count: Math.max(link.cables?.length ?? 0, 1) });
+    case 'wan':
+      return t('map.kind.wan');
     case 'ipsec':
       return [link.a.tunnel, link.b.tunnel].filter(Boolean).join(' ↔ ') || undefined;
     case 'bgp':
@@ -128,18 +170,29 @@ function Canvas({
   layers,
   selection,
   onSelect,
+  positions,
+  onMove,
+  onLayout,
 }: {
   infra: Infrastructure;
   layers: ReadonlySet<Layer>;
   selection: Selection;
   onSelect(selection: Selection): void;
+  /** The positions moved by hand (#15, part 3). */
+  positions: MapEdits['positions'];
+  /** A node moved by hand: its position from the corner of its site, or from the middle. */
+  onMove?(node: { kind: 'devices' | 'externals'; key: string }, at: { x: number; y: number }): void;
+  /** The layout drawn, for the exports. */
+  onLayout?(layout: MapLayout): void;
 }) {
   const marks = useMemo(() => problemMarks(infra.problems), [infra.problems]);
   const { t } = useTranslation();
   const scheme = useComputedColorScheme('light');
   const { fitView } = useReactFlow();
   const shown = useMemo(() => visibleLinks(infra.links, layers), [infra.links, layers]);
-  const layout = useMemo(() => computeLayout(infra, layers), [infra, layers]);
+  const moved = useMemo(() => savedPositions(infra, positions), [infra, positions]);
+  const layout = useMemo(() => computeLayout(infra, layers, moved), [infra, layers, moved]);
+  useEffect(() => onLayout?.(layout), [layout, onLayout]);
 
   const built = useMemo(() => {
     const externals = visibleExternals(infra, shown);
@@ -167,9 +220,10 @@ function Canvas({
       const box = layout.nodes.get(id);
       if (!box) return null;
       const parent = site ? layout.sites.get(site) : undefined;
+      // Not kept inside the box of the site: moved out of it, the site grows to take it in.
       return {
         position: parent ? { x: box.x - parent.x, y: box.y - parent.y } : { x: box.x, y: box.y },
-        ...(parent ? { parentId: siteNodeId(site!), extent: 'parent' as const } : {}),
+        ...(parent ? { parentId: siteNodeId(site!) } : {}),
       };
     };
     for (const d of infra.devices) {
@@ -227,11 +281,27 @@ function Canvas({
     setNodes(built.nodes);
     setEdges(built.edges);
   }, [built, setNodes, setEdges]);
-  // A new drawing (other layers, other devices) is shown whole.
+  // A new drawing (other layers, other nodes) is shown whole; a node moved by hand moves nothing
+  // else.
+  const drawing = `${[...layers].join()}|${[...layout.nodes.keys()].sort().join()}`;
   useEffect(() => {
     const frame = requestAnimationFrame(() => void fitView({ padding: 0.12, duration: 0 }));
     return () => cancelAnimationFrame(frame);
-  }, [layout, fitView]);
+  }, [drawing, fitView]);
+
+  const dropped = (node: MapNode) => {
+    if (!onMove || node.type === 'site') return;
+    const parent = node.parentId
+      ? layout.sites.get(node.parentId.slice('site:'.length))
+      : undefined;
+    const abs = parent
+      ? { x: parent.x + node.position.x, y: parent.y + node.position.y }
+      : node.position;
+    const origin = layout.origins.get(layout.siteOfNode.get(node.id) ?? '') ?? { x: 0, y: 0 };
+    const at = { x: abs.x - origin.x, y: abs.y - origin.y };
+    if (node.type === 'device') onMove({ kind: 'devices', key: node.data.device.hostname }, at);
+    else onMove({ kind: 'externals', key: node.data.external.id }, at);
+  };
 
   return (
     <ReactFlow<MapNode, MapEdge>
@@ -246,7 +316,9 @@ function Canvas({
       fitViewOptions={{ padding: 0.12 }}
       minZoom={0.1}
       maxZoom={2.5}
-      nodesDraggable={false}
+      nodesDraggable={!!onMove}
+      nodeDragThreshold={4}
+      onNodeDragStop={(_, node) => dropped(node)}
       nodesConnectable={false}
       elementsSelectable
       proOptions={{ hideAttribution: true }}
@@ -296,7 +368,9 @@ function LinksTable({
         id: 'source',
         header: t('map.col.source'),
         accessorFn: (l) =>
-          `${l.verified ? t('map.verified') : t('map.inferred')} (${[...new Set(l.sources.map((s) => t(`map.sourceKind.${s.kind}`)))].join(', ')})`,
+          l.manual
+            ? t('map.manual')
+            : `${l.verified ? t('map.verified') : t('map.inferred')}${l.confirmed ? `, ${t('map.confirmed')}` : ''} (${[...new Set(l.sources.map((s) => t(`map.sourceKind.${s.kind}`)))].join(', ')})`,
       },
       {
         id: 'state',
@@ -406,8 +480,88 @@ export default function MapView({
   onOpenFile,
   exportName,
   focus = null,
+  edits,
+  onEdit,
+  saveState,
 }: MapViewProps) {
   const { t } = useTranslation();
+  // The forms of the changes made by hand.
+  const [linkForm, setLinkForm] = useState<ManualLink | null>(null);
+  const [externalForm, setExternalForm] = useState<ManualExternal | 'new' | null>(null);
+  const [sitesOpen, setSitesOpen] = useState(false);
+  const editing = useMemo<MapEditing | undefined>(
+    () =>
+      edits && onEdit
+        ? {
+            edits,
+            onEdit,
+            openLink: (link) =>
+              setLinkForm(link ?? { id: '', kind: 'cable', a: { device: '' }, b: { device: '' } }),
+            openExternal: (external) => setExternalForm(external ?? 'new'),
+          }
+        : undefined,
+    [edits, onEdit],
+  );
+  const onMove = useCallback(
+    (n: { kind: 'devices' | 'externals'; key: string }, at: { x: number; y: number }) =>
+      onEdit?.((e) => withPosition(e, n.kind, n.key, at)),
+    [onEdit],
+  );
+  /** The layout drawn, for the exports of the map. */
+  const drawn = useRef<MapLayout | null>(null);
+  const onLayout = useCallback((layout: MapLayout) => {
+    drawn.current = layout;
+  }, []);
+  const moved =
+    Object.keys(edits?.positions?.devices ?? {}).length +
+      Object.keys(edits?.positions?.externals ?? {}).length >
+    0;
+
+  // The map as a file: draw.io, PNG and SVG, with the layers shown (#15, part 3).
+  const canvas = useRef<HTMLDivElement>(null);
+  const [exportFailed, setExportFailed] = useState(false);
+  const fileBase = `${safeFileName(exportName)}-map`;
+  const exportDrawio = () => {
+    const layout = drawn.current;
+    if (!layout) return;
+    const links = visibleLinks(infra.links, layers);
+    const labels = new Map<string, string>();
+    for (const l of links) {
+      const label = edgeLabel(l, t);
+      if (label) labels.set(l.id, label);
+    }
+    const text = drawioXml({
+      infra,
+      layout,
+      links,
+      externals: visibleExternals(infra, links),
+      labels,
+      title: exportName,
+      deviceDetail: (d) =>
+        [
+          d.model,
+          d.ha ? 'HA' : '',
+          d.contexts.length > 1 ? t('map.vdoms', { count: d.contexts.length }) : '',
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      externalDetail: (e) => e.detail ?? t(`map.external.${e.kind}`),
+      noSite: t('map.noSite'),
+    });
+    saveBlob(new Blob([text], { type: 'application/xml' }), `${fileBase}.drawio`);
+  };
+  const exportPicture = async (format: 'png' | 'svg') => {
+    const layout = drawn.current;
+    const viewport = canvas.current?.querySelector<HTMLElement>('.react-flow__viewport');
+    if (!layout || !viewport || !canvas.current) return;
+    setExportFailed(false);
+    try {
+      const background = getComputedStyle(canvas.current).backgroundColor;
+      saveBlob(await mapPicture(viewport, layout, format, background), `${fileBase}.${format}`);
+    } catch {
+      setExportFailed(true);
+    }
+  };
   // Opened on a link of a hidden layer: its layer is turned on.
   const [layers, setLayers] = useState<Set<Layer>>(() => {
     const saved = savedLayers();
@@ -467,7 +621,13 @@ export default function MapView({
       setSelection({ kind: 'node', id: p.devices[0]! });
     }
   };
-  const panelProps = { infra, modelOf, onOpenFile, onSelectLink: selectLink };
+  const panelProps = {
+    infra,
+    modelOf,
+    onOpenFile,
+    onSelectLink: selectLink,
+    ...(editing ? { editing } : {}),
+  };
   const devices = infra.devices.length;
   const sites = infra.sites.filter((s) => s.name).length;
 
@@ -516,19 +676,105 @@ export default function MapView({
               </Group>
             </Chip.Group>
           </Group>
+          {devices > 0 && (
+            <Group justify="space-between" gap="xs" data-testid="map-tools">
+              <Group gap={6}>
+                {editing && (
+                  <>
+                    <Button
+                      size="xs"
+                      variant="light"
+                      leftSection={<IconPlus size={14} />}
+                      onClick={() => editing.openLink()}
+                      data-testid="btn-map-add-link"
+                    >
+                      {t('mapEdit.tools.addLink')}
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="light"
+                      leftSection={<IconBox size={14} />}
+                      onClick={() => editing.openExternal()}
+                      data-testid="btn-map-add-node"
+                    >
+                      {t('mapEdit.tools.addNode')}
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="light"
+                      leftSection={<IconMapPin size={14} />}
+                      onClick={() => setSitesOpen(true)}
+                      data-testid="btn-map-sites"
+                    >
+                      {t('mapEdit.tools.sites')}
+                    </Button>
+                    {moved && (
+                      <Button
+                        size="xs"
+                        variant="subtle"
+                        leftSection={<IconLayoutGrid size={14} />}
+                        onClick={() => onEdit?.(withoutPositions)}
+                        data-testid="btn-map-reset-layout"
+                      >
+                        {t('mapEdit.tools.resetLayout')}
+                      </Button>
+                    )}
+                  </>
+                )}
+                <Menu position="bottom-start" withinPortal>
+                  <Menu.Target>
+                    <Button
+                      size="xs"
+                      variant="light"
+                      leftSection={<IconDownload size={14} />}
+                      data-testid="btn-map-export"
+                    >
+                      {t('mapEdit.tools.export')}
+                    </Button>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item onClick={exportDrawio} data-testid="btn-export-drawio">
+                      {t('mapEdit.export.drawio')}
+                    </Menu.Item>
+                    <Menu.Item
+                      onClick={() => void exportPicture('png')}
+                      data-testid="btn-export-png"
+                    >
+                      {t('mapEdit.export.png')}
+                    </Menu.Item>
+                    <Menu.Item
+                      onClick={() => void exportPicture('svg')}
+                      data-testid="btn-export-svg"
+                    >
+                      {t('mapEdit.export.svg')}
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+                {exportFailed && (
+                  <Text size="xs" c="red" data-testid="map-export-error">
+                    {t('mapEdit.export.error')}
+                  </Text>
+                )}
+              </Group>
+              {saveState && <SaveState state={saveState} />}
+            </Group>
+          )}
           {devices === 0 ? (
             <Text c="dimmed" data-testid="map-empty">
               {t('map.empty')}
             </Text>
           ) : (
             <Box className="ncv-map-layout">
-              <Paper withBorder className="ncv-map-canvas">
+              <Paper withBorder className="ncv-map-canvas" ref={canvas}>
                 <ReactFlowProvider>
                   <Canvas
                     infra={infra}
                     layers={layers}
                     selection={selection}
                     onSelect={(s) => (s?.kind === 'link' ? selectLink(s.id) : setSelection(s))}
+                    positions={edits?.positions}
+                    {...(onEdit ? { onMove } : {})}
+                    onLayout={onLayout}
                   />
                 </ReactFlowProvider>
               </Paper>
@@ -567,17 +813,56 @@ export default function MapView({
                 selected={current?.id ?? null}
                 onSelect={(id) => selectLink(id, true)}
               />
+              {onEdit && (
+                <Box mt="sm">
+                  <DiscardedLinks
+                    infra={infra}
+                    title={(l) => `${kindLabel(l.kind, t)}: ${linkTitle(l, infra, modelOf)}`}
+                    onEdit={onEdit}
+                  />
+                </Box>
+              )}
             </Box>
           )}
         </Stack>
       </ScrollArea>
+      {linkForm && onEdit && (
+        <LinkForm
+          link={linkForm}
+          infra={infra}
+          modelOf={modelOf}
+          onClose={() => setLinkForm(null)}
+          onEdit={onEdit}
+        />
+      )}
+      {externalForm && onEdit && (
+        <ExternalForm
+          {...(externalForm === 'new' ? {} : { external: externalForm })}
+          infra={infra}
+          onClose={() => setExternalForm(null)}
+          onEdit={onEdit}
+        />
+      )}
+      {sitesOpen && onEdit && (
+        <SitesForm infra={infra} onClose={() => setSitesOpen(false)} onEdit={onEdit} />
+      )}
     </DeviceViewContext.Provider>
   );
 }
 
 function Legend() {
   const { t } = useTranslation();
-  const kinds = ['lag', 'cable', 'internet', 'ipsec', 'shortcut', 'bgp', 'ospf', 'subnet'] as const;
+  const kinds = [
+    'lag',
+    'cable',
+    'wan',
+    'internet',
+    'ipsec',
+    'shortcut',
+    'bgp',
+    'ospf',
+    'subnet',
+  ] as const;
   return (
     <Stack gap="xs" data-testid="map-legend">
       <Title order={5}>{t('map.legend.title')}</Title>
@@ -616,6 +901,12 @@ function Legend() {
         <Text size="xs">{t('map.legend.inferred')}</Text>
       </Group>
       <Group gap={6} wrap="nowrap">
+        <Badge color="grape" variant="light" tt="none" style={{ flexShrink: 0 }}>
+          {t('map.manual')}
+        </Badge>
+        <Text size="xs">{t('map.legend.manual')}</Text>
+      </Group>
+      <Group gap={6} wrap="nowrap">
         {SEVERITIES.map((s) => (
           <span key={s} className={`ncv-map-problem ncv-map-problem-${s}`}>
             1
@@ -628,6 +919,9 @@ function Legend() {
       </Text>
       <Text size="xs" c="dimmed">
         {t('map.legend.click')}
+      </Text>
+      <Text size="xs" c="dimmed">
+        {t('map.legend.move')}
       </Text>
     </Stack>
   );

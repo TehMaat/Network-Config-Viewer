@@ -49,6 +49,15 @@ test('never contacts another site, and cannot', async ({ page, baseURL }) => {
   await Promise.all([page.waitForEvent('download'), page.getByTestId('export-links').click()]);
   // The problems between the devices and the VPN of the client (#15, part 2).
   await Promise.all([page.waitForEvent('download'), page.getByTestId('export-problems').click()]);
+  // The map as draw.io, PNG and SVG, made in the page (#15, part 3).
+  await page.getByTestId('nav-map').click();
+  for (const kind of ['drawio', 'png', 'svg']) {
+    await page.getByTestId('btn-map-export').click();
+    await Promise.all([
+      page.waitForEvent('download'),
+      page.getByTestId(`btn-export-${kind}`).click(),
+    ]);
+  }
   await page.getByTestId('nav-vpn').click();
   await page.getByTestId('row-vpn-tunnels').first().click();
   await expect(page.getByTestId('vpn-panel').getByTestId('map-link-panel')).toBeVisible();

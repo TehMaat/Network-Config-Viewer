@@ -2,7 +2,7 @@ import { AppShell, Button, Center, Group, Loader, Modal, Stack, Text } from '@ma
 import { Dropzone } from '@mantine/dropzone';
 import { useDisclosure } from '@mantine/hooks';
 import { IconUpload } from '@tabler/icons-react';
-import { DEFAULT_LIMITS, type ModelHints } from '@ncv/core';
+import { DEFAULT_LIMITS, type MapEdits, type ModelHints } from '@ncv/core';
 import {
   lazy,
   Suspense,
@@ -15,6 +15,7 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useArchive } from './archive/useArchive';
+import { useMapEdits } from './archive/useMapEdits';
 import { AppHeader } from './components/AppHeader';
 import { ClientBar, ClientDialogs, type ClientDialog } from './components/ClientBar';
 import { EmptyState } from './components/EmptyState';
@@ -33,6 +34,7 @@ import {
 } from './state/files';
 import { deviceGroups } from './state/groups';
 import { buildInfrastructure, MAP_ID, VPN_ID, type MapFocus } from './state/infra';
+import { EMPTY_EDITS, structuralEdits } from './state/mapEdits';
 import { AnalyzerClient } from './worker/client';
 import type { WorkerMessage } from './worker/protocol';
 
@@ -64,7 +66,11 @@ export function App() {
     dispatch({ type: 'clear' });
   }, []);
 
-  const archive = useArchive({ dispatch, analyzer: client, files, closeFiles });
+  // The changes made by hand to the map (#15, part 3), as they are now: the archive saves those
+  // of the tab with the files of the tab.
+  const tabMap = useRef<MapEdits>(EMPTY_EDITS);
+  const archive = useArchive({ dispatch, analyzer: client, files, closeFiles, tabMap });
+  const mapEdits = useMapEdits(archive.state.current?.id ?? null, tabMap);
   const { take, save } = archive;
   const [dialog, setDialog] = useState<ClientDialog>(null);
   const [confirmDelete, setConfirmDelete] = useState<TextEntry | null>(null);
@@ -276,8 +282,13 @@ export function App() {
   const currentIds = useMemo(() => new Set(groups.map((g) => g.current.id)), [groups]);
   // Files of shows go with the device they describe: its views show the real state.
   const links = useMemo(() => linkShows(state.files, currentIds), [state.files, currentIds]);
-  // The devices of the client put together: sites, links and nodes outside the client (#15).
-  const infra = useMemo(() => buildInfrastructure(groups, links), [groups, links]);
+  // The devices of the client put together: sites, links and nodes outside the client (#15),
+  // with the changes made by hand. The positions change only the drawing, not the links.
+  const structure = JSON.stringify(structuralEdits(mapEdits.edits));
+  const infra = useMemo(
+    () => buildInfrastructure(groups, links, JSON.parse(structure) as MapEdits),
+    [groups, links, structure],
+  );
   const modelOf = useCallback(
     (key: string) => {
       const file = infra.devices.find((d) => d.key === key)?.file;
@@ -387,6 +398,9 @@ export function App() {
                 onOpenFile={openFile}
                 exportName={archive.state.current?.name ?? t('map.exportName')}
                 focus={mapFocus}
+                edits={mapEdits.edits}
+                onEdit={mapEdits.update}
+                saveState={mapEdits.state}
               />
             </Suspense>
           ) : vpnOpen ? (

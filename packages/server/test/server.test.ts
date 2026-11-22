@@ -1,4 +1,5 @@
-import { mkdtempSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
@@ -6,6 +7,7 @@ import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp, MODIFIED_HEADER, PATH_HEADER, type AppOptions } from '../src/app.js';
 import type { ClientIndex, ClientSummary, FileRecord } from '../src/archive.js';
+import { cleanMap, MAX_MAP_BYTES, type MapFile } from '../src/map.js';
 import { hostName, isLocalHost, SECURITY_HEADERS } from '../src/security.js';
 
 // Synthetic content only. Bytes that must survive unchanged: BOM, CRLF, a byte that is not
@@ -393,6 +395,192 @@ describe('export and import', () => {
     expect((await importZip(app, foreign)).statusCode).toBe(400);
     expect((await importZip(app, strToU8('non sono uno zip'))).statusCode).toBe(400);
     expect(readdirSync(join(dataDir, 'clients'))).toEqual(before);
+  });
+});
+
+describe('the map changed by hand', () => {
+  // The map of the example client: the same file is checked by the tests of the core.
+  const EXAMPLE = JSON.parse(
+    readFileSync(new URL('../../../samples/mappa-esempio.json', import.meta.url), 'utf8'),
+  ) as MapFile;
+
+  const putMap = (
+    app: FastifyInstance,
+    client: string,
+    map: unknown,
+    headers: Record<string, string> = CHANGE,
+  ) =>
+    app.inject({
+      method: 'PUT',
+      url: `/api/clients/${client}/map`,
+      headers: { ...headers, 'content-type': 'application/json' },
+      // A string is sent as it is: JSON that an object literal of JavaScript cannot write.
+      payload: typeof map === 'string' ? map : JSON.stringify(map),
+    });
+  const getMap = (app: FastifyInstance, client: string) =>
+    app.inject({ url: `/api/clients/${client}/map`, headers: { host: HOST } });
+
+  it('accepts the map of the example client as it is', () => {
+    const { updatedAt: _updatedAt, ...rest } = EXAMPLE;
+    expect(cleanMap(EXAMPLE)).toEqual(rest);
+  });
+
+  it('keeps the map of a client next to its index, readable by hand', async () => {
+    const { app, dataDir } = await start();
+    const client = await createClient(app);
+    // No map yet: an empty one.
+    expect((await getMap(app, client.id)).json()).toEqual({ format: 'ncv-map', version: 1 });
+
+    const before = Date.now();
+    const saved = await putMap(app, client.id, EXAMPLE);
+    expect(saved.statusCode).toBe(200);
+    const map = saved.json<MapFile>();
+    expect(map.links).toEqual(EXAMPLE.links);
+    // The time of the change is the server's.
+    expect(Date.parse(map.updatedAt!)).toBeGreaterThanOrEqual(before - 1000);
+    expect((await getMap(app, client.id)).json()).toEqual(map);
+    const file = readFileSync(join(dataDir, 'clients', client.id, 'map.json'), 'utf8');
+    expect(file).toBe(`${JSON.stringify(map, null, 2)}\n`);
+    expect(readdirSync(join(dataDir, 'clients', client.id)).sort()).toEqual([
+      'client.json',
+      'files',
+      'map.json',
+    ]);
+
+    // After a restart of the server, the map is still there.
+    const again = await start({}, dataDir);
+    expect((await getMap(again.app, client.id)).json()).toEqual(map);
+  });
+
+  it('accepts changes of the map only from the app, and only for a client that exists', async () => {
+    const { app } = await start();
+    const client = await createClient(app);
+    expect((await putMap(app, client.id, EXAMPLE, { host: HOST })).statusCode).toBe(403);
+    expect(
+      (await putMap(app, client.id, EXAMPLE, { ...CHANGE, origin: 'http://evil.example' }))
+        .statusCode,
+    ).toBe(403);
+    expect(
+      (await putMap(app, client.id, EXAMPLE, { ...CHANGE, host: 'evil.example:8080' })).statusCode,
+    ).toBe(403);
+    expect((await putMap(app, '00000000-0000-4000-8000-000000000000', EXAMPLE)).statusCode).toBe(
+      404,
+    );
+    expect((await putMap(app, '..%2F..%2Fetc', EXAMPLE)).statusCode).toBe(404);
+    expect((await getMap(app, '00000000-0000-4000-8000-000000000000')).statusCode).toBe(404);
+  });
+
+  it('refuses a map that is not valid, too long or too big', async () => {
+    const { app, dataDir } = await start();
+    const client = await createClient(app);
+    const base = { format: 'ncv-map', version: 1 };
+    const link = { id: 'l1', kind: 'cable', a: { device: 'SW-A' }, b: { external: 'nas' } };
+    for (const bad of [
+      null,
+      [],
+      { ...base, version: 2 },
+      { format: 'altro', version: 1 },
+      { ...base, extra: true },
+      { ...base, sites: { Sede: 42 } },
+      { ...base, sites: { Sede: 'x'.repeat(101) } },
+      { ...base, sites: { Sede: 'riga\nnuova' } },
+      '{"format":"ncv-map","version":1,"deviceSites":{"__proto__":"Sede"}}',
+      { ...base, links: [{ ...link, kind: 'fibra' }] },
+      { ...base, links: [{ ...link, id: '../x' }] },
+      { ...base, links: [link, link] },
+      { ...base, links: [{ ...link, a: { device: 'SW-A', external: 'nas' } }] },
+      { ...base, links: [{ ...link, note: 'n'.repeat(501) }] },
+      { ...base, externals: [{ id: 'nas', label: '' }] },
+      { ...base, decisions: { 'cable:a|b': 'forse' } },
+      { ...base, positions: { devices: { 'SW-A': { x: 'uno', y: 2 } } } },
+      { ...base, positions: { devices: { 'SW-A': { x: 1e9, y: 2 } } } },
+      { ...base, positions: { switches: {} } },
+    ]) {
+      const res = await putMap(app, client.id, bad);
+      expect(res.statusCode, JSON.stringify(bad)).toBe(400);
+    }
+    const big = { ...base, sites: { Sede: 'x' }, note: 'x'.repeat(MAX_MAP_BYTES) };
+    expect((await putMap(app, client.id, big)).statusCode).toBe(413);
+    expect(readdirSync(join(dataDir, 'clients', client.id)).sort()).toEqual([
+      'client.json',
+      'files',
+    ]);
+  });
+
+  it('goes in the exported client and comes back with it, checked', async () => {
+    const { app } = await start();
+    const client = await createClient(app, 'Con mappa');
+    await upload(app, client.id, CONFIG, ['sw.txt']);
+    const map = (await putMap(app, client.id, EXAMPLE)).json<MapFile>();
+    const zip = new Uint8Array(
+      (await app.inject({ url: `/api/clients/${client.id}/export`, headers: { host: HOST } }))
+        .rawPayload,
+    );
+    const entries = unzipSync(zip);
+    expect(Object.keys(entries).sort()).toEqual(['client.json', 'files/0001-sw.txt', 'map.json']);
+    const manifest = JSON.parse(strFromU8(entries['client.json']!)) as {
+      map: { entry: string; size: number; sha256: string };
+    };
+    expect(manifest.map).toMatchObject({ entry: 'map.json', size: entries['map.json']!.length });
+
+    const imported = await app.inject({
+      method: 'POST',
+      url: '/api/import',
+      headers: { ...CHANGE, 'content-type': 'application/zip' },
+      payload: Buffer.from(zip),
+    });
+    expect(imported.statusCode).toBe(201);
+    const copy = imported.json<ClientSummary>();
+    expect((await getMap(app, copy.id)).json()).toEqual(map);
+
+    // A map changed inside the zip file: nothing is imported.
+    const changed = zipSync({
+      ...entries,
+      'map.json': strToU8('{"format":"ncv-map","version":1}'),
+    });
+    const refused = await app.inject({
+      method: 'POST',
+      url: '/api/import',
+      headers: { ...CHANGE, 'content-type': 'application/zip' },
+      payload: Buffer.from(changed),
+    });
+    expect(refused.json()).toEqual({ error: 'corrupt-file' });
+  });
+
+  it('imports the clients exported before the map, without one', async () => {
+    const { app } = await start();
+    // As 0.1.0 exported a client: an index and the files, no map.
+    const manifest = {
+      format: 'ncv-client-export',
+      version: 1,
+      name: 'Esportato con la 0.1.0',
+      createdAt: '2026-11-21T07:35:15.966Z',
+      exportedAt: '2026-11-21T07:35:16.023Z',
+      files: [
+        {
+          entry: 'files/0001-sw.txt',
+          path: ['sw.txt'],
+          size: CONFIG.length,
+          sha256: createHash('sha256').update(CONFIG).digest('hex'),
+          addedAt: '2026-11-21T07:35:15.969Z',
+          overrides: {},
+        },
+      ],
+    };
+    const zip = zipSync({
+      'client.json': strToU8(JSON.stringify(manifest)),
+      'files/0001-sw.txt': CONFIG,
+    });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/import',
+      headers: { ...CHANGE, 'content-type': 'application/zip' },
+      payload: Buffer.from(zip),
+    });
+    expect(res.statusCode).toBe(201);
+    const copy = res.json<ClientSummary>();
+    expect(copy).toMatchObject({ name: 'Esportato con la 0.1.0', files: 1 });
+    expect((await getMap(app, copy.id)).json()).toEqual({ format: 'ncv-map', version: 1 });
   });
 });
 

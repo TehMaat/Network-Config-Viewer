@@ -37,8 +37,8 @@ export interface InfraDevice {
   location?: string;
 }
 
-/** How the site of a device was found: SNMP location, hostname, cables, or not at all. */
-export type SiteSource = 'snmp' | 'hostname' | 'cables' | 'none';
+/** How the site of a device was found: SNMP location, hostname, cables, by hand, or not at all. */
+export type SiteSource = 'snmp' | 'hostname' | 'cables' | 'manual' | 'none';
 
 export interface Site {
   id: string;
@@ -46,9 +46,19 @@ export interface Site {
   name: string;
   source: SiteSource;
   devices: string[];
+  /**
+   * With changes made by hand: the names proposed for its nodes before them ("Magazzino" for a
+   * site renamed "Sede"). Without changes, the site has the name proposed.
+   */
+  proposed?: string[];
 }
 
-export type ExternalKind = 'internet' | 'provider' | 'peer' | 'neighbor' | 'segment';
+/**
+ * Internet, a provider, a peer, a neighbour that was not loaded, a shared segment; a node added
+ * by hand (#15, part 3); a device of a link added by hand that is not in the client any more.
+ */
+export type ExternalKind =
+  'internet' | 'provider' | 'peer' | 'neighbor' | 'segment' | 'manual' | 'missing';
 
 /** A node that is not a device of the client. */
 export interface ExternalNode {
@@ -61,8 +71,9 @@ export interface ExternalNode {
   site?: string;
 }
 
+/** "wan": a private WAN (MPLS, point to point of a provider), only added by hand. */
 export type LinkKind =
-  'cable' | 'lag' | 'subnet' | 'internet' | 'ipsec' | 'bgp' | 'ospf' | 'shortcut';
+  'cable' | 'lag' | 'wan' | 'subnet' | 'internet' | 'ipsec' | 'bgp' | 'ospf' | 'shortcut';
 
 /**
  * Where a link comes from. Shows verify (LLDP, CDP, tunnels and BGP sessions seen up), the
@@ -79,7 +90,8 @@ export type SourceKind =
   | 'bgp-neighbor'
   | 'ospf'
   | 'tunnel-state'
-  | 'bgp-state';
+  | 'bgp-state'
+  | 'manual';
 
 export const VERIFYING_SOURCES: readonly SourceKind[] = [
   'lldp',
@@ -173,6 +185,12 @@ export interface Link {
   state?: { a?: EndState; b?: EndState };
   /** IPsec: how many parameters were compared, and how many do not agree. */
   comparison?: { compared: number; issues: number };
+  /** Added by hand (#15, part 3). */
+  manual?: boolean;
+  /** Inferred, and confirmed by hand. */
+  confirmed?: boolean;
+  /** The note written with a link added by hand. */
+  note?: string;
 }
 
 export interface Infrastructure {
@@ -184,6 +202,8 @@ export interface Infrastructure {
   problems: Problem[];
   /** ADVPN of the client: hubs, checks and pairs of branches. */
   advpn: Advpn;
+  /** Inferred links discarded by hand (#15, part 3): not on the map, but not forgotten. */
+  discarded: Link[];
 }
 
 // ---- Consistency checks (chapter 6 of the study) --------------------------------------
@@ -225,6 +245,8 @@ export const PROBLEM_CODES = [
   'advpn-spoke-policy',
   'advpn-next-hop',
   'advpn-no-rr',
+  'manual-orphan',
+  'manual-interface',
 ] as const;
 
 export type ProblemCode = (typeof PROBLEM_CODES)[number];

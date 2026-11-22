@@ -8,7 +8,7 @@ Strumento per vedere l'infrastruttura di rete di un cliente partendo dai backup 
 
 Le fasi 0 e 1 della roadmap sono realizzate: trascini un backup FortiGate o Cisco e l'app lo legge e lo mostra in forma grafica, apparato per apparato, sempre collegato alla config originale, identica al file. Se aggiungi gli output dei comandi show, le viste mostrano anche lo stato reale. I file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato, e ogni apparato si esporta in Excel.
 
-La fase 2 è in corso: gli apparati di un cliente si vedono insieme nella **mappa dell'infrastruttura**, con i **problemi** trovati confrontandoli tra loro, e nella **vista VPN** del cliente, con ADVPN. Le parti successive (modifiche a mano ed export della mappa, FortiSwitch e FortiAP gestiti) e le altre fasi (analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
+La fase 2 è in corso: gli apparati di un cliente si vedono insieme nella **mappa dell'infrastruttura**, con i **problemi** trovati confrontandoli tra loro, e nella **vista VPN** del cliente, con ADVPN. La mappa si **corregge a mano** e si **esporta** in draw.io, PNG e SVG. La parte che manca (FortiSwitch e FortiAP gestiti) e le altre fasi (analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
 
 ## Cosa fa oggi
 
@@ -40,6 +40,13 @@ La fase 2 è in corso: gli apparati di un cliente si vedono insieme nella **mapp
   - i problemi sono segnati sulla mappa, sugli apparati e sui collegamenti, elencati sotto la mappa (con export Excel), nel dettaglio di ogni collegamento con i valori che non tornano colorati, e nel riepilogo di ogni apparato.
 - **Mostra la VPN del cliente**: tutti i tunnel con i due estremi, il tipo, lo stato e l'esito del confronto ("9 parametri coerenti", "2 incoerenze", "un solo lato"); per ADVPN ruoli, controlli e, per ogni coppia di filiali, se la scorciatoia è attiva, possibile o no, e perché.
 - **Trova il gateway di una VLAN** anche su un altro apparato, seguendo i trunk: nella vista VLAN di uno switch di accesso compare il FortiGate o il centro stella che fa da gateway, con il percorso.
+- **Si corregge a mano**, e le modifiche restano nel cliente, in `map.json`, senza mai toccare le config:
+  - apparati e nodi si spostano trascinandoli; i siti si rinominano e si uniscono, e un apparato si sposta in un altro sito;
+  - si aggiungono nodi senza config (un router del provider, un NAS) e collegamenti da porta a porta: cavi, LAG, WAN private;
+  - i collegamenti dedotti si confermano, si scartano (e si ripristinano) o si correggono;
+  - un collegamento a mano verso un apparato che non c'è più resta, ed è segnalato;
+  - senza un cliente aperto le modifiche restano nella scheda, e vanno nel cliente con i file.
+- **Esporta la mappa** in draw.io, da ritoccare, e come immagine PNG o SVG, con i livelli accesi.
 - **Esporta in Excel**, con il file creato nel browser:
   - ogni apparato, con un foglio per vista: porte, VLAN, ACL, routing e MAC degli switch; interfacce e VLAN del FortiGate, e policy, oggetti, routing, VPN e SD-WAN di ogni VDOM. Con gli show c'è anche lo stato reale;
   - ogni tabella, così come è filtrata e ordinata, con il pulsante accanto al filtro.
@@ -51,6 +58,8 @@ La fase 2 è in corso: gli apparati di un cliente si vedono insieme nella **mapp
 - Tema **chiaro, scuro o come il sistema**, a scelta. La scelta resta salvata nel browser.
 
 ![La mappa del cliente di esempio con i problemi segnati, e il dettaglio del LAG tra SW-HQ-ACC3 e il centro stella, dove i protocolli dei due lati non si accordano](docs/img/app-mappa.png)
+
+![La mappa del cliente di esempio con i collegamenti aggiunti a mano: quello verso lo switch del vecchio magazzino, che non c'è più, è segnalato](docs/img/app-mappa-mano.png)
 
 ![La vista VPN del cliente di esempio in tema scuro: i tunnel con l'esito del confronto, e il dettaglio del tunnel WAN2 della filiale 2, senza proposte e gruppi DH in comune con l'hub](docs/img/app-vpn-scuro.png)
 

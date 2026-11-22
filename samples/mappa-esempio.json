@@ -1,0 +1,44 @@
+{
+  "format": "ncv-map",
+  "version": 1,
+  "updatedAt": "2026-11-22T09:00:00.000Z",
+  "externals": [
+    {
+      "id": "sw-dc",
+      "label": "SW-DC",
+      "detail": "Switch del datacenter, config non disponibile",
+      "site": "Datacenter"
+    },
+    {
+      "id": "server-dmz",
+      "label": "Server DMZ",
+      "detail": "Server web e posta pubblicati",
+      "site": "Sede"
+    }
+  ],
+  "links": [
+    {
+      "id": "dc-switch",
+      "kind": "cable",
+      "a": { "device": "FGT-DC", "interface": "x1" },
+      "b": { "external": "sw-dc" },
+      "note": "Visto in sede: x1 va allo switch del datacenter"
+    },
+    {
+      "id": "dmz-server",
+      "kind": "cable",
+      "a": { "device": "FGT-HQ", "interface": "port10" },
+      "b": { "external": "server-dmz" }
+    },
+    {
+      "id": "magazzino",
+      "kind": "cable",
+      "a": { "device": "SW-HQ-CORE", "interface": "Gi3/0/39" },
+      "b": { "device": "SW-HQ-MAG", "interface": "Gi1/0/1" },
+      "note": "Sulla presa PDL-135 c'era lo switch del vecchio magazzino: c'è ancora?"
+    }
+  ],
+  "decisions": {
+    "lag:sw-hq-acc3/default/port-channel1|sw-hq-core/default/port-channel12": "confirmed"
+  }
+}

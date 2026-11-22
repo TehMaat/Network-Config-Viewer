@@ -4,7 +4,7 @@
 // moves nothing: only the segments of the shared subnets take room when their layer is on.
 
 import dagre from '@dagrejs/dagre';
-import type { ExternalNode, Infrastructure, Link, LinkKind } from '@ncv/core';
+import type { ExternalNode, Infrastructure, Link, LinkKind, MapEdits } from '@ncv/core';
 
 export type Layer = 'cables' | 'vpn' | 'shortcuts' | 'routing' | 'subnets';
 
@@ -14,6 +14,7 @@ export const DEFAULT_LAYERS: readonly Layer[] = ['cables', 'vpn', 'shortcuts', '
 export const LAYER_OF: Record<LinkKind, Layer> = {
   cable: 'cables',
   lag: 'cables',
+  wan: 'cables',
   internet: 'cables',
   subnet: 'subnets',
   ipsec: 'vpn',
@@ -58,6 +59,30 @@ export interface MapLayout {
   sites: Map<string, Box>;
   /** Boxes of the devices and of the external nodes, absolute. */
   nodes: Map<string, Box>;
+  /**
+   * Where every site starts in the automatic layout: the positions moved by hand are kept from
+   * there, so that they follow their site when the rest of the map changes.
+   */
+  origins: Map<string, { x: number; y: number }>;
+  /** The site of every node drawn in a site. */
+  siteOfNode: Map<string, string>;
+}
+
+/** The positions moved by hand, by node id of the map. */
+export function savedPositions(
+  infra: Infrastructure,
+  positions: MapEdits['positions'],
+): Map<string, { x: number; y: number }> {
+  const out = new Map<string, { x: number; y: number }>();
+  const byHost = new Map(infra.devices.map((d) => [d.hostname.toLowerCase(), d.key]));
+  for (const [host, p] of Object.entries(positions?.devices ?? {})) {
+    const key = byHost.get(host.toLowerCase());
+    if (key) out.set(deviceNodeId(key), p);
+  }
+  for (const [id, p] of Object.entries(positions?.externals ?? {})) {
+    if (infra.externals.some((e) => e.id === id)) out.set(externalNodeId(id), p);
+  }
+  return out;
 }
 
 /** The node id of a side of a link. */
@@ -70,17 +95,25 @@ export function visibleLinks(links: readonly Link[], layers: ReadonlySet<Layer>)
   return links.filter((l) => layers.has(LAYER_OF[l.kind]));
 }
 
-/** External nodes with at least one link shown: the others are not drawn. */
+/**
+ * External nodes with at least one link shown: the others are not drawn. A node added by hand
+ * is always drawn, also before it has a link.
+ */
 export function visibleExternals(infra: Infrastructure, links: readonly Link[]): ExternalNode[] {
   const used = new Set(links.flatMap((l) => [l.a.node, l.b.node]));
-  return infra.externals.filter((e) => used.has(e.id));
+  return infra.externals.filter((e) => used.has(e.id) || e.kind === 'manual');
 }
 
 const CABLE: ReadonlySet<LinkKind> = new Set(['cable', 'lag']);
 
-export function computeLayout(infra: Infrastructure, layers: ReadonlySet<Layer>): MapLayout {
+export function computeLayout(
+  infra: Infrastructure,
+  layers: ReadonlySet<Layer>,
+  moved: ReadonlyMap<string, { x: number; y: number }> = new Map(),
+): MapLayout {
   const nodes = new Map<string, Box>();
   const sites = new Map<string, Box>();
+  const siteOfNode = new Map<string, string>();
   const siteNodes = new Map<string, { id: string; width: number; height: number }[]>();
   const segments = new Map<string, ExternalNode[]>();
   const free: ExternalNode[] = [];
@@ -91,7 +124,8 @@ export function computeLayout(infra: Infrastructure, layers: ReadonlySet<Layer>)
   for (const e of infra.externals) {
     if (e.kind === 'segment' && e.site && siteNodes.has(e.site)) {
       segments.set(e.site, [...(segments.get(e.site) ?? []), e]);
-    } else if (e.kind === 'neighbor' && e.site && siteNodes.has(e.site)) {
+    } else if ((e.kind === 'neighbor' || e.kind === 'manual') && e.site && siteNodes.has(e.site)) {
+      // Neighbours that were not loaded, and nodes added by hand in a site, are drawn in it.
       siteNodes.get(e.site)!.push({ id: externalNodeId(e.id), ...EXTERNAL_SIZE });
     } else {
       free.push(e);
@@ -219,10 +253,13 @@ export function computeLayout(infra: Infrastructure, layers: ReadonlySet<Layer>)
       boxes.every((b) => middle.every((m) => !touch(b, m, GAP)));
     if (clear) break;
   }
+  const origins = new Map<string, { x: number; y: number }>();
   order.forEach((id, i) => {
     const box = boxes[i]!;
     sites.set(id, box);
+    origins.set(id, { x: box.x, y: box.y });
     for (const [nodeId, b] of local.get(id)!) {
+      siteOfNode.set(nodeId, id);
       nodes.set(nodeId, {
         ...b,
         x: box.x + PADDING + b.x,
@@ -230,7 +267,32 @@ export function computeLayout(infra: Infrastructure, layers: ReadonlySet<Layer>)
       });
     }
   });
-  return { sites, nodes };
+
+  // The nodes moved by hand: from the corner of their site, or from the middle of the map.
+  if (moved.size > 0) {
+    for (const [nodeId, p] of moved) {
+      const box = nodes.get(nodeId);
+      if (!box) continue;
+      const origin = origins.get(siteOfNode.get(nodeId) ?? '') ?? { x: 0, y: 0 };
+      nodes.set(nodeId, { ...box, x: origin.x + p.x, y: origin.y + p.y });
+    }
+    // Every site around its nodes again: it grows with a node moved out of it.
+    for (const id of sites.keys()) {
+      const members = [...siteOfNode].filter(([, s]) => s === id).map(([n]) => nodes.get(n)!);
+      if (members.length === 0) continue;
+      const minX = Math.min(...members.map((b) => b.x));
+      const minY = Math.min(...members.map((b) => b.y));
+      const maxX = Math.max(...members.map((b) => b.x + b.width));
+      const maxY = Math.max(...members.map((b) => b.y + b.height));
+      sites.set(id, {
+        x: minX - PADDING,
+        y: minY - PADDING - HEADER,
+        width: maxX - minX + PADDING * 2,
+        height: maxY - minY + PADDING * 2 + HEADER,
+      });
+    }
+  }
+  return { sites, nodes, origins, siteOfNode };
 }
 
 /**

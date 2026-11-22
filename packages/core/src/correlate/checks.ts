@@ -17,6 +17,7 @@ import { vlanSetHas } from '../model/vlans';
 import { policyMatchesIp } from '../query/policies';
 import type { DescriptionMismatch } from './cables';
 import type { DeviceInfo } from './devices';
+import type { LinkEditResult } from './edits';
 import type { SubnetResult } from './l3';
 import { configEvidence } from './links';
 import type {
@@ -61,10 +62,13 @@ class Problems {
 }
 
 export interface CheckInput {
-  infra: Omit<Infrastructure, 'problems' | 'advpn'>;
+  infra: Omit<Infrastructure, 'problems' | 'advpn' | 'discarded'>;
   byKey: ReadonlyMap<string, DeviceInfo>;
   mismatches: readonly DescriptionMismatch[];
   subnets: Pick<SubnetResult, 'duplicates' | 'overlaps'>;
+  /** Links added by hand towards devices or ports that are not there (#15, part 3). */
+  orphans?: LinkEditResult['orphans'];
+  unknownPorts?: LinkEditResult['unknownPorts'];
 }
 
 export function findProblems(input: CheckInput): { problems: Problem[]; advpn: Advpn } {
@@ -119,10 +123,39 @@ export function findProblems(input: CheckInput): { problems: Problem[]; advpn: A
       p.values.viaProblem = 'yes';
     }
   }
+  checkManual(input, host, out);
   const advpn = checkAdvpn(infra.links, byKey, host, out);
   const rank = { error: 0, warning: 1, info: 2 } as const;
   out.list.sort((a, b) => rank[a.severity] - rank[b.severity] || a.id.localeCompare(b.id));
   return { problems: out.list, advpn };
+}
+
+// ---- Links added by hand --------------------------------------------------------------
+
+/** A link added by hand keeps its sides: one that is not there any more is said, not removed. */
+function checkManual(input: CheckInput, host: (key: string) => string, out: Problems): void {
+  const label = (node: string) =>
+    input.infra.externals.find((e) => e.id === node)?.label ?? host(node);
+  for (const o of input.orphans ?? []) {
+    const link = input.infra.links.find((l) => l.id === o.link);
+    if (!link) continue;
+    const other = link.a.node.startsWith('missing:') ? link.b.node : link.a.node;
+    const devices = input.byKey.has(other) ? [other] : [];
+    out.add('manual-orphan', 'warning', devices, { device: o.hostname, other: label(other) }, [], {
+      link: link.id,
+      key: o.hostname.toLowerCase(),
+    });
+  }
+  for (const u of input.unknownPorts ?? []) {
+    out.add(
+      'manual-interface',
+      'info',
+      [u.device],
+      { device: host(u.device), interface: u.interface },
+      [],
+      { link: u.link, key: `${u.device}|${u.interface}` },
+    );
+  }
 }
 
 // ---- IPsec ----------------------------------------------------------------------------
@@ -707,7 +740,9 @@ function checkDiscovery(
   out: Problems,
 ): void {
   for (const link of links) {
-    if ((link.kind !== 'cable' && link.kind !== 'lag') || link.verified) continue;
+    // A link confirmed or added by hand has been seen by someone: no show is needed.
+    if (link.kind !== 'cable' && link.kind !== 'lag') continue;
+    if (link.verified || link.confirmed || link.manual) continue;
     for (const end of [link.a, link.b]) {
       const d = byKey.get(end.node);
       if (!d || !end.interface || end.unknownInterface || discoveryOn(d, end.interface)) continue;

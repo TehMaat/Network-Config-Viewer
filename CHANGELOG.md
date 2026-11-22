@@ -6,6 +6,32 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
 
 ## [Non rilasciato]
 
+## [0.4.0] - 2026-11-22
+
+### Aggiunto
+
+- Modifiche a mano della mappa, terza parte della fase 2 ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)):
+  - apparati e nodi si trascinano, e la posizione resta; "Disposizione automatica" torna alla disposizione proposta;
+  - nodi aggiunti a mano, fuori dal cliente (un router del provider, un NAS), e collegamenti a mano da porta a porta: cavi, LAG e WAN private, anche verso quei nodi, con una nota; i collegamenti a mano si controllano come gli altri;
+  - collegamenti dedotti confermati, scartati e ripristinati, o corretti con un collegamento a mano che ne prende il posto;
+  - siti rinominati e uniti, e apparati spostati in un altro sito, prima dei controlli;
+  - un collegamento a mano verso un apparato che non è più nel cliente resta, con un nodo e un problema che lo dicono;
+  - le modifiche restano nel cliente, in `map.json` accanto a `client.json`, leggibile a mano; senza un cliente aperto restano nella scheda, con un avviso, e vanno nel cliente con i file.
+- Due richieste del server per leggere e scrivere la mappa del cliente, con le protezioni delle altre: intestazione dell'app, nomi del server, limite di 2 MB, controllo di ogni campo, scrittura atomica. L'export del cliente comprende la mappa, con lo sha256; i clienti esportati prima si importano ancora ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Export della mappa in draw.io, scritto nel progetto, e come immagine PNG e SVG con html-to-image 1.11.13 (MIT), caricato solo all'export ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Mappa del cliente di esempio con due nodi e tre collegamenti a mano, uno verso uno switch che non c'è più, e un LAG confermato: `samples/mappa-esempio.json`, anche nel cliente di esempio ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Script `scripts/example-client.mjs` che rifà il cliente di esempio dagli esempi e dalla sua mappa, e un test che controlla che lo zip resti uguale agli esempi ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Test delle modifiche a mano nel core, del server per la mappa e nel browser (anche dopo il riavvio del container e nel test di riservatezza, con gli export); screenshot della mappa con i collegamenti a mano in chiaro e scuro ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+
+### Modificato
+
+- I cavi confermati o aggiunti a mano non danno più l'informazione "LLDP e CDP spenti": li ha visti qualcuno ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Cliente di esempio e screenshot rifatti; studio e README con le modifiche a mano e l'export ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+
+### Corretto
+
+- Il test nel browser del cliente con 150 apparati aspetta fino a 60 secondi il caricamento dei file, che non è quello che misura: su Firefox, nella CI, ne servono circa 20 e a volte falliva. Per questo la v0.2.0 non è stata rilasciata ([#18](https://github.com/TehMaat/Network-Config-Viewer/pull/18)).
+
 ## [0.3.0] - 2026-11-22
 
 ### Aggiunto

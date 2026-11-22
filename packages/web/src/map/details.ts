@@ -359,6 +359,7 @@ export function linkRows(
   switch (link.kind) {
     case 'cable':
     case 'lag':
+    case 'wan':
       rows = cableRows(link, a, b, t);
       break;
     case 'subnet':
