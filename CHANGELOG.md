@@ -28,6 +28,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
 - I cavi confermati o aggiunti a mano non danno più l'informazione "LLDP e CDP spenti": li ha visti qualcuno ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
 - Cliente di esempio e screenshot rifatti; studio e README con le modifiche a mano e l'export ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
 
+### Corretto
+
+- Il test nel browser del cliente con 150 apparati aspetta fino a 60 secondi il caricamento dei file, che non è quello che misura: su Firefox, nella CI, ne servono circa 20 e a volte falliva. Per questo la v0.2.0 non è stata rilasciata ([#18](https://github.com/TehMaat/Network-Config-Viewer/pull/18)).
+
 ## [0.3.0] - 2026-11-22
 
 ### Aggiunto

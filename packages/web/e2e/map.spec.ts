@@ -218,8 +218,11 @@ test('exports the list of the links to Excel, and works on a large client', asyn
       });
     }
   }
+  // Reading the 150 files is not what is measured: on the runners of the CI Firefox takes about
+  // 20 seconds, the default timeout of an expectation.
+  test.slow();
   await openApp(page);
-  await loadFiles(page, files, files.length);
+  await loadFiles(page, files, files.length, 60_000);
   const started = Date.now();
   await page.getByTestId('nav-map').click();
   await expect(page.getByTestId('map-device')).toHaveCount(150);
