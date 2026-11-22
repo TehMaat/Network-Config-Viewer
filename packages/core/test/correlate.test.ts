@@ -2,80 +2,26 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
-  analyzeText,
-  assignShows,
   buildCiscoModel,
   buildFortiosModel,
-  buildModel,
   correlate,
-  mergeStates,
-  modelHints,
   parseSyntax,
-  readShowFile,
   siteCode,
   siteFromLocation,
   splitLines,
   type CorrelationInput,
-  type DeviceState,
   type Infrastructure,
   type Link,
   type LinkEnd,
   vlanGateways,
 } from '../src';
-import { readSampleText, SAMPLES_DIR, sampleFiles } from './helpers';
+import { sampleClient, SAMPLES_DIR } from './helpers';
 
 // The links expected between the samples, in a compact form that can be read and checked by
 // hand. After a deliberate change of the correlation or of a sample, rewrite it with
 // NCV_UPDATE_EXPECTED=1 npx vitest run test/correlate.test.ts and review the diff.
 const EXPECTED = join(SAMPLES_DIR, 'expected-links.json');
 const update = process.env.NCV_UPDATE_EXPECTED === '1';
-
-/** The client of the samples, as the app gives it: current configurations with their shows. */
-function sampleClient(): CorrelationInput[] {
-  const configs: { id: string; hostname: string; input: Omit<CorrelationInput, 'state'> }[] = [];
-  const shows: {
-    id: string;
-    hostname?: string;
-    serials: string[];
-    fileName: string;
-    state: DeviceState;
-  }[] = [];
-  for (const rel of sampleFiles()) {
-    if (rel.startsWith('versioni/')) continue;
-    const text = readSampleText(rel);
-    const analysis = analyzeText(text);
-    const lines = splitLines(text);
-    if (analysis.detection.kind.value === 'config') {
-      const model = buildModel(lines, analysis.tree, modelHints(analysis.detection));
-      if (model?.hostname) {
-        configs.push({
-          id: rel,
-          hostname: model.hostname,
-          input: { hostname: model.hostname, file: rel, model },
-        });
-      }
-    } else if (analysis.detection.kind.value === 'show') {
-      const show = readShowFile(lines);
-      shows.push({
-        id: rel,
-        ...(show.hostname ? { hostname: show.hostname } : {}),
-        serials: show.state.serials,
-        fileName: rel.split('/').at(-1)!,
-        state: show.state,
-      });
-    }
-  }
-  const assigned = assignShows(
-    configs.map((c) => ({ id: c.id, hostname: c.hostname })),
-    shows,
-  );
-  return configs.map((c) => {
-    const parts = shows
-      .filter((s) => assigned.get(s.id)?.device === c.id)
-      .map((s) => ({ file: s.id, state: s.state }));
-    return { ...c.input, state: parts.length > 0 ? mergeStates(parts) : null };
-  });
-}
 
 function endText(e: LinkEnd): string {
   return [

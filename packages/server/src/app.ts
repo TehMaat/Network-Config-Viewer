@@ -6,6 +6,7 @@ import { sep } from 'node:path';
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
 import { Archive, ArchiveError, DEFAULT_ARCHIVE_LIMITS, type ArchiveLimits } from './archive.js';
+import { MAX_MAP_BYTES } from './map.js';
 import { REFUSAL_MESSAGES, refusal, SECURITY_HEADERS } from './security.js';
 
 export interface AppOptions {
@@ -142,6 +143,17 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
     await archive.removeFile(request.params.id, request.params.fileId);
     return reply.code(204).send();
   });
+
+  // The map of the client changed by hand (#15, part 3), checked before it is written.
+  app.get<{ Params: IdParams }>('/api/clients/:id/map', async (request) =>
+    archive.readMap(request.params.id),
+  );
+
+  app.put<{ Params: IdParams; Body: unknown }>(
+    '/api/clients/:id/map',
+    { bodyLimit: MAX_MAP_BYTES },
+    async (request) => archive.writeMap(request.params.id, request.body),
+  );
 
   app.get<{ Params: IdParams }>('/api/clients/:id/export', async (request, reply) => {
     const { name, zip } = await archive.exportZip(request.params.id);

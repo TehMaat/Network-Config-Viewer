@@ -3,6 +3,7 @@
 //
 //   <data>/clients/<client id>/client.json
 //   <data>/clients/<client id>/files/<file id>
+//   <data>/clients/<client id>/map.json        the map changed by hand, when there is one
 //
 // File names on disk are chosen here, never by who uploads: the names and paths given by the
 // user are kept only in the index, so no file can end up outside the archive.
@@ -11,6 +12,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate';
+import { cleanMap, EMPTY_MAP, type MapFile } from './map.js';
 
 /** Corrections of the recognition typed by the user, as the app sends them. */
 export type Overrides = Partial<Record<(typeof OVERRIDE_KEYS)[number], string>>;
@@ -295,6 +297,44 @@ export class Archive {
     await rm(join(this.clientDir(id), 'files', fileId), { force: true });
   }
 
+  /** The map of the client changed by hand, or an empty one. */
+  async readMap(id: string): Promise<MapFile> {
+    const bytes = await this.mapBytes(id);
+    if (!bytes) return { ...EMPTY_MAP };
+    try {
+      return JSON.parse(strFromU8(bytes)) as MapFile;
+    } catch {
+      throw new ArchiveError(500, 'damaged');
+    }
+  }
+
+  /** Saves the map changed by hand, checked field by field and written in one go. */
+  async writeMap(id: string, value: unknown): Promise<MapFile> {
+    const { format, version, ...rest } = cleanMap(value);
+    return this.withLock(id, async () => {
+      const index = await this.readIndex(id);
+      const map: MapFile = { format, version, updatedAt: now(), ...rest };
+      await this.writeFileAtomic(this.mapPath(id), strToU8(`${JSON.stringify(map, null, 2)}\n`));
+      index.updatedAt = now();
+      await this.writeIndex(index);
+      return map;
+    });
+  }
+
+  private mapPath(id: string) {
+    return join(this.clientDir(id), 'map.json');
+  }
+
+  /** The bytes of map.json, or null when the client has no map; the client must exist. */
+  private async mapBytes(id: string): Promise<Uint8Array | null> {
+    await this.readIndex(id);
+    try {
+      return new Uint8Array(await readFile(this.mapPath(id)));
+    } catch {
+      return null;
+    }
+  }
+
   /** The client in a single zip file: the original files and an index with the corrections. */
   async exportZip(id: string): Promise<{ name: string; zip: Uint8Array }> {
     const index = await this.readIndex(id);
@@ -310,6 +350,9 @@ export class Archive {
       const { id: _id, ...rest } = record;
       files.push({ entry, ...rest });
     }
+    // The map changed by hand, checked like the files (#15, part 3).
+    const map = await this.mapBytes(id);
+    if (map) entries['map.json'] = [map, { mtime: new Date(index.updatedAt) }];
     const manifest = {
       format: EXPORT_FORMAT,
       version: 1,
@@ -317,6 +360,7 @@ export class Archive {
       createdAt: index.createdAt,
       exportedAt: now(),
       files,
+      ...(map ? { map: { entry: 'map.json', size: map.length, sha256: sha256(map) } } : {}),
     };
     entries['client.json'] = strToU8(`${JSON.stringify(manifest, null, 2)}\n`);
     return { name: index.name, zip: zipSync(entries, { level: 6 }) };
@@ -333,7 +377,11 @@ export class Archive {
           if (file.originalSize > this.limits.maxFileBytes || total > this.limits.maxImportBytes) {
             throw new ArchiveError(413, 'too-large');
           }
-          return file.name === 'client.json' || file.name.startsWith('files/');
+          return (
+            file.name === 'client.json' ||
+            file.name === 'map.json' ||
+            file.name.startsWith('files/')
+          );
         },
       });
     } catch (error) {
@@ -348,6 +396,7 @@ export class Archive {
       name?: unknown;
       createdAt?: unknown;
       files?: unknown;
+      map?: unknown;
     };
     try {
       manifest = JSON.parse(strFromU8(manifestBytes)) as typeof manifest;
@@ -388,6 +437,26 @@ export class Archive {
         },
       });
     }
+    // The map changed by hand, in the clients exported from 0.4.0 on: checked byte for byte and
+    // field by field. The clients exported before have none.
+    let map: MapFile | undefined;
+    if (manifest.map !== undefined) {
+      const item = (manifest.map ?? {}) as Record<string, unknown>;
+      const bytes = typeof item.entry === 'string' ? unpacked[item.entry] : undefined;
+      if (!bytes || bytes.length !== item.size || sha256(bytes) !== item.sha256) {
+        throw new ArchiveError(400, 'corrupt-file');
+      }
+      let parsed: { updatedAt?: unknown };
+      try {
+        parsed = JSON.parse(strFromU8(bytes)) as typeof parsed;
+      } catch {
+        throw new ArchiveError(400, 'invalid-map');
+      }
+      const { format, version, ...rest } = cleanMap(parsed);
+      const updatedAt =
+        parsed.updatedAt === undefined ? now() : cleanDate(parsed.updatedAt, 'invalid-map');
+      map = { format, version, updatedAt, ...rest };
+    }
     const index: ClientIndex = {
       format: 'ncv-client',
       version: 1,
@@ -402,6 +471,12 @@ export class Archive {
       await mkdir(join(dir, 'files'), { recursive: true });
       for (const { record, bytes } of files) {
         await this.writeFileAtomic(join(dir, 'files', record.id), bytes);
+      }
+      if (map) {
+        await this.writeFileAtomic(
+          join(dir, 'map.json'),
+          strToU8(`${JSON.stringify(map, null, 2)}\n`),
+        );
       }
       // The index comes last: until it is written, the client does not exist.
       await this.writeIndex(index);
