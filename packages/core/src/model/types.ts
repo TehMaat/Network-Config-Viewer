@@ -122,6 +122,8 @@ export interface Interface extends Element {
   ospf?: { process?: string; area?: string; cost?: number };
   helperAddresses?: string[];
   policyRouteMap?: string;
+  /** LLDP and CDP on the port, only when written on it (#15). */
+  discovery?: { cdp?: boolean; lldpTransmit?: boolean; lldpReceive?: boolean };
   // FortiOS
   alias?: string;
   role?: string;
@@ -443,6 +445,17 @@ export interface IpsecTunnel extends Element {
   addRoute: boolean;
   advpn?: 'sender' | 'receiver';
   dpd?: string;
+  /** IKEv1: main or aggressive. */
+  mode?: string;
+  /** psk or signature. */
+  authMethod?: string;
+  localId?: string;
+  peerId?: string;
+  /** ADVPN and dial-up overlays: tells apart the tunnels on the same interface. */
+  networkId?: number;
+  natTraversal?: string;
+  /** Phase 1 key life, in seconds. */
+  keylife?: number;
   phase2: IpsecPhase2[];
 }
 
@@ -604,6 +617,11 @@ export interface DeviceModel {
   location?: Element & { text: string };
   /** FortiOS dynamic DNS names: IPsec peers may point to them instead of an address. */
   ddns?: (Element & { domain: string; interface?: string })[];
+  /**
+   * LLDP and CDP on the whole device, written or from the default: a cable can be verified
+   * by the shows only where they run (#15).
+   */
+  discovery?: Element & { lldp: boolean; cdp: boolean };
   vtpMode?: string;
   features: FeatureCode[];
   references: Reference[];

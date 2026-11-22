@@ -53,6 +53,10 @@ export const FORTIOS_DEFAULTS = {
   },
   phase1: {
     type: 'static',
+    mode: 'main',
+    authMethod: 'psk',
+    natTraversal: 'enable',
+    keylife: 86400,
     peertype: 'any',
     netDevice: 'disable',
     addRoute: 'enable',

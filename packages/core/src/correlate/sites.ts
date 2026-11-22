@@ -21,10 +21,15 @@ export function siteFromLocation(location: string | undefined): string | undefin
   return first || undefined;
 }
 
-/** The first word of a hostname that is not a kind of device: "SW-BR1-ACC" → "BR1". */
+/**
+ * The first word of a hostname that is not a kind of device: "SW-BR1-ACC" → "BR1". A number
+ * or a single letter tells a device apart, not a site: "CORE-1" and "R-A" have no code.
+ */
 export function siteCode(hostname: string): string | undefined {
   for (const word of hostname.split(/[-_.\s]+/)) {
-    if (word && !TYPE_WORD.test(word)) return word.toUpperCase();
+    if (!word || TYPE_WORD.test(word)) continue;
+    if (/^\d+$/.test(word) || word.length === 1) return undefined;
+    return word.toUpperCase();
   }
   return undefined;
 }

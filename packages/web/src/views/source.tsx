@@ -1,9 +1,16 @@
 import { ActionIcon, Badge, Text, Tooltip } from '@mantine/core';
 import { IconCode, IconTerminal2 } from '@tabler/icons-react';
-import type { DeviceState, Element, Src, StateItem } from '@ncv/core';
+import type {
+  DeviceState,
+  Element,
+  Infrastructure,
+  RemoteGateway,
+  Src,
+  StateItem,
+} from '@ncv/core';
 import { createContext, useContext, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Peer } from '../state/infra';
+import { EMPTY_INFRASTRUCTURE, type MapFocus, type Peer } from '../state/infra';
 
 /** What every view can ask the device page: show some lines of the original config. */
 export interface DeviceViewApi {
@@ -17,6 +24,14 @@ export interface DeviceViewApi {
   exportName: string;
   /** The other side of the links of the device, from the map of the client (#15). */
   peers: Peer[];
+  /** The devices of the client put together: links, problems (#15, part 2). */
+  infra: Infrastructure;
+  /** Key of the device in the infrastructure, when it is a device of the client. */
+  deviceKey?: string;
+  /** The gateway of a VLAN on another device, along the trunks that carry it. */
+  gatewaysOf(vlan: number): RemoteGateway[];
+  /** Opens the map of the client on a link or a device. */
+  openMap(focus: MapFocus): void;
 }
 
 export const DeviceViewContext = createContext<DeviceViewApi>({
@@ -26,6 +41,9 @@ export const DeviceViewContext = createContext<DeviceViewApi>({
   fileName: (id) => id,
   exportName: 'export',
   peers: [],
+  infra: EMPTY_INFRASTRUCTURE,
+  gatewaysOf: () => [],
+  openMap: () => undefined,
 });
 
 export const useDeviceView = () => useContext(DeviceViewContext);

@@ -95,6 +95,8 @@ class CiscoReader {
   private readonly ospfNetworks: { ospf: Ospf; ip: string; wildcard: string; area: string }[] = [];
   private hostname?: string;
   private location?: DeviceModel['location'];
+  private lldpRun?: { on: boolean; line: number };
+  private cdpRun?: { on: boolean; line: number };
   private vtpMode?: string;
   private vtpLine?: number;
   private voiceVlanGlobal?: number;
@@ -145,11 +147,30 @@ class CiscoReader {
       contexts: [this.context],
       ...this.management(),
       ...(this.location ? { location: this.location } : {}),
+      discovery: this.discovery(),
       ...(this.vtpMode ? { vtpMode: this.vtpMode } : {}),
       features: [...this.features].sort(),
       references: this.ctx.references(),
       coverage: this.ctx.coverage((line) => this.sectionOf(line)),
       warnings,
+    };
+  }
+
+  /**
+   * LLDP and CDP of the switch: IOS runs CDP and not LLDP unless told otherwise; Small Business
+   * runs both, a default still to be confirmed on real switches (#15).
+   */
+  private discovery(): NonNullable<DeviceModel['discovery']> {
+    const defaults: string[] = [];
+    const lldp = this.lldpRun?.on ?? (defaults.push('lldp'), this.sb);
+    const cdp = this.cdpRun?.on ?? (defaults.push('cdp'), true);
+    const lines = [this.lldpRun?.line, this.cdpRun?.line].filter((l): l is number => !!l);
+    return {
+      lldp,
+      cdp,
+      src: lines.map((l) => [l, l] as const),
+      ...(defaults.length > 0 ? { defaults } : {}),
+      ...(this.sb && defaults.length > 0 ? { unverified: defaults } : {}),
     };
   }
 
@@ -263,6 +284,12 @@ class CiscoReader {
       this.readPrefixList(node, m[1]!, m[2]!);
     } else if ((m = /^line\s+(vty|con|console|aux)\s*(.*)$/.exec(t))) {
       this.readLine(node, `${m[1]} ${m[2]}`.trim());
+    } else if ((m = /^(no )?(lldp|cdp) run$/.exec(t))) {
+      // LLDP and CDP of the whole switch (#15).
+      const run = { on: !m[1], line: node.line };
+      if (m[2] === 'lldp') this.lldpRun = run;
+      else this.cdpRun = run;
+      this.ctx.understood(node);
     } else if ((m = /^snmp-server location\s+(.+)$/.exec(t))) {
       // The first hint of the site of the device (#15); Small Business writes it in quotes.
       const text = m[1]!
@@ -594,6 +621,15 @@ class CiscoReader {
         ok();
       } else if ((m = /^mtu\s+(\d+)$/.exec(t))) {
         iface.mtu = Number(m[1]);
+        ok();
+      } else if ((m = /^(no )?cdp enable$/.exec(t))) {
+        iface.discovery = { ...iface.discovery, cdp: !m[1] };
+        ok();
+      } else if ((m = /^(no )?lldp (transmit|receive)$/.exec(t))) {
+        iface.discovery = {
+          ...iface.discovery,
+          ...(m[2] === 'transmit' ? { lldpTransmit: !m[1] } : { lldpReceive: !m[1] }),
+        };
         ok();
       } else if (t === 'negotiation auto') {
         ok();

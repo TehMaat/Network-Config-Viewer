@@ -287,7 +287,9 @@ describe('shows and devices', () => {
     // Interfaces that learn no MACs are never marked.
     expect(port('Loopback0').noMac).toBe(false);
     expect(port('Vlan99').noMac).toBe(false);
-    expect(portsWithoutMac(m, state)).toHaveLength(20);
+    // Port-channel12 to SW-HQ-ACC3 is down, LACP on one side only (#15): nothing learned.
+    expect(portsWithoutMac(m, state)).toHaveLength(21);
+    expect(portsWithoutMac(m, state)).toContain('Port-channel12');
     expect(portsWithoutMac(m, state)).toContain('GigabitEthernet1/0/13');
     expect(portsWithoutMac(m, null)).toEqual([]);
   });

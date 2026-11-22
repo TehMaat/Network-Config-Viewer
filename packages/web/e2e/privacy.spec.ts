@@ -47,6 +47,11 @@ test('never contacts another site, and cannot', async ({ page, baseURL }) => {
   await page.getByTestId('row-links').first().click();
   await expect(page.getByTestId('map-link-panel')).toBeVisible();
   await Promise.all([page.waitForEvent('download'), page.getByTestId('export-links').click()]);
+  // The problems between the devices and the VPN of the client (#15, part 2).
+  await Promise.all([page.waitForEvent('download'), page.getByTestId('export-problems').click()]);
+  await page.getByTestId('nav-vpn').click();
+  await page.getByTestId('row-vpn-tunnels').first().click();
+  await expect(page.getByTestId('vpn-panel').getByTestId('map-link-panel')).toBeVisible();
   await fileItem(page, 'fgt-campus-200f-fortios-7.6.conf').click();
   await openConfigTab(page);
   await page.getByTestId('btn-search').click();

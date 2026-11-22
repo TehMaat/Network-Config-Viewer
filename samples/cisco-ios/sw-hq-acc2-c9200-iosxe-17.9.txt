@@ -97,6 +97,7 @@ lldp run
 !
 interface Port-channel1
  description UPLINK-SW-HQ-CORE-Po11
+ switchport trunk native vlan 999
  switchport trunk allowed vlan 10,20,60,70,99
  switchport mode trunk
 !
@@ -397,12 +398,14 @@ interface GigabitEthernet1/0/24
 !
 interface GigabitEthernet1/1/1
  description UPLINK-SW-HQ-CORE-Gi3/0/47
+ switchport trunk native vlan 999
  switchport trunk allowed vlan 10,20,60,70,99
  switchport mode trunk
  channel-group 1 mode active
 !
 interface GigabitEthernet1/1/2
  description UPLINK-SW-HQ-CORE-Gi3/0/48
+ switchport trunk native vlan 999
  switchport trunk allowed vlan 10,20,60,70,99
  switchport mode trunk
  channel-group 1 mode active

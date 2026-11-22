@@ -1,3 +1,4 @@
+import { PROBLEM_CODES } from '@ncv/core';
 import { describe, expect, it } from 'vitest';
 import en from './en.json';
 import itTranslations from './it.json';
@@ -34,6 +35,16 @@ describe('translations', () => {
   it('use the same placeholders in both languages', () => {
     for (const [key, value] of italian) {
       expect(variables(value), key).toEqual(variables(english.get(key) ?? ''));
+    }
+  });
+
+  it('explain every problem of the consistency checks', () => {
+    for (const code of PROBLEM_CODES) {
+      for (const part of ['title', 'why', 'fix']) {
+        const key = `problems.code.${code}.${part}`;
+        expect(italian.get(key), key).toBeTruthy();
+        expect(english.get(key), key).toBeTruthy();
+      }
     }
   });
 

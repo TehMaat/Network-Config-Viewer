@@ -20,6 +20,7 @@ import {
   type Infrastructure,
   type Link,
   type LinkEnd,
+  vlanGateways,
 } from '../src';
 import { readSampleText, SAMPLES_DIR, sampleFiles } from './helpers';
 
@@ -105,6 +106,7 @@ function linkText(l: Link): string {
   if (l.gateway) parts.push(`gateway ${l.gateway}`);
   if (l.state) parts.push(`state ${l.state.a?.status ?? '-'}/${l.state.b?.status ?? '-'}`);
   if (l.overlay) parts.push(`overlay ${l.overlay.a?.zone ?? '-'}/${l.overlay.b?.zone ?? '-'}`);
+  if (l.comparison) parts.push(`compared ${l.comparison.compared}, issues ${l.comparison.issues}`);
   return parts.join(' | ');
 }
 
@@ -118,6 +120,18 @@ function summarize(infra: Infrastructure) {
         `${e.id} ${e.kind} ${e.label}${e.detail ? ` (${e.detail})` : ''}${e.site ? ` @${e.site}` : ''}`,
     ),
     links: infra.links.map(linkText),
+    problems: infra.problems.map(
+      (p) =>
+        `${p.severity}${p.unverified ? ' (da verificare)' : ''} | ${p.code} | ${p.devices.join(' ')} | ${Object.entries(
+          p.values,
+        )
+          .map(([k, v]) => `${k}=${v}`)
+          .join(' ')}`,
+    ),
+    advpn: infra.advpn.pairs.map(
+      (x) =>
+        `${x.a} ↔ ${x.b} (hub ${x.hub}): ${x.status}${x.reasons.length ? ` ${x.reasons.join(', ')}` : ''}`,
+    ),
   };
 }
 
@@ -202,6 +216,28 @@ describe('correlation of the samples', () => {
       'remote-gw fgt-dc',
       'remote-gw fgt-hq',
       'tunnel-state fgt-hq',
+    ]);
+  });
+
+  it('follows a VLAN along the trunks up to its gateway on another device', () => {
+    const models = new Map(sampleClient().map((i) => [i.hostname.toLowerCase(), i.model]));
+    const modelOf = (key: string) => models.get(key) ?? null;
+    // VLAN 10 of an access switch: through the core, up to the VLAN interface of the firewall.
+    expect(vlanGateways(infra, modelOf, 'sw-hq-acc1', 10)).toMatchObject([
+      {
+        hostname: 'FGT-HQ',
+        interface: 'VL10-DATA',
+        ip: '10.10.10.1',
+        path: ['sw-hq-acc1', 'sw-hq-core', 'fgt-hq'],
+      },
+    ]);
+    // VLAN 70 stops on the core, which has the SVI.
+    expect(vlanGateways(infra, modelOf, 'sw-hq-acc1', 70)).toMatchObject([
+      { hostname: 'SW-HQ-CORE', interface: 'Vlan70', ip: '10.10.70.1' },
+    ]);
+    // A branch switch reaches the VLAN interfaces of its FortiGate through the hardware switch.
+    expect(vlanGateways(infra, modelOf, 'sw-br1-acc', 99)).toMatchObject([
+      { hostname: 'FGT-BR1', interface: 'VL99-MGMT' },
     ]);
   });
 
@@ -395,7 +431,7 @@ end`);
     const infra = correlate([hub, spoke]);
     const tunnels = infra.links.filter((l) => l.kind === 'ipsec').map(linkText);
     expect(tunnels).toEqual([
-      'ipsec | fgt-spoke wan1 tunnel HUB 192.0.2.10 | fgt-hub wan1 tunnel SPOKES | ddns | dial-up',
+      'ipsec | fgt-spoke wan1 tunnel HUB 192.0.2.10 | fgt-hub wan1 tunnel SPOKES | ddns | dial-up | compared 4, issues 0',
       'ipsec | fgt-spoke wan1 tunnel PARTNER 192.0.2.10 | peer:198.51.100.200 198.51.100.200 | remote-gw',
     ]);
     expect(infra.externals.map((e) => `${e.id} ${e.label} ${e.detail ?? ''}`.trim())).toEqual([

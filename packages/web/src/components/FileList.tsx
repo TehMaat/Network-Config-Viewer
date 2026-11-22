@@ -16,6 +16,7 @@ import {
   IconCloudX,
   IconFileText,
   IconFileUnknown,
+  IconLockAccess,
   IconPin,
   IconPinnedOff,
   IconServer2,
@@ -29,6 +30,8 @@ import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { baseName, formatOrigin, formatPath } from '../format';
 import type { ShowLinks } from '../state/devices';
+import { problemsOf, worstSeverity } from '../state/infra';
+import { problemsSummary, SEVERITY_COLOR } from '../views/problems';
 import { effectiveDetection } from '../state/effective';
 import type { FileEntry, TextEntry } from '../state/files';
 import { fileDate, type DeviceGroup } from '../state/groups';
@@ -42,6 +45,9 @@ interface Props {
   /** The map of the client is open. */
   mapOpen: boolean;
   onOpenMap(): void;
+  /** The VPN of the client is open (#15, part 2). */
+  vpnOpen: boolean;
+  onOpenVpn(): void;
   deviceOf: ShowLinks['deviceOf'];
   selectedId: string | null;
   processing: boolean;
@@ -65,6 +71,8 @@ export function FileList({
   infra,
   mapOpen,
   onOpenMap,
+  vpnOpen,
+  onOpenVpn,
   deviceOf,
   selectedId,
   processing,
@@ -180,7 +188,45 @@ export function FileList({
               links: t('map.links', { count: infra.links.length }),
             })}
             leftSection={<IconTopologyStar3 size={18} />}
+            rightSection={
+              infra.problems.length > 0 ? (
+                <Tooltip label={problemsSummary(infra.problems, t)}>
+                  <Badge
+                    size="sm"
+                    circle
+                    color={SEVERITY_COLOR[worstSeverity(infra.problems)!]}
+                    data-testid="nav-map-problems"
+                    data-count={infra.problems.length}
+                  >
+                    {infra.problems.length}
+                  </Badge>
+                </Tooltip>
+              ) : null
+            }
             data-testid="nav-map"
+          />
+        )}
+        {groups.length > 0 && (
+          <NavLink
+            component="button"
+            type="button"
+            active={vpnOpen}
+            onClick={onOpenVpn}
+            label={
+              <Text size="sm" fw={600}>
+                {t('vpnClient.nav')}
+              </Text>
+            }
+            description={t('vpnClient.navDescription', {
+              tunnels: t('vpnClient.tunnels', {
+                count: infra.links.filter((l) => l.kind === 'ipsec').length,
+              }),
+              shortcuts: t('vpnClient.shortcuts', {
+                count: infra.links.filter((l) => l.kind === 'shortcut').length,
+              }),
+            })}
+            leftSection={<IconLockAccess size={18} />}
+            data-testid="nav-vpn"
           />
         )}
         {sections.map((section) => (
@@ -220,6 +266,7 @@ export function FileList({
                     <Text size="xs" fw={700} truncate="end">
                       {group.hostname}
                     </Text>
+                    <ProblemDot problems={problemsOf(infra, group.key)} />
                   </Group>
                 </UnstyledButton>
                 {item(group.current, CURRENT, { pinned: group.pinned })}
@@ -237,6 +284,25 @@ export function FileList({
         {rest.map((file) => item(file))}
       </ScrollArea>
     </Stack>
+  );
+}
+
+/** A dot in the colour of the most serious problem of a device with the others (#15). */
+function ProblemDot({ problems }: { problems: ReturnType<typeof problemsOf> }) {
+  const { t } = useTranslation();
+  const worst = worstSeverity(problems);
+  if (!worst) return null;
+  return (
+    <Tooltip label={problemsSummary(problems, t)}>
+      <Box
+        component="span"
+        className={`ncv-problem-dot ncv-problem-dot-${worst}`}
+        aria-label={problemsSummary(problems, t)}
+        data-testid="device-problems"
+        data-severity={worst}
+        data-count={problems.length}
+      />
+    </Tooltip>
   );
 }
 

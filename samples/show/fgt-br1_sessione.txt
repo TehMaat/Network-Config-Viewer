@@ -65,6 +65,8 @@ C       10.21.99.0/24 is directly connected, VL99-MGMT
 B       10.22.0.0/16 [200/0] via 10.255.1.22 (recursive via 10.255.1.254, HUB-WAN1), 2d03h12m, [1/0]
 C       10.255.1.21/32 is directly connected, HUB-WAN1
 C       10.255.2.21/32 is directly connected, HUB-WAN2
+B       172.16.10.0/24 [200/0] via 10.255.1.254 (recursive is directly connected, HUB-WAN1), 2d03h12m, [1/0]
+                       [200/0] via 10.255.2.254 (recursive is directly connected, HUB-WAN2), 2d03h10m, [1/0]
 C       192.0.2.32/30 is directly connected, wan1
 
 FGT-BR1 # get router info bgp summary

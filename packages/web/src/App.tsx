@@ -32,7 +32,7 @@ import {
   type TextEntry,
 } from './state/files';
 import { deviceGroups } from './state/groups';
-import { buildInfrastructure, MAP_ID } from './state/infra';
+import { buildInfrastructure, MAP_ID, VPN_ID, type MapFocus } from './state/infra';
 import { AnalyzerClient } from './worker/client';
 import type { WorkerMessage } from './worker/protocol';
 
@@ -40,6 +40,8 @@ let localIssueCounter = 0;
 
 /** The map of the client, with React Flow and dagre: loaded only when it is opened (#15). */
 const MapView = lazy(() => import('./map/MapView'));
+/** The VPN of the client: its tunnels, ADVPN and the checks (#15, part 2). */
+const ClientVpnView = lazy(() => import('./map/ClientVpnView'));
 
 export function App() {
   const { t } = useTranslation();
@@ -226,6 +228,17 @@ export function App() {
     closeNav();
   };
 
+  // The map opens on a link or a device when a problem elsewhere asks for it.
+  const [mapFocus, setMapFocus] = useState<MapFocus | null>(null);
+  const openMap = useCallback(
+    (focus?: MapFocus) => {
+      setMapFocus(focus ?? null);
+      dispatch({ type: 'select', id: MAP_ID });
+      closeNav();
+    },
+    [closeNav],
+  );
+
   const removeFromPage = (id: string) => {
     contentStore.delete(id);
     client.current?.forget([id]);
@@ -251,6 +264,7 @@ export function App() {
   };
 
   const mapOpen = state.selectedId === MAP_ID;
+  const vpnOpen = state.selectedId === VPN_ID;
   const selected = state.files.find((f) => f.id === state.selectedId) ?? null;
   const hasFiles = state.files.length > 0 || state.pendingBatches.length > 0;
   const clientOpen = archive.state.current !== null;
@@ -343,7 +357,9 @@ export function App() {
                 groups={groups}
                 infra={infra}
                 mapOpen={mapOpen}
-                onOpenMap={() => select(MAP_ID)}
+                onOpenMap={() => openMap()}
+                vpnOpen={vpnOpen}
+                onOpenVpn={() => select(VPN_ID)}
                 deviceOf={links.deviceOf}
                 selectedId={state.selectedId}
                 processing={state.pendingBatches.length > 0}
@@ -370,6 +386,23 @@ export function App() {
                 modelOf={modelOf}
                 onOpenFile={openFile}
                 exportName={archive.state.current?.name ?? t('map.exportName')}
+                focus={mapFocus}
+              />
+            </Suspense>
+          ) : vpnOpen ? (
+            <Suspense
+              fallback={
+                <Center h={200}>
+                  <Loader />
+                </Center>
+              }
+            >
+              <ClientVpnView
+                infra={infra}
+                modelOf={modelOf}
+                onOpenFile={openFile}
+                onOpenMap={openMap}
+                exportName={archive.state.current?.name ?? t('vpnClient.exportName')}
               />
             </Suspense>
           ) : selected ? (
@@ -377,6 +410,8 @@ export function App() {
               key={selected.id}
               entry={selected}
               infra={infra}
+              modelOf={modelOf}
+              onOpenMap={openMap}
               onOverride={override}
               shows={linkedShows ?? []}
               state={selectedState}

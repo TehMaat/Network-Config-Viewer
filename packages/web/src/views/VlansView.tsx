@@ -1,8 +1,10 @@
-import { Badge, Box, Group, Paper, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { Badge, Box, Button, Group, Paper, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { IconArrowRight } from '@tabler/icons-react';
 import {
   vlanNameFromState,
   vlanUsage,
   type DeviceModel,
+  type RemoteGateway,
   type VlanRole,
   type VlanUsage,
 } from '@ncv/core';
@@ -19,10 +21,28 @@ const ROLES: VlanRole[] = ['access', 'voice', 'untagged', 'tagged'];
 export function VlansView({ model }: { model: DeviceModel }) {
   const { t } = useTranslation();
   const usage = useMemo(() => vlanUsage(model), [model]);
-  const { state } = useDeviceView();
+  const { state, gatewaysOf, infra, openFile } = useDeviceView();
   const colors = useMemo(() => vlanColors(model.vlans.map((v) => v.id)), [model]);
   const [selected, setSelected] = useState<number | null>(null);
   const current = usage.find((u) => u.vlan.id === selected) ?? null;
+  // A VLAN without an address here may have its gateway on another device of the client (#15).
+  const remote = useMemo(
+    () =>
+      new Map(
+        usage
+          .filter((u) => u.gateways.length === 0)
+          .map((u) => [u.vlan.id, gatewaysOf(u.vlan.id)] as const)
+          .filter(([, list]) => list.length > 0),
+      ),
+    [usage, gatewaysOf],
+  );
+  const host = (key: string) => infra.devices.find((d) => d.key === key)?.hostname ?? key;
+  const remoteText = (g: RemoteGateway) =>
+    t('vlans.remoteGateway', {
+      ip: `${g.ip}/${g.prefix}`,
+      device: g.hostname,
+      interface: g.interface,
+    });
 
   const columns = useMemo<ColumnDef<VlanUsage, unknown>[]>(
     () => [
@@ -84,7 +104,32 @@ export function VlansView({ model }: { model: DeviceModel }) {
       {
         id: 'gateway',
         header: t('vlans.col.gateway'),
-        accessorFn: (u) => u.gateways.map((g) => `${g.ip}/${g.prefix}`).join(' '),
+        accessorFn: (u) =>
+          u.gateways.length > 0
+            ? u.gateways.map((g) => `${g.ip}/${g.prefix}`).join(' ')
+            : (remote.get(u.vlan.id) ?? []).map(remoteText).join(', '),
+        cell: (c) => {
+          const u = c.row.original;
+          const far = remote.get(u.vlan.id);
+          if (u.gateways.length > 0 || !far) return c.getValue<string>();
+          return (
+            <Group gap={4} wrap="nowrap">
+              <Text span size="sm">
+                {far.map((g) => `${g.ip}/${g.prefix}`).join(' ')}
+              </Text>
+              <Badge
+                size="xs"
+                variant="light"
+                color="indigo"
+                tt="none"
+                data-testid="vlan-remote-gateway"
+                data-device={far[0]!.hostname}
+              >
+                {t('vlans.onDevice', { device: far.map((g) => g.hostname).join(', ') })}
+              </Badge>
+            </Group>
+          );
+        },
       },
       ...ROLES.map<ColumnDef<VlanUsage, unknown>>((role) => ({
         id: role,
@@ -110,7 +155,9 @@ export function VlansView({ model }: { model: DeviceModel }) {
         cell: (c) => <SourceButton src={c.row.original.vlan.src} />,
       },
     ],
-    [t, colors, state],
+    // remoteText reads only t.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [t, colors, state, remote],
   );
 
   return (
@@ -138,6 +185,31 @@ export function VlansView({ model }: { model: DeviceModel }) {
             </Title>
             <SourceButton src={current.vlan.src} />
           </Group>
+          {remote.get(current.vlan.id)?.map((g) => (
+            <Group
+              key={`${g.device}-${g.interface}`}
+              gap="xs"
+              mb="xs"
+              wrap="wrap"
+              data-testid="vlan-gateway-detail"
+            >
+              <Text size="sm">
+                {t('vlans.gatewayPath', {
+                  gateway: remoteText(g),
+                  path: g.path.map(host).join(' → '),
+                })}
+              </Text>
+              <Button
+                size="compact-xs"
+                variant="light"
+                rightSection={<IconArrowRight size={12} />}
+                onClick={() => openFile(g.file)}
+                data-testid="vlan-gateway-open"
+              >
+                {t('vlans.openDevice', { device: g.hostname })}
+              </Button>
+            </Group>
+          ))}
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
             {ROLES.map((role) => (
               <Box key={role}>

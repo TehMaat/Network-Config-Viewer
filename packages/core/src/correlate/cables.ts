@@ -41,6 +41,20 @@ export interface CableResult {
   externals: ExternalNode[];
   /** Nodes joined by a cable: they are in the same site. */
   pairs: [string, string][];
+  /** Ports whose description names a device, while LLDP or CDP sees another one. */
+  mismatches: DescriptionMismatch[];
+}
+
+export interface DescriptionMismatch {
+  device: string;
+  port: string;
+  description: string;
+  /** The device the description names. */
+  described: string;
+  /** The neighbour seen on the port, and by which protocol. */
+  seen: string;
+  protocol: 'lldp' | 'cdp';
+  evidence: LinkSource['evidence'];
 }
 
 /** "SW-HQ-ACC1.esempio.example", "SW1(FOC1234X0AB)" → the hostname. */
@@ -111,6 +125,10 @@ export function findCables(
 ): CableResult {
   const claims: Claim[] = [];
   const externals = new Map<string, ExternalNode>();
+  const mismatches: DescriptionMismatch[] = [];
+  /** What LLDP and CDP see on every port: a description cannot say otherwise. */
+  const seen = new Map<string, { node: string; label: string; source: LinkSource }[]>();
+  const portKey = (device: string, port: string) => `${device}|${port}`.toLowerCase();
 
   // Neighbours seen by LLDP and CDP: verified cables.
   for (const d of devices) {
@@ -130,6 +148,17 @@ export function findCables(
         evidence: showEvidence(d.key, n),
       };
       const a: ClaimEnd = { device: d.key, port: local?.name, known: local?.known ?? false };
+      if (local?.name) {
+        const key = portKey(d.key, local.name);
+        seen.set(key, [
+          ...(seen.get(key) ?? []),
+          {
+            node: target?.key ?? `host:${hostKey(name)}`,
+            label: target?.input.hostname ?? name,
+            source,
+          },
+        ]);
+      }
       if (target) {
         const port = target.resolvePort(n.port);
         claims.push({
@@ -166,6 +195,27 @@ export function findCables(
       const hit = namedDevice(iface.description, patterns, d.key);
       if (!hit) continue;
       const target = byKey.get(hit.device)!;
+      const description: LinkSource = {
+        kind: 'description',
+        device: d.key,
+        text: iface.description,
+        evidence: configEvidence(d.key, iface.src),
+      };
+      // The neighbour seen on the port wins: a description that names another device is wrong.
+      const neighbours = seen.get(portKey(d.key, iface.name)) ?? [];
+      if (neighbours.length > 0 && !neighbours.some((x) => x.node === target.key)) {
+        const other = neighbours[0]!;
+        mismatches.push({
+          device: d.key,
+          port: iface.name,
+          description: iface.description,
+          described: target.input.hostname,
+          seen: other.label,
+          protocol: other.source.kind === 'cdp' ? 'cdp' : 'lldp',
+          evidence: [...description.evidence, ...other.source.evidence],
+        });
+        continue;
+      }
       const token = firstToken(hit.rest);
       const port = token ? target.resolvePort(token) : undefined;
       const usable = port && (port.known || INTERFACE_LIKE.test(token ?? ''));
@@ -176,12 +226,7 @@ export function findCables(
           ...(usable ? { port: port.name } : {}),
           known: usable ? port.known : false,
         },
-        source: {
-          kind: 'description',
-          device: d.key,
-          text: iface.description,
-          evidence: configEvidence(d.key, iface.src),
-        },
+        source: description,
       });
     }
   }
@@ -271,7 +316,7 @@ export function findCables(
       pairs.push([r.a.device, r.b.device]);
     }
   }
-  return { links, externals: [...externals.values()], pairs };
+  return { links, externals: [...externals.values()], pairs, mismatches };
 }
 
 const UP = new Set(['connected', 'up']);

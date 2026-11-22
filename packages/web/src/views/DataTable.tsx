@@ -19,7 +19,9 @@ import {
   type ColumnDef,
   type FilterFn,
   type Row,
+  type RowData,
   type SortingState,
+  type VisibilityState,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useMemo, useRef, useState, type ReactNode } from 'react';
@@ -27,6 +29,15 @@ import { useTranslation } from 'react-i18next';
 import { saveBlob } from '../export/download';
 import type { Cell } from '../export/xlsx';
 import { useDeviceView } from './source';
+
+declare module '@tanstack/react-table' {
+  // The parameters must be the same as in TanStack's own declaration.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    /** A column only of the Excel file: on screen its text is in the detail of the row. */
+    exportOnly?: boolean;
+  }
+}
 
 export interface DataTableProps<T> {
   /** Name used for the test ids ("table-<name>", "row-<name>"). */
@@ -85,13 +96,20 @@ export function DataTable<T>({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [query, setQuery] = useState('');
   const scroller = useRef<HTMLDivElement>(null);
+  const columnVisibility = useMemo<VisibilityState>(
+    () =>
+      Object.fromEntries(
+        columns.filter((c) => c.meta?.exportOnly && c.id).map((c) => [c.id!, false]),
+      ),
+    [columns],
+  );
 
   // The project does not use the React Compiler: TanStack keeps its own memoization.
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable<T>({
     data,
     columns,
-    state: { sorting, globalFilter: query },
+    state: { sorting, globalFilter: query, columnVisibility },
     onSortingChange: setSorting,
     onGlobalFilterChange: setQuery,
     globalFilterFn: textFilter as FilterFn<T>,
@@ -174,8 +192,13 @@ export function DataTable<T>({
   // The table as it is shown, filtered and sorted, in an Excel file (#10).
   const exportTable = async () => {
     const shown = table
-      .getVisibleLeafColumns()
-      .filter((c) => typeof c.columnDef.header === 'string' && c.columnDef.header !== '');
+      .getAllLeafColumns()
+      .filter(
+        (c) =>
+          (c.getIsVisible() || c.columnDef.meta?.exportOnly) &&
+          typeof c.columnDef.header === 'string' &&
+          c.columnDef.header !== '',
+      );
     const { workbookBlob } = await import('../export/xlsx');
     const blob = await workbookBlob([
       {

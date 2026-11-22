@@ -126,6 +126,7 @@ class FortiosReader {
   private readonly ddns: NonNullable<DeviceModel['ddns']> = [];
   private hostname?: string;
   private location?: DeviceModel['location'];
+  private discovery?: DeviceModel['discovery'];
   private multiVdom = false;
 
   constructor(private readonly input: DriverInput) {
@@ -157,6 +158,7 @@ class FortiosReader {
       ...this.management(),
       ...(this.location ? { location: this.location } : {}),
       ...(this.ddns.length > 0 ? { ddns: this.ddns } : {}),
+      discovery: this.discovery ?? { lldp: false, cdp: false, src: [], defaults: ['lldp'] },
       features: [...this.features].sort(),
       references: this.ctx.references(),
       coverage: this.ctx.coverage((line) => this.sections.get(line) ?? 'other'),
@@ -326,6 +328,15 @@ class FortiosReader {
     if (hostname) this.hostname = hostname;
     this.get(s, 'alias');
     this.get(s, 'vdom-mode');
+    // LLDP of the whole device: off unless enabled (#15). FortiOS has no CDP.
+    const transmission = this.one(s, 'lldp-transmission');
+    this.get(s, 'lldp-reception');
+    this.discovery = {
+      lldp: transmission === 'enable',
+      cdp: false,
+      src: [],
+      ...(transmission === undefined ? { defaults: ['lldp'] } : {}),
+    };
   }
 
   /** The SNMP location: the first hint of the site of the device (#15). */
@@ -438,6 +449,15 @@ class FortiosReader {
       if (this.flag(e, 'mtu-override')) {
         const mtu = this.one(e, 'mtu');
         if (mtu) iface.mtu = Number(mtu);
+      }
+      // LLDP on the port: "vdom" (the default) follows the setting of the device (#15).
+      const lldpTx = this.one(e, 'lldp-transmission');
+      const lldpRx = this.one(e, 'lldp-reception');
+      if ((lldpTx && lldpTx !== 'vdom') || (lldpRx && lldpRx !== 'vdom')) {
+        iface.discovery = {
+          ...(lldpTx && lldpTx !== 'vdom' ? { lldpTransmit: lldpTx === 'enable' } : {}),
+          ...(lldpRx && lldpRx !== 'vdom' ? { lldpReceive: lldpRx === 'enable' } : {}),
+        };
       }
       if (this.one(e, 'dedicated-to') === 'management') iface.kind = 'management';
       this.skip(e, 'snmp-index', 'estimated-upstream-bandwidth', 'estimated-downstream-bandwidth');
@@ -1148,8 +1168,23 @@ class FortiosReader {
       this.get(e, 'tunnel-search');
       this.get(e, 'dpd-retryinterval');
       this.get(e, 'mode-cfg');
-      this.get(e, 'localid');
       this.get(e, 'exchange-interface-ip');
+      // What the two sides of a tunnel must agree on, besides proposals and DH groups (#15).
+      tunnel.mode = value(() => this.one(e, 'mode'), d.mode, 'mode');
+      tunnel.authMethod = value(() => this.one(e, 'authmethod'), d.authMethod, 'authMethod');
+      tunnel.natTraversal = value(
+        () => this.one(e, 'nattraversal'),
+        d.natTraversal,
+        'natTraversal',
+      );
+      tunnel.keylife = value(() => num(this.one(e, 'keylife')), d.keylife, 'keylife');
+      const localId = this.one(e, 'localid');
+      if (localId) tunnel.localId = localId;
+      const peerId = this.one(e, 'peerid');
+      if (peerId) tunnel.peerId = peerId;
+      this.get(e, 'network-overlay');
+      const networkId = num(this.one(e, 'network-id'));
+      if (networkId !== undefined) tunnel.networkId = networkId;
       this.skip(e, 'psksecret', 'psksecret-remote', 'ppk-secret');
       if (defaults.length > 0) tunnel.defaults = defaults;
       if (unverified.length > 0) tunnel.unverified = unverified;

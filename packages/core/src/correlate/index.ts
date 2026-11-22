@@ -2,6 +2,7 @@
 // It finds the links between them, the sites they are in and the nodes outside the client.
 
 import { findCables } from './cables';
+import { findProblems } from './checks';
 import { AddressIndex, DeviceInfo } from './devices';
 import { findInternet, findOspf, findSubnets } from './l3';
 import { LinkSet } from './links';
@@ -16,6 +17,7 @@ import {
 import { findBgp, findShortcuts, findTunnels } from './vpn';
 
 export * from './types';
+export { vlanGateways, type RemoteGateway } from './gateways';
 export { linkId } from './links';
 export { siteCode, siteFromLocation } from './sites';
 
@@ -50,7 +52,11 @@ export function correlate(inputs: readonly CorrelationInput[]): Infrastructure {
     cables.pairs,
   );
 
-  const subnets = findSubnets(devices, siteOf);
+  const subnets = findSubnets(
+    devices,
+    siteOf,
+    new Set(sites.filter((s) => !s.name).map((s) => s.id)),
+  );
   for (const link of subnets.links) set.add(link);
   for (const e of subnets.externals) externals.set(e.id, e);
   const internet = findInternet(devices, index);
@@ -93,10 +99,17 @@ export function correlate(inputs: readonly CorrelationInput[]): Infrastructure {
     };
   });
 
-  return {
+  const graph = {
     devices: infraDevices,
     sites: used,
     externals: [...externals.values()].sort((x, y) => x.id.localeCompare(y.id)),
     links: set.all().sort((x, y) => x.id.localeCompare(y.id)),
   };
+  const { problems, advpn } = findProblems({
+    infra: graph,
+    byKey,
+    mismatches: cables.mismatches,
+    subnets,
+  });
+  return { ...graph, problems, advpn };
 }

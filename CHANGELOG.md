@@ -6,6 +6,28 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
 
 ## [Non rilasciato]
 
+## [0.3.0] - 2026-11-22
+
+### Aggiunto
+
+- Controlli di coerenza tra gli apparati di un cliente, seconda parte della fase 2 ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)):
+  - in `packages/core`, dopo la correlazione: tunnel IPsec (tunnel che dall'altro lato non c'è, versione IKE, modalità, autenticazione, proposte e gruppi DH di fase 1 e 2, selettori speculari, PFS, ruoli ADVPN), sessioni BGP (AS, neighbor dall'altro lato, sessione giù con il tunnel che la porta), trunk (modalità, VLAN nativa e permesse, anche le VLAN del FortiGate), LAG (da un lato solo, protocolli incompatibili, numero di porte), MTU, OSPF (area, interfaccia passiva), IP duplicati e subnet sovrapposte tra siti, rotte annunciate in BGP che mancano negli show, descrizioni in contrasto con LLDP e CDP, porte con LLDP e CDP spenti, ADVPN (policy dell'hub e delle filiali, next hop e route reflector);
+  - tre gravità, errore, avviso e informazione; un valore che viene da un default non confermato dà un avviso "da verificare", mai un errore;
+  - ogni problema con il perché, come sistemarlo e le righe di config e show dei due lati, in italiano e in inglese;
+  - sulla mappa un segno con il numero dei problemi sugli apparati e sui collegamenti, nel colore del più grave; sotto la mappa l'elenco dei problemi con filtro ed export Excel, che porta al collegamento o all'apparato; nel dettaglio dei collegamenti i valori che non tornano colorati e l'elenco dei problemi;
+  - nel riepilogo di ogni apparato i suoi problemi, con il pulsante che li apre sulla mappa; nell'elenco a sinistra un pallino sugli apparati con problemi.
+- Vista VPN del cliente: tutti i tunnel IPsec e le scorciatoie ADVPN, con i due estremi, il tipo, lo stato e l'esito del confronto; per ADVPN ruoli, controlli e, per ogni coppia di filiali, scorciatoia attiva, possibile o non possibile, e perché ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Gateway delle VLAN su un altro apparato: la vista VLAN di uno switch segue la VLAN lungo cavi e LAG fino alla SVI o alla sotto-interfaccia del FortiGate che fa da gateway, con il percorso e il pulsante che apre l'apparato ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Lettura di LLDP e CDP accesi o spenti, in generale e su ogni porta (Cisco IOS e Small Business, FortiOS), e dei parametri di fase 1 dei tunnel FortiOS che servono al confronto: modalità, autenticazione, local-id e peer-id, network-id, NAT traversal e durata della chiave ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Un problema voluto per ogni controllo negli esempi, descritto in `samples/README.md`; problemi e coppie ADVPN attesi in `samples/expected-links.json`, verificati dai test ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Test di ogni controllo su casi sintetici, test nel browser dei problemi, della vista VPN e del gateway delle VLAN, anche nel test di riservatezza; screenshot della vista VPN in chiaro e scuro ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+
+### Modificato
+
+- Il dettaglio di un tunnel IPsec mostra anche modalità, autenticazione, local-id e peer-id, network-id, NAT traversal e durata della chiave, con i default indicati; quello di un cavo mostra l'MTU di default quando l'altro lato ne ha una diversa ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- La colonna del gateway nella vista VLAN degli switch si chiama "Gateway", perché ora può stare anche su un altro apparato ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Cliente di esempio, risultati attesi e screenshot rifatti con gli esempi aggiornati; studio e README con i controlli, la vista VPN e il gateway delle VLAN ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+
 ## [0.2.0] - 2026-11-21
 
 ### Aggiunto

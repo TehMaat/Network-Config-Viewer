@@ -23,6 +23,8 @@ voice vlan state oui-enabled
 voice vlan oui-table add 0001e3 Siemens_AG_phone________
 voice vlan oui-table add 00036b Cisco_phone_____________
 voice vlan oui-table add 00096e Avaya___________________
+no cdp run
+no lldp run
 hostname SW-BR2-ACC
 line ssh
 exec-timeout 30

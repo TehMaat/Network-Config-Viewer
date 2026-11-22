@@ -29,6 +29,18 @@ const SHARED_KINDS = new Set<Interface['kind']>([
 export interface SubnetResult {
   links: NewLink[];
   externals: ExternalNode[];
+  /** The same address on interfaces of two devices. */
+  duplicates: { ip: string; members: SubnetMember[] }[];
+  /** The same subnet in different sites. */
+  overlaps: { subnet: string; members: SubnetMember[] }[];
+}
+
+export interface SubnetMember {
+  device: string;
+  context: string;
+  interface: string;
+  ip: string;
+  src: Interface['src'];
 }
 
 /**
@@ -39,7 +51,9 @@ export interface SubnetResult {
 export function findSubnets(
   devices: readonly DeviceInfo[],
   siteOf: ReadonlyMap<string, string>,
+  unnamed: ReadonlySet<string> = new Set(),
 ): SubnetResult {
+  const named = (site: string | undefined) => (site && !unnamed.has(site) ? site : '');
   const groups = new Map<string, Member[]>();
   for (const d of devices) {
     for (const iface of d.model.interfaces) {
@@ -55,21 +69,35 @@ export function findSubnets(
   }
   const links: NewLink[] = [];
   const externals: ExternalNode[] = [];
+  const duplicates: SubnetResult['duplicates'] = [];
+  const overlaps: SubnetResult['overlaps'] = [];
+  const member = (m: Member): SubnetMember => ({
+    device: m.device.key,
+    context: m.device.contextOf(m.iface),
+    interface: m.iface.name,
+    ip: m.ip,
+    src: m.iface.src,
+  });
   for (const [subnet, members] of groups) {
     const devicesIn = new Set(members.map((m) => m.device.key));
     if (devicesIn.size < 2) continue;
     // The same address on two devices is a duplicate (part 2): no link from it.
-    const ips = new Map<string, string>();
+    const byIp = new Map<string, Member[]>();
+    for (const m of members) byIp.set(m.ip, [...(byIp.get(m.ip) ?? []), m]);
     let duplicate = false;
-    for (const m of members) {
-      const other = ips.get(m.ip);
-      if (other && other !== m.device.key) duplicate = true;
-      ips.set(m.ip, m.device.key);
+    for (const [ip, owners] of byIp) {
+      if (new Set(owners.map((o) => o.device.key)).size < 2) continue;
+      duplicate = true;
+      duplicates.push({ ip, members: owners.map(member) });
     }
     if (duplicate) continue;
-    const sites = new Set([...devicesIn].map((k) => siteOf.get(k) ?? ''));
+    // Devices without a site may be anywhere: only sites with a name can overlap.
+    const sites = new Set([...devicesIn].map((k) => named(siteOf.get(k))));
     const prefix = members[0]!.prefix;
-    if (sites.size > 1 && prefix < 30) continue;
+    if (!sites.has('') && sites.size > 1 && prefix < 30) {
+      overlaps.push({ subnet, members: members.map(member) });
+      continue;
+    }
     const end = (m: Member) => ({
       node: m.device.key,
       context: m.device.contextOf(m.iface),
@@ -111,7 +139,7 @@ export function findSubnets(
       });
     }
   }
-  return { links, externals };
+  return { links, externals, duplicates, overlaps };
 }
 
 /**

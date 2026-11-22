@@ -524,3 +524,113 @@ body {
   color: var(--mantine-color-text);
   border-color: var(--mantine-color-indigo-6);
 }
+
+/* Problems found by the consistency checks (#15, part 2): a round mark with their number, in
+   the colour of the most serious one, on the devices and on the links of the map. */
+.ncv-map-problem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  box-shadow: 0 0 0 2px var(--mantine-color-body);
+}
+
+.ncv-map-problem-error {
+  background: var(--mantine-color-red-filled);
+}
+
+.ncv-map-problem-warning {
+  background: var(--mantine-color-orange-filled);
+}
+
+.ncv-map-problem-info {
+  background: var(--mantine-color-blue-filled);
+}
+
+.ncv-map-device {
+  position: relative;
+}
+
+.ncv-map-device > .ncv-map-problem {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+}
+
+.ncv-map-edge-label .ncv-map-problem {
+  min-width: 15px;
+  height: 15px;
+  margin-right: 4px;
+  padding: 0 4px;
+  font-size: 10px;
+  box-shadow: none;
+}
+
+/* Only the mark, when the label is hidden: no box around it. */
+.ncv-map-edge-label.ncv-map-edge-mark {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.ncv-map-edge-label.ncv-map-edge-mark .ncv-map-problem {
+  margin-right: 0;
+  box-shadow: 0 0 0 2px var(--mantine-color-body);
+}
+
+/* The parameters of the two sides that do not agree. */
+.ncv-compare-error > td {
+  background: var(--mantine-color-red-light);
+}
+
+.ncv-compare-warning > td {
+  background: var(--mantine-color-orange-light);
+}
+
+.ncv-compare-info > td {
+  background: var(--mantine-color-blue-light);
+}
+
+.ncv-problem {
+  border-left-width: 3px;
+}
+
+.ncv-problem-error {
+  border-left-color: var(--mantine-color-red-filled);
+}
+
+.ncv-problem-warning {
+  border-left-color: var(--mantine-color-orange-filled);
+}
+
+.ncv-problem-info {
+  border-left-color: var(--mantine-color-blue-filled);
+}
+
+/* In the list of the files: the devices with problems. */
+.ncv-problem-dot {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.ncv-problem-dot-error {
+  background: var(--mantine-color-red-filled);
+}
+
+.ncv-problem-dot-warning {
+  background: var(--mantine-color-orange-filled);
+}
+
+.ncv-problem-dot-info {
+  background: var(--mantine-color-blue-filled);
+}

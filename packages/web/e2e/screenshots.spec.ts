@@ -86,14 +86,26 @@ for (const [colorScheme, suffix] of [
       await exampleClient(page, request);
       await page.getByTestId('nav-map').click();
       await expect(page.getByTestId('map-device')).toHaveCount(12);
-      // The session between branch 1 and the hub, with the tunnel that carries it.
-      await page.getByTestId('filter-links').fill('10.255.1.21');
-      await page.getByTestId('row-links').first().click();
-      await expect(page.getByTestId('map-link-panel')).toHaveAttribute('data-kind', 'bgp');
-      await page.getByTestId('filter-links').fill('');
+      // A problem of the list: the LAG between the core and an access switch, with the two
+      // protocols that do not agree.
+      await page.locator('[data-testid="row-problems"][data-id^="lag-mode|"]').click();
+      await expect(page.getByTestId('map-link-panel')).toHaveAttribute('data-kind', 'lag');
       // The layout is fitted to the canvas once the nodes have their size.
       await page.waitForTimeout(500);
       await page.screenshot({ path: `${DOCS_IMG}app-mappa${suffix}.png`, style });
+    });
+
+    test('VPN of the client', async ({ page, request }) => {
+      await exampleClient(page, request);
+      await page.getByTestId('nav-vpn').click();
+      // The tunnel of branch 2 on WAN2: no phase 1 proposal and no DH group in common.
+      await page
+        .getByTestId('row-vpn-tunnels')
+        .filter({ hasText: 'FGT-BR2' })
+        .filter({ hasText: 'HUB-WAN2' })
+        .click();
+      await expect(page.getByTestId('map-link-comparison')).toHaveText('2 incoerenze');
+      await page.screenshot({ path: `${DOCS_IMG}app-vpn${suffix}.png`, style });
     });
 
     test('start page', async ({ page, request }) => {
