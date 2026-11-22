@@ -210,7 +210,9 @@
     "policies": "Policy",
     "objects": "Oggetti",
     "vpn": "VPN",
-    "sdwan": "SD-WAN"
+    "sdwan": "SD-WAN",
+    "fortiswitch": "FortiSwitch",
+    "wifi": "Wi-Fi"
   },
   "table": {
     "filter": "Filtra la tabella",
@@ -931,7 +933,9 @@
       "bgp": "Sessione BGP",
       "ospf": "Adiacenza OSPF",
       "shortcut": "Scorciatoia ADVPN",
-      "wan": "WAN privata"
+      "wan": "WAN privata",
+      "fortilink": "FortiLink",
+      "capwap": "FortiAP (CAPWAP)"
     },
     "type": {
       "firewall": "FW",
@@ -948,7 +952,8 @@
       "neighbor": "vicino non caricato",
       "segment": "subnet condivisa",
       "manual": "aggiunto a mano",
-      "missing": "non più nel cliente"
+      "missing": "non più nel cliente",
+      "ap-group": "access point gestiti"
     },
     "state": {
       "up": "su",
@@ -983,7 +988,11 @@
       "ospf": "OSPF su {{device}} ({{text}})",
       "tunnel-state": "Tunnel su negli show di {{device}}",
       "bgp-state": "Sessione stabilita negli show di {{device}}",
-      "manual": "Aggiunto a mano, nella mappa del cliente"
+      "manual": "Aggiunto a mano, nella mappa del cliente",
+      "fortilink": "Switch gestito nella config di {{device}} (numero di serie {{text}})",
+      "fortilink-state": "Switch «{{text}}» negli show di {{device}}",
+      "mclag": "Coppia MCLAG nella config di {{device}} (trunk {{text}})",
+      "capwap": "{{text}} FortiAP nella config di {{device}}"
     },
     "sourceKind": {
       "lldp": "LLDP",
@@ -997,7 +1006,11 @@
       "ospf": "OSPF",
       "tunnel-state": "tunnel negli show",
       "bgp-state": "BGP negli show",
-      "manual": "a mano"
+      "manual": "a mano",
+      "fortilink": "FortiLink",
+      "fortilink-state": "FortiLink negli show",
+      "mclag": "MCLAG",
+      "capwap": "CAPWAP"
     },
     "row": {
       "vdom": "VDOM",
@@ -1050,7 +1063,10 @@
       "peerId": "Peer ID",
       "networkId": "Network ID",
       "nat": "NAT traversal",
-      "keylife": "Durata chiave di fase 1 (s)"
+      "keylife": "Durata chiave di fase 1 (s)",
+      "serial": "Numero di serie",
+      "accessPoints": "Access point",
+      "ssids": "SSID"
     },
     "value": {
       "yes": "sì",
@@ -1442,6 +1458,59 @@
       "png": "Immagine PNG",
       "svg": "Immagine SVG",
       "error": "L'export della mappa non è riuscito: riprova."
+    }
+  },
+  "managed": {
+    "intro": "Gli switch che il FortiGate gestisce con FortiLink. Clicca uno switch per vedere le sue porte e le sue VLAN, con gli stessi colori del FortiGate.",
+    "navDescription": "{{model}} · gestito dal FortiGate",
+    "by": "Gestito da {{fortigate}} tramite FortiLink ({{fortilink}}): le righe sono nella config del FortiGate.",
+    "openFortigate": "Apri {{fortigate}}",
+    "trunks": "Trunk",
+    "mclagMember": "coppia MCLAG",
+    "col": {
+      "name": "Nome",
+      "serial": "Numero di serie",
+      "model": "Modello",
+      "fortilink": "FortiLink",
+      "ports": "Porte",
+      "poe": "Porte PoE",
+      "down": "Porte spente",
+      "role": "Ruolo",
+      "status": "Stato (dagli show)",
+      "version": "Versione (dagli show)",
+      "address": "Indirizzo (dagli show)"
+    },
+    "mclag": {
+      "title": "Coppia MCLAG",
+      "intro": "{{a}} e {{b}} lavorano in coppia: l'ICL li unisce, e i trunk MCLAG usano porte di tutti e due.",
+      "trunk": "Trunk",
+      "kind": "Tipo",
+      "icl": "ICL tra i due switch",
+      "mclag": "trunk MCLAG verso il basso",
+      "fortilink": "FortiLink verso il FortiGate"
+    }
+  },
+  "wifi": {
+    "ssids": "SSID",
+    "accessPoints": "Access point",
+    "profiles": "Profili degli access point",
+    "bridging": "sulla LAN dell'access point",
+    "tunnel": "nel tunnel verso il FortiGate",
+    "radio": "Radio {{n}}",
+    "mode": {
+      "monitor": "monitoraggio"
+    },
+    "col": {
+      "ssid": "SSID",
+      "name": "Nome nella config",
+      "security": "Sicurezza",
+      "radius": "Server RADIUS",
+      "vlan": "VLAN",
+      "bridging": "Traffico",
+      "ap": "Access point",
+      "profile": "Profilo",
+      "ssids": "SSID",
+      "enabled": "Attivo"
     }
   }
 }

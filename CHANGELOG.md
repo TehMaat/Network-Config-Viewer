@@ -6,6 +6,26 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/) e le versioni s
 
 ## [Non rilasciato]
 
+## [0.5.0] - 2026-11-22
+
+### Aggiunto
+
+- FortiSwitch e FortiAP gestiti dal FortiGate, quarta e ultima parte della fase 2 ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)):
+  - il driver FortiOS legge gli switch gestiti (porte, VLAN, PoE, porte spente, trunk, ICL, FortiLink e trunk MCLAG) e il wireless controller (SSID con sicurezza, server RADIUS, VLAN e traffico; profili degli access point con le radio; access point), con le righe d'origine e la copertura;
+  - nel FortiGate, la scheda FortiSwitch con gli switch gestiti, il loro stato e la coppia MCLAG, e la scheda Wi-Fi con SSID, access point e profili. La chiave degli SSID non è in nessuna vista;
+  - ogni FortiSwitch gestito è un apparato con la sua pagina, sotto il suo FortiGate nell'elenco: riepilogo, porte e VLAN, con il gateway delle VLAN sul FortiGate attraverso la FortiLink. Ogni elemento apre le sue righe nella config del FortiGate;
+  - dagli show del FortiGate, lo stato degli switch (`execute switch-controller get-conn-status`) e i MAC sulle loro porte (`diagnose switch-controller switch-info mac-table`), con il segno sulle porte configurate senza MAC. I formati sono sintetici, da verificare con un output reale;
+  - sulla mappa, gli switch collegati al FortiGate con la FortiLink, verificata quando lo switch è su negli show; la coppia MCLAG affiancata, con l'ICL; i FortiAP come un gruppo sotto il FortiGate. Legenda, dettagli ed export in draw.io comprendono i nuovi collegamenti.
+- Le VLAN del FortiGate hanno un colore, lo stesso delle porte dei FortiSwitch che gestisce ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Nel campus degli esempi, la coppia MCLAG con ICL, FortiLink e trunk verso le aule, e lo show del FortiGate con lo stato e i MAC degli switch, anche nel cliente di esempio ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Test del driver, della correlazione e nel browser per FortiSwitch, FortiAP, coppia MCLAG e mappa, anche nel test di riservatezza; screenshot di un FortiSwitch gestito in chiaro e scuro ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+
+### Modificato
+
+- Sulla mappa due apparati alla stessa altezza collegati tra loro restano affiancati, i testi troppo lunghi dei riquadri finiscono con i puntini invece di uscire, e i nodi fuori dal cliente sono un po' più larghi, così le loro etichette stanno dentro ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Lo script del cliente di esempio aggiunge in coda gli esempi nuovi ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+- Cliente di esempio e screenshot rifatti; studio e README con i FortiSwitch e i FortiAP gestiti e la fase 2 completa ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)).
+
 ## [0.4.0] - 2026-11-22
 
 ### Aggiunto

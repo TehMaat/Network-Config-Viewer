@@ -3,6 +3,7 @@
 // (objects, policies, routing, VPN) go to the logical context of their VDOM.
 
 import { ipToInt, isIpv4, maskToPrefix, parsePrefix, wildcardMatches } from '../model/ip';
+import { vlanSetFrom } from '../model/vlans';
 import {
   emptyContext,
   type AddressGroup,
@@ -18,6 +19,7 @@ import {
   type IpsecPhase2,
   type IpsecTunnel,
   type LogicalContext,
+  type ManagedSwitch,
   type ModelWarning,
   type Ospf,
   type PolicyRoute,
@@ -32,6 +34,7 @@ import {
   type ServicePorts,
   type StaticRoute,
   type Vip,
+  type WirelessController,
   type Zone,
 } from '../model/types';
 import type { SyntaxNode } from '../syntax/types';
@@ -124,6 +127,17 @@ class FortiosReader {
   private readonly warnings: ModelWarning[] = [];
   private readonly switchMembers = new Map<string, string[]>();
   private readonly ddns: NonNullable<DeviceModel['ddns']> = [];
+  /** FortiSwitches and FortiAPs managed by the FortiGate (#15, part 4). */
+  private readonly managedSwitches: ManagedSwitch[] = [];
+  private readonly wireless: WirelessController = { ssids: [], profiles: [], accessPoints: [] };
+  /** The VLANs of the ports of the managed switches, by name: numbers once the interfaces are known. */
+  private readonly switchVlans: {
+    port: ManagedSwitch['ports'][number];
+    vlan?: string;
+    allowed: string[];
+    untagged: string[];
+    all: boolean;
+  }[] = [];
   private hostname?: string;
   private location?: DeviceModel['location'];
   private discovery?: DeviceModel['discovery'];
@@ -140,6 +154,7 @@ class FortiosReader {
     this.multiVdom = top.some((n) => n.text === 'config global');
     for (const node of top) this.readTop(node);
     this.finishInterfaces();
+    this.finishManagedSwitches();
     for (const context of this.contexts.values()) this.finishContext(context);
     if (this.contexts.size === 0) this.context('root');
     if (this.multiVdom) this.features.add('vdom');
@@ -159,6 +174,10 @@ class FortiosReader {
       ...(this.location ? { location: this.location } : {}),
       ...(this.ddns.length > 0 ? { ddns: this.ddns } : {}),
       discovery: this.discovery ?? { lldp: false, cdp: false, src: [], defaults: ['lldp'] },
+      ...(this.managedSwitches.length > 0 ? { managedSwitches: this.managedSwitches } : {}),
+      ...(this.wireless.ssids.length + this.wireless.accessPoints.length > 0
+        ? { wireless: this.wireless }
+        : {}),
       features: [...this.features].sort(),
       references: this.ctx.references(),
       coverage: this.ctx.coverage((line) => this.sections.get(line) ?? 'other'),
@@ -315,6 +334,10 @@ class FortiosReader {
       'router prefix-list': () => this.readPrefixLists(node, vdom),
       'vpn ipsec phase1-interface': () => this.readPhase1(node, vdom),
       'vpn ipsec phase2-interface': () => this.readPhase2(node, vdom),
+      'switch-controller managed-switch': () => this.readManagedSwitches(node),
+      'wireless-controller vap': () => this.readVaps(node),
+      'wireless-controller wtp-profile': () => this.readWtpProfiles(node),
+      'wireless-controller wtp': () => this.readWtps(node),
     };
     handlers[path]?.();
   }
@@ -502,6 +525,282 @@ class FortiosReader {
       if (!intrazone) zone.defaults = ['intrazone'];
       this.get(e, 'description');
       ctx.zones.push(zone);
+    }
+  }
+
+  // ---- devices managed by the FortiGate (#15, part 4) -------------------------------
+
+  /**
+   * FortiSwitches managed through FortiLink: their ports, with the VLANs named after the VLAN
+   * interfaces of the FortiGate, and their trunks (MCLAG, FortiLink).
+   */
+  private readManagedSwitches(node: SyntaxNode) {
+    this.structure(node);
+    for (const e of this.entries(node)) {
+      this.begin(e);
+      const name = this.one(e, 'name') ?? e.name;
+      const fortilink = this.one(e, 'fsw-wan1-peer');
+      this.refs(e, 'fsw-wan1-peer', 'interface', '');
+      for (const key of [
+        'fsw-wan1-admin',
+        'poe-detection-type',
+        'version',
+        'max-allowed-trunk-members',
+        'description',
+        'owner-vdom',
+        'switch-profile',
+        'access-profile',
+        'pre-provisioned',
+        'directly-connected',
+        'mclag-igmp-snooping-aware',
+        'l3-discovered',
+      ]) {
+        this.get(e, key);
+      }
+      const ports: ManagedSwitch['ports'] = [];
+      // The LACP mode of every trunk: its members have it, as the members of an aggregate.
+      const modes = new Map<string, string>();
+      const table = e.configs.get('ports');
+      const downlinks = switchDownlinks(e.name);
+      if (table) {
+        this.structure(table);
+        for (const p of this.entries(table)) {
+          this.begin(p);
+          ports.push(this.readSwitchPort(p, downlinks, modes));
+        }
+      }
+      // Members of a trunk: the trunk they are in, as for an aggregate.
+      for (const trunk of ports.filter((p) => p.kind === 'lag')) {
+        const mode = modes.get(trunk.name);
+        for (const member of trunk.members ?? []) {
+          const port = ports.find((p) => p.name === member);
+          if (port) port.lag = { group: trunk.name, ...(mode ? { mode } : {}) };
+        }
+      }
+      this.managedSwitches.push({
+        serial: e.name,
+        name,
+        ...(fortiswitchModel(e.name) ? { model: fortiswitchModel(e.name)! } : {}),
+        ...(fortilink ? { fortilink } : {}),
+        ports,
+        src: nodeSrc(e.node),
+      });
+      this.features.add('fortiswitch');
+      if (ports.some((p) => p.trunkRole === 'icl')) this.features.add('mclag');
+      if (ports.some((p) => p.poe)) this.features.add('poe');
+    }
+  }
+
+  private readSwitchPort(
+    p: Entry,
+    downlinks: number,
+    modes: Map<string, string>,
+  ): ManagedSwitch['ports'][number] {
+    const trunk = this.one(p, 'type') === 'trunk';
+    const vlan = this.one(p, 'vlan');
+    this.refs(p, 'vlan', 'interface', '');
+    const allowed = this.get(p, 'allowed-vlans') ?? [];
+    this.refs(p, 'allowed-vlans', 'interface', '');
+    const untagged = this.get(p, 'untagged-vlans') ?? [];
+    this.refs(p, 'untagged-vlans', 'interface', '');
+    const all = this.one(p, 'allowed-vlans-all') === 'enable';
+    const description = this.one(p, 'description');
+    const poe = this.one(p, 'poe-status');
+    const members = this.get(p, 'members');
+    // "lacp-active" and "lacp-passive" as the LACP modes of the FortiGate aggregates.
+    const mode = this.one(p, 'mode')?.replace(/^lacp-/, '');
+    // All three are read: a FortiLink trunk is an MCLAG trunk too.
+    const icl = this.flag(p, 'mclag-icl-port');
+    const fortilinkPort = this.flag(p, 'fortilink-port');
+    const mclag = this.flag(p, 'mclag');
+    const role = icl ? 'icl' : fortilinkPort ? 'fortilink' : mclag ? 'mclag' : undefined;
+    for (const key of [
+      'speed',
+      'stp-state',
+      'edge-port',
+      'loop-guard',
+      'lldp-status',
+      'lldp-profile',
+      'export-to',
+      'qos-policy',
+      'access-mode',
+      'arp-inspection-trust',
+      'igmp-snooping',
+      'learning-limit',
+      'sticky-mac',
+      'dhcp-snooping',
+    ]) {
+      this.get(p, key);
+    }
+    if (trunk && mode) modes.set(p.name, mode);
+    const number = /^port(\d+)$/.exec(p.name)?.[1];
+    const port: ManagedSwitch['ports'][number] = {
+      name: p.name,
+      kind: trunk ? 'lag' : 'physical',
+      shutdown: this.one(p, 'status') === 'down',
+      ipv4: [],
+      src: nodeSrc(p.node),
+      ...(description ? { description } : {}),
+      ...(poe ? { poe: { mode: poe === 'enable' ? 'auto' : 'never' } } : {}),
+      ...(members ? { members } : {}),
+      ...(role ? { trunkRole: role } : {}),
+      ...(number
+        ? {
+            position: {
+              member: 1,
+              slot: 0,
+              port: Number(number),
+              uplink: Number(number) > downlinks,
+            },
+          }
+        : {}),
+    };
+    // Member ports of a trunk follow the trunk; the others have their VLANs.
+    if (vlan || allowed.length > 0 || untagged.length > 0 || all) {
+      this.switchVlans.push({ port, ...(vlan ? { vlan } : {}), allowed, untagged, all });
+    }
+    return port;
+  }
+
+  /** The names of the VLANs of the managed switches as numbers: the VLAN interfaces of the FortiGate. */
+  private finishManagedSwitches() {
+    const ids = new Map<string, number>(Object.entries(FORTISWITCH_VLANS));
+    for (const i of this.interfaces.values()) if (i.vlanId !== undefined) ids.set(i.name, i.vlanId);
+    const id = (name: string) => ids.get(name);
+    for (const { port, vlan, allowed, untagged, all } of this.switchVlans) {
+      const native = vlan ? id(vlan) : undefined;
+      const tagged = allowed.map(id).filter((v): v is number => v !== undefined);
+      const plain = untagged.map(id).filter((v): v is number => v !== undefined);
+      const ranges = (list: number[]) => list.map((v) => ({ from: v, to: v }));
+      // A trunk carries another VLAN than its native one: a port that allows only its native
+      // VLAN carries that VLAN alone, untagged, as an access port.
+      const others = [...tagged, ...plain].some((v) => v !== native);
+      port.switchport =
+        all || others
+          ? {
+              mode: 'trunk',
+              ...(native !== undefined ? { nativeVlan: native } : {}),
+              allowed: all ? { all: true, ranges: [] } : vlanSetFrom(ranges(tagged)),
+              ...(plain.length > 0 ? { untagged: vlanSetFrom(ranges(plain)) } : {}),
+            }
+          : { mode: 'access', ...(native !== undefined ? { accessVlan: native } : {}) };
+    }
+  }
+
+  /** The SSIDs: virtual access points of the wireless controller. */
+  private readVaps(node: SyntaxNode) {
+    this.structure(node);
+    for (const e of this.entries(node)) {
+      this.begin(e);
+      // A virtual access point is an interface of the FortiGate: policies use its name.
+      this.ctx.define('interface', e.name, e.node.line);
+      const security = this.one(e, 'security');
+      const radius = this.one(e, 'radius-server');
+      const vlan = num(this.one(e, 'vlanid'));
+      for (const key of [
+        'auth',
+        'schedule',
+        'broadcast-ssid',
+        'max-clients',
+        'pmf',
+        'intra-vap-privacy',
+        'captive-portal',
+        'portal-type',
+        'selected-usergroups',
+        'local-standalone',
+        'ip',
+        'vlan-pooling',
+        'multicast-enhance',
+        'quarantine',
+      ]) {
+        this.get(e, key);
+      }
+      this.skip(e, 'passphrase', 'sae-password');
+      this.wireless.ssids.push({
+        name: e.name,
+        ssid: this.one(e, 'ssid') ?? e.name,
+        ...(security ? { security } : {}),
+        ...(radius ? { radiusServer: radius } : {}),
+        ...(vlan !== undefined ? { vlanId: vlan } : {}),
+        localBridging: this.one(e, 'local-bridging') === 'enable',
+        src: nodeSrc(e.node),
+      });
+      this.features.add('fortiap');
+    }
+  }
+
+  private readWtpProfiles(node: SyntaxNode) {
+    this.structure(node);
+    for (const e of this.entries(node)) {
+      this.begin(e);
+      this.ctx.define('wtp-profile', e.name, e.node.line);
+      const platformNode = e.configs.get('platform');
+      let platform: string | undefined;
+      if (platformNode) {
+        this.structure(platformNode);
+        const s = this.settings(platformNode);
+        platform = this.one(s, 'type');
+        this.get(s, 'mode');
+        this.get(s, 'ddscan');
+      }
+      for (const key of [
+        'handoff-sta-thresh',
+        'comment',
+        'ap-country',
+        'led-state',
+        'allowaccess',
+      ]) {
+        this.get(e, key);
+      }
+      const radios: WirelessController['profiles'][number]['radios'] = [];
+      for (const n of [1, 2, 3, 4]) {
+        const radioNode = e.configs.get(`radio-${n}`);
+        if (!radioNode) continue;
+        this.structure(radioNode);
+        const s = this.settings(radioNode);
+        const band = this.one(s, 'band');
+        const mode = this.one(s, 'mode');
+        const ssids = this.get(s, 'vaps') ?? [];
+        this.refs(s, 'vaps', 'interface', '');
+        for (const key of [
+          'vap-all',
+          'channel',
+          'power-level',
+          'channel-bonding',
+          'auto-power-level',
+        ]) {
+          this.get(s, key);
+        }
+        radios.push({ radio: n, ...(band ? { band } : {}), ...(mode ? { mode } : {}), ssids });
+      }
+      this.wireless.profiles.push({
+        name: e.name,
+        ...(platform ? { platform } : {}),
+        radios,
+        src: nodeSrc(e.node),
+      });
+      this.features.add('fortiap');
+    }
+  }
+
+  private readWtps(node: SyntaxNode) {
+    this.structure(node);
+    for (const e of this.entries(node)) {
+      this.begin(e);
+      const profile = this.one(e, 'wtp-profile');
+      this.refs(e, 'wtp-profile', 'wtp-profile', '');
+      for (const key of ['location', 'region', 'override-led-state', 'firmware-provision']) {
+        this.get(e, key);
+      }
+      this.wireless.accessPoints.push({
+        serial: e.name,
+        name: this.one(e, 'name') ?? e.name,
+        ...(fortiapModel(e.name) ? { model: fortiapModel(e.name)! } : {}),
+        ...(profile ? { profile } : {}),
+        enabled: this.one(e, 'admin') !== 'disable',
+        src: nodeSrc(e.node),
+      });
+      this.features.add('fortiap');
     }
   }
 
@@ -1599,6 +1898,33 @@ function range(text: string): PortRange | null {
 function slashPrefix(value: string): string {
   const p = parsePrefix(value.replace('/', ' '));
   return p ? `${p.ip}/${p.prefix}` : value;
+}
+
+/** The VLANs that every managed FortiSwitch has, besides the VLAN interfaces of the FortiGate. */
+const FORTISWITCH_VLANS: Record<string, number> = {
+  _default: 1,
+  quarantine: 4093,
+  rspan: 4092,
+  onboarding: 4094,
+};
+
+/** "S248EPTF20000001" → "FortiSwitch 248E-POE": the model is in the serial number. */
+function fortiswitchModel(serial: string): string | undefined {
+  const m = /^S(\d{3}[A-Z])([PF])?/.exec(serial);
+  if (!m) return undefined;
+  return `FortiSwitch ${m[1]}${m[2] === 'P' ? '-POE' : m[2] === 'F' ? '-FPOE' : ''}`;
+}
+
+/** Front ports of a FortiSwitch, from its model: 248 → 48, 124 → 24, 108 → 8. */
+function switchDownlinks(serial: string): number {
+  const m = /^S\d(\d{2})/.exec(serial);
+  return m ? Number(m[1]) : Number.MAX_SAFE_INTEGER;
+}
+
+/** "FP231FTF20000001" → "FortiAP 231F". */
+function fortiapModel(serial: string): string | undefined {
+  const m = /^FP(\d{3}[A-Z])/.exec(serial);
+  return m ? `FortiAP ${m[1]}` : undefined;
 }
 
 function num(v: string | undefined): number | undefined {

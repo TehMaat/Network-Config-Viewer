@@ -8,6 +8,7 @@ export * from './syntax';
 export * from './text';
 export * from './drivers';
 export * from './model/ip';
+export * from './model/managed';
 export * from './model/names';
 export * from './model/types';
 export * from './model/vlans';

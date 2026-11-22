@@ -6,7 +6,7 @@ import { IconArrowRight } from '@tabler/icons-react';
 import type { Infrastructure, Link, LinkSource, Problem } from '@ncv/core';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { worstSeverity } from '../state/infra';
+import { deviceViewId, worstSeverity } from '../state/infra';
 import { EvidenceButton, ProblemItem, SEVERITY_COLOR } from '../views/problems';
 import {
   comparisonText,
@@ -81,7 +81,7 @@ export function LinkPanel({ link, ...props }: PanelProps & { link: Link }) {
           size="compact-xs"
           variant="light"
           rightSection={<IconArrowRight size={12} />}
-          onClick={() => onOpenFile(s.device!.file)}
+          onClick={() => onOpenFile(deviceViewId(s.device!))}
           data-testid="map-open-device"
         >
           {t('map.openViews')}
@@ -269,7 +269,7 @@ export function NodePanel({ node, ...props }: PanelProps & { node: string }) {
       {device && (
         <Button
           rightSection={<IconArrowRight size={14} />}
-          onClick={() => onOpenFile(device.file)}
+          onClick={() => onOpenFile(deviceViewId(device))}
           data-testid="map-open-device"
         >
           {t('map.openViews')}

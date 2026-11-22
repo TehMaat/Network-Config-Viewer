@@ -315,7 +315,7 @@ test('keeps a link by hand towards a device that is no longer in the client, and
   await openApp(page);
   await page.getByTestId('btn-start-import').click();
   await page.getByTestId('client-import-input').setInputFiles(samplePath('cliente-esempio.zip'));
-  await expect(page.locator('[data-testid="file-item"][data-saved="yes"]')).toHaveCount(23);
+  await expect(page.locator('[data-testid="file-item"][data-saved="yes"]')).toHaveCount(24);
   await openMap(page);
   // The map of the example client: nodes and links added by hand, a LAG confirmed.
   await expect(external(page, 'manual:sw-dc')).toBeVisible();

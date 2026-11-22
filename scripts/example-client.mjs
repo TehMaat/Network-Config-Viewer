@@ -28,8 +28,12 @@ export function sampleFilesByName() {
   return out;
 }
 
+/** The date of the samples in the example client: a previous version has it in its name. */
+const SAMPLE_DATE = '2025-11-03T09:00:00.000Z';
+
 /**
- * The example client with the samples as they are now.
+ * The example client with the samples as they are now. A sample that is not in it yet is added
+ * after the others, as the app adds a file to a client.
  * @param {Uint8Array} zip the example client as it is
  * @returns {Uint8Array}
  */
@@ -37,6 +41,20 @@ export function rebuildExampleClient(zip) {
   const entries = unzipSync(zip);
   const manifest = JSON.parse(strFromU8(entries['client.json']));
   const files = sampleFilesByName();
+  const listed = new Set(manifest.files.map((/** @type {any} */ item) => item.path.at(-1)));
+  for (const [name, path] of files) {
+    if (listed.has(name)) continue;
+    const number = String(manifest.files.length + 1).padStart(4, '0');
+    manifest.files.push({
+      entry: `files/${number}-${name}`,
+      path: [name],
+      size: 0,
+      sha256: '',
+      addedAt: manifest.exportedAt,
+      ...(path === join(SAMPLES, 'versioni', name) ? {} : { modifiedAt: SAMPLE_DATE }),
+      overrides: {},
+    });
+  }
   /** @type {import('fflate').Zippable} */
   const out = {};
   for (const item of manifest.files) {

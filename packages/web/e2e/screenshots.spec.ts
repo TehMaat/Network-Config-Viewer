@@ -25,7 +25,7 @@ async function exampleClient(page: Page, request: APIRequestContext) {
   }
   await openApp(page);
   await page.getByTestId('client-import-input').setInputFiles(samplePath('cliente-esempio.zip'));
-  await expect(page.locator('[data-testid="file-item"][data-saved="yes"]')).toHaveCount(23);
+  await expect(page.locator('[data-testid="file-item"][data-saved="yes"]')).toHaveCount(24);
 }
 
 // Every screenshot in the light theme, and again in the dark one with the "-scuro" suffix.
@@ -68,6 +68,17 @@ for (const [colorScheme, suffix] of [
       await page.screenshot({ path: `${DOCS_IMG}app-stato${suffix}.png`, style });
     });
 
+    test('FortiSwitch managed by the FortiGate', async ({ page, request }) => {
+      await exampleClient(page, request);
+      // A switch of the campus, as a device of its own: its ports with the colours of the VLANs
+      // of the FortiGate, and a port with its MAC from the shows of the FortiGate.
+      await page.locator('[data-testid="managed-item"][data-device="FSW-CAMPUS-01"]').click();
+      await expect(page.getByTestId('managed-switch-view')).toBeVisible();
+      await page.locator('[data-testid="port"][data-name="port1"]').click();
+      await expect(page.getByTestId('port-macs')).toBeVisible();
+      await page.screenshot({ path: `${DOCS_IMG}app-fortiswitch${suffix}.png`, style });
+    });
+
     test('linked config', async ({ page, request }) => {
       await exampleClient(page, request);
       await selectFile(page, 'sw-hq-core-c9300-iosxe-17.12-stack.txt');
@@ -85,7 +96,7 @@ for (const [colorScheme, suffix] of [
     test('map of the infrastructure', async ({ page, request }) => {
       await exampleClient(page, request);
       await page.getByTestId('nav-map').click();
-      await expect(page.getByTestId('map-device')).toHaveCount(12);
+      await expect(page.getByTestId('map-device')).toHaveCount(14);
       // A problem of the list: the LAG between the core and an access switch, with the two
       // protocols that do not agree.
       await page.locator('[data-testid="row-problems"][data-id^="lag-mode|"]').click();
@@ -98,7 +109,7 @@ for (const [colorScheme, suffix] of [
     test('map changed by hand', async ({ page, request }) => {
       await exampleClient(page, request);
       await page.getByTestId('nav-map').click();
-      await expect(page.getByTestId('map-device')).toHaveCount(12);
+      await expect(page.getByTestId('map-device')).toHaveCount(14);
       // The cable added by hand towards the switch of the old warehouse, no longer there.
       await page.locator('[data-testid="row-problems"]').filter({ hasText: 'SW-HQ-MAG' }).click();
       await expect(page.getByTestId('map-link-manual')).toBeVisible();

@@ -2,7 +2,13 @@ import { AppShell, Button, Center, Group, Loader, Modal, Stack, Text } from '@ma
 import { Dropzone } from '@mantine/dropzone';
 import { useDisclosure } from '@mantine/hooks';
 import { IconUpload } from '@tabler/icons-react';
-import { DEFAULT_LIMITS, type MapEdits, type ModelHints } from '@ncv/core';
+import {
+  DEFAULT_LIMITS,
+  managedSwitchModel,
+  managedSwitchState,
+  type MapEdits,
+  type ModelHints,
+} from '@ncv/core';
 import {
   lazy,
   Suspense,
@@ -21,6 +27,7 @@ import { ClientBar, ClientDialogs, type ClientDialog } from './components/Client
 import { EmptyState } from './components/EmptyState';
 import { FileList } from './components/FileList';
 import { FileView } from './components/FileView';
+import { ManagedSwitchView } from './components/ManagedSwitchView';
 import { normalizeDroppedPath } from './format';
 import { contentStore } from './state/content';
 import { deviceState, linkShows } from './state/devices';
@@ -33,7 +40,13 @@ import {
   type TextEntry,
 } from './state/files';
 import { deviceGroups } from './state/groups';
-import { buildInfrastructure, MAP_ID, VPN_ID, type MapFocus } from './state/infra';
+import {
+  buildInfrastructure,
+  MAP_ID,
+  parseManagedViewId,
+  VPN_ID,
+  type MapFocus,
+} from './state/infra';
 import { EMPTY_EDITS, structuralEdits } from './state/mapEdits';
 import { AnalyzerClient } from './worker/client';
 import type { WorkerMessage } from './worker/protocol';
@@ -271,6 +284,16 @@ export function App() {
 
   const mapOpen = state.selectedId === MAP_ID;
   const vpnOpen = state.selectedId === VPN_ID;
+  // The page of a FortiSwitch managed by a FortiGate (#15, part 4).
+  const managedOpen = parseManagedViewId(state.selectedId);
+  const managedFortigate = managedOpen
+    ? state.files.find((f) => f.id === managedOpen.file)
+    : undefined;
+  const managedModel =
+    managedFortigate?.type === 'text' ? contentStore.get(managedFortigate.id)?.model : undefined;
+  const managedSwitch = managedModel?.managedSwitches?.find(
+    (s) => s.serial === managedOpen?.serial,
+  );
   const selected = state.files.find((f) => f.id === state.selectedId) ?? null;
   const hasFiles = state.files.length > 0 || state.pendingBatches.length > 0;
   const clientOpen = archive.state.current !== null;
@@ -291,8 +314,14 @@ export function App() {
   );
   const modelOf = useCallback(
     (key: string) => {
-      const file = infra.devices.find((d) => d.key === key)?.file;
-      return (file && contentStore.get(file)?.model) || null;
+      const device = infra.devices.find((d) => d.key === key);
+      const model = (device && contentStore.get(device.file)?.model) || null;
+      // A managed FortiSwitch has the file of its FortiGate, not a model of its own (#15).
+      if (model && device?.managedBy) {
+        const sw = model.managedSwitches?.find((s) => s.serial === device.serial);
+        return sw ? managedSwitchModel(model, sw) : null;
+      }
+      return model;
     },
     [infra],
   );
@@ -419,6 +448,23 @@ export function App() {
                 exportName={archive.state.current?.name ?? t('vpnClient.exportName')}
               />
             </Suspense>
+          ) : managedSwitch && managedModel && managedFortigate?.type === 'text' ? (
+            <ManagedSwitchView
+              key={state.selectedId}
+              fortigate={managedFortigate}
+              fortigateName={managedModel.hostname ?? managedFortigate.name}
+              sw={managedSwitch}
+              model={managedSwitchModel(managedModel, managedSwitch)}
+              state={managedSwitchState(
+                deviceState(links.showsOf.get(managedFortigate.id)),
+                managedSwitch,
+              )}
+              infra={infra}
+              modelOf={modelOf}
+              onOpenFile={openFile}
+              onOpenMap={openMap}
+              fileName={fileName}
+            />
           ) : selected ? (
             <FileView
               key={selected.id}

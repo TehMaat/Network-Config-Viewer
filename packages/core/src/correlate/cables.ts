@@ -85,6 +85,13 @@ interface HostPattern {
   length: number;
 }
 
+/** The FortiLink trunk of a managed FortiSwitch, or one of its ports. */
+function fortilink(d: DeviceInfo, iface: Interface): boolean {
+  if (iface.trunkRole === 'fortilink') return true;
+  const trunk = iface.lag ? d.iface(iface.lag.group) : undefined;
+  return trunk?.trunkRole === 'fortilink';
+}
+
 /** The device a description names, the longest hostname first, and the text after it. */
 function namedDevice(
   description: string,
@@ -192,6 +199,8 @@ export function findCables(
   for (const d of devices) {
     for (const iface of d.model.interfaces) {
       if (!iface.description || (iface.kind !== 'physical' && iface.kind !== 'lag')) continue;
+      // The FortiLink of a managed FortiSwitch is a link of its own (#15, part 4).
+      if (fortilink(d, iface)) continue;
       const hit = namedDevice(iface.description, patterns, d.key);
       if (!hit) continue;
       const target = byKey.get(hit.device)!;

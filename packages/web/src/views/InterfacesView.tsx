@@ -1,8 +1,9 @@
-import { Badge, Group, Paper, SimpleGrid, Stack, Table, Text, Title } from '@mantine/core';
+import { Badge, Box, Group, Paper, SimpleGrid, Stack, Table, Text, Title } from '@mantine/core';
 import type { DeviceModel, Interface, LogicalContext } from '@ncv/core';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { vlanColors } from './colors';
 import { DataTable } from './DataTable';
 import { ShowSourceButton, SourceButton, useDeviceView, Value } from './source';
 import { FULL_LABEL } from './values';
@@ -271,13 +272,37 @@ export function FirewallVlansView({
   context: LogicalContext | null;
 }) {
   const { t } = useTranslation();
+  // Every VLAN of the device, in every VDOM: the FortiSwitches it manages have the same colours
+  // (#15, part 4).
+  const colors = useMemo(
+    () => vlanColors([...new Set(model.interfaces.flatMap((i) => i.vlanId ?? []))]),
+    [model],
+  );
   const data = model.interfaces.filter(
     (i) =>
       i.vlanId !== undefined &&
       (model.contexts.length <= 1 || !context || (i.context ?? 'root') === context.name),
   );
   const columns: ColumnDef<Interface, unknown>[] = [
-    { id: 'id', header: t('vlans.col.id'), accessorFn: (i) => i.vlanId },
+    {
+      id: 'id',
+      header: t('vlans.col.id'),
+      accessorFn: (i) => i.vlanId,
+      cell: (c) => (
+        <Group gap={6} wrap="nowrap">
+          <Box
+            w={10}
+            h={10}
+            style={{ background: colors.get(c.getValue<number>()), borderRadius: 2 }}
+            data-testid="vlan-color"
+            data-vlan={c.getValue<number>()}
+          />
+          <Text span size="sm" fw={600}>
+            {c.getValue<number>()}
+          </Text>
+        </Group>
+      ),
+    },
     {
       id: 'name',
       header: t('vlans.col.interface'),

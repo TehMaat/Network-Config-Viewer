@@ -124,6 +124,11 @@ export interface Interface extends Element {
   policyRouteMap?: string;
   /** LLDP and CDP on the port, only when written on it (#15). */
   discovery?: { cdp?: boolean; lldpTransmit?: boolean; lldpReceive?: boolean };
+  /**
+   * A trunk of a FortiSwitch managed by a FortiGate (#15, part 4): the inter-chassis link of an
+   * MCLAG pair, a trunk spread on the two switches of the pair, or the FortiLink to the FortiGate.
+   */
+  trunkRole?: 'icl' | 'mclag' | 'fortilink';
   // FortiOS
   alias?: string;
   role?: string;
@@ -585,7 +590,10 @@ export type FeatureCode =
   | 'advpn'
   | 'ha'
   | 'nat'
-  | 'vip';
+  | 'vip'
+  | 'fortiswitch'
+  | 'mclag'
+  | 'fortiap';
 
 export type ModelWarningCode =
   | 'vtp-vlans-not-in-config'
@@ -600,6 +608,66 @@ export interface ModelWarning {
   line?: number;
   /** Logical context (VDOM) the warning is about. */
   context?: string;
+}
+
+// ---- Devices managed by a FortiGate (#15, part 4) ------------------------------------
+
+/** A FortiSwitch managed by a FortiGate through FortiLink, from the configuration of the FortiGate. */
+export interface ManagedSwitch extends Element {
+  /** Serial number: the name of its entry in the configuration of the FortiGate. */
+  serial: string;
+  name: string;
+  /** "FortiSwitch 248E-POE", from the serial number. */
+  model?: string;
+  /** The FortiLink interface of the FortiGate it is managed from. */
+  fortilink?: string;
+  /** Ports and trunks, with the VLANs as numbers. */
+  ports: Interface[];
+}
+
+/** An SSID of the FortiAPs: a virtual access point of the wireless controller. */
+export interface WifiSsid extends Element {
+  /** Name of the virtual access point in the configuration. */
+  name: string;
+  ssid: string;
+  security?: string;
+  /** RADIUS server of an enterprise SSID. */
+  radiusServer?: string;
+  vlanId?: number;
+  /** Traffic bridged on the LAN of the access point, not tunnelled to the FortiGate. */
+  localBridging: boolean;
+}
+
+export interface ApRadio {
+  radio: number;
+  band?: string;
+  /** "ap", "monitor"... */
+  mode?: string;
+  /** Names of the SSIDs on the radio. */
+  ssids: string[];
+}
+
+export interface ApProfile extends Element {
+  name: string;
+  /** Platform of the FortiAP: "231F". */
+  platform?: string;
+  radios: ApRadio[];
+}
+
+/** A FortiAP managed by the FortiGate. */
+export interface AccessPoint extends Element {
+  serial: string;
+  name: string;
+  /** "FortiAP 231F", from the serial number. */
+  model?: string;
+  profile?: string;
+  enabled: boolean;
+}
+
+export interface WirelessController {
+  ssids: WifiSsid[];
+  profiles: ApProfile[];
+  accessPoints: AccessPoint[];
 }
 
 export interface DeviceModel {
@@ -623,6 +691,9 @@ export interface DeviceModel {
    */
   discovery?: Element & { lldp: boolean; cdp: boolean };
   vtpMode?: string;
+  /** FortiSwitches and FortiAPs managed by a FortiGate (#15, part 4). */
+  managedSwitches?: ManagedSwitch[];
+  wireless?: WirelessController;
   features: FeatureCode[];
   references: Reference[];
   coverage: Coverage;

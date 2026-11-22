@@ -13,6 +13,12 @@ export interface CorrelationInput {
   file: string;
   model: DeviceModel;
   state?: DeviceState | null;
+  /**
+   * A FortiSwitch managed by a FortiGate (#15, part 4): the hostname of the FortiGate and the
+   * serial number of the switch. Its file is the configuration of the FortiGate.
+   */
+  managedBy?: string;
+  serial?: string;
 }
 
 export type DeviceType = 'firewall' | 'switch';
@@ -35,6 +41,9 @@ export interface InfraDevice {
   contexts: string[];
   managementIp?: string;
   location?: string;
+  /** A FortiSwitch managed by a FortiGate (#15, part 4): the key of the FortiGate, and its serial number. */
+  managedBy?: string;
+  serial?: string;
 }
 
 /** How the site of a device was found: SNMP location, hostname, cables, by hand, or not at all. */
@@ -58,7 +67,7 @@ export interface Site {
  * by hand (#15, part 3); a device of a link added by hand that is not in the client any more.
  */
 export type ExternalKind =
-  'internet' | 'provider' | 'peer' | 'neighbor' | 'segment' | 'manual' | 'missing';
+  'internet' | 'provider' | 'peer' | 'neighbor' | 'segment' | 'manual' | 'missing' | 'ap-group';
 
 /** A node that is not a device of the client. */
 export interface ExternalNode {
@@ -71,9 +80,22 @@ export interface ExternalNode {
   site?: string;
 }
 
-/** "wan": a private WAN (MPLS, point to point of a provider), only added by hand. */
+/**
+ * "wan": a private WAN (MPLS, point to point of a provider), only added by hand. "fortilink":
+ * a FortiGate and a FortiSwitch it manages; "capwap": a FortiGate and its FortiAPs (#15, part 4).
+ */
 export type LinkKind =
-  'cable' | 'lag' | 'wan' | 'subnet' | 'internet' | 'ipsec' | 'bgp' | 'ospf' | 'shortcut';
+  | 'cable'
+  | 'lag'
+  | 'wan'
+  | 'subnet'
+  | 'internet'
+  | 'ipsec'
+  | 'bgp'
+  | 'ospf'
+  | 'shortcut'
+  | 'fortilink'
+  | 'capwap';
 
 /**
  * Where a link comes from. Shows verify (LLDP, CDP, tunnels and BGP sessions seen up), the
@@ -91,13 +113,18 @@ export type SourceKind =
   | 'ospf'
   | 'tunnel-state'
   | 'bgp-state'
-  | 'manual';
+  | 'manual'
+  | 'fortilink'
+  | 'fortilink-state'
+  | 'mclag'
+  | 'capwap';
 
 export const VERIFYING_SOURCES: readonly SourceKind[] = [
   'lldp',
   'cdp',
   'tunnel-state',
   'bgp-state',
+  'fortilink-state',
 ];
 
 /** Lines of the configuration of a device, or of one of its files of shows. */

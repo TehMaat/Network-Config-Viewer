@@ -21,6 +21,21 @@ export const MAP_ID = '#map';
 /** Selection of the VPN of the client in the list of the files (#15, part 2). */
 export const VPN_ID = '#vpn';
 
+/**
+ * The page of a FortiSwitch managed by a FortiGate (#15, part 4): the file of the FortiGate and
+ * the serial number of the switch.
+ */
+export const managedViewId = (file: string, serial: string) => `#managed:${serial}:${file}`;
+
+export function parseManagedViewId(id: string | null): { file: string; serial: string } | null {
+  const m = id ? /^#managed:([^:]+):(.+)$/.exec(id) : null;
+  return m ? { serial: m[1]!, file: m[2]! } : null;
+}
+
+/** What opens the views of a device of the map: its file, or the page of a managed switch. */
+export const deviceViewId = (device: { file: string; managedBy?: string; serial?: string }) =>
+  device.managedBy && device.serial ? managedViewId(device.file, device.serial) : device.file;
+
 /** What the map shows when it opens from elsewhere: a link or a node. */
 export interface MapFocus {
   kind: 'link' | 'node';

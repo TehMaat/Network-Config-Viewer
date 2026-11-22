@@ -35,7 +35,9 @@ export type ShowCommandId =
   | 'get router info routing-table all'
   | 'get router info bgp summary'
   | 'diagnose sys sdwan health-check'
-  | 'diagnose sys sdwan service';
+  | 'diagnose sys sdwan service'
+  | 'execute switch-controller get-conn-status'
+  | 'diagnose switch-controller switch-info mac-table';
 
 /** One command of a file, with the lines of its output. */
 export interface ShowOutput {
@@ -204,6 +206,23 @@ export interface SdwanServiceState extends StateItem {
 }
 
 /** Everything the shows of one device say, each value with the lines it comes from. */
+/** A FortiSwitch managed by the FortiGate, as the FortiGate sees it (#15, part 4). */
+export interface ManagedSwitchState extends StateItem {
+  serial: string;
+  name?: string;
+  version?: string;
+  status: 'up' | 'down';
+  /** "Authorized/Up", as the FortiGate shows it. */
+  statusText: string;
+  address?: string;
+}
+
+/** A MAC address on a port of a managed FortiSwitch. */
+export interface SwitchMacEntry extends MacEntry {
+  /** Serial number of the switch. */
+  switch: string;
+}
+
 export interface DeviceState {
   hostname?: string;
   version?: string;
@@ -223,6 +242,14 @@ export interface DeviceState {
   bgp: BgpPeerState[];
   sla: SlaState[];
   sdwanServices: SdwanServiceState[];
+  /** FortiSwitches managed by the FortiGate, and the MAC addresses on their ports. */
+  managedSwitches: ManagedSwitchState[];
+  switchMacs: SwitchMacEntry[];
+  /**
+   * The state of a FortiSwitch managed by a FortiGate, taken from the shows of the FortiGate
+   * (#15, part 4): the table of the MACs of the switches is the MAC table of the switch.
+   */
+  managed?: boolean;
   /** Commands read, for the summary: "show mac address-table" and where it is. */
   commands: { id: ShowCommandId; line: number; context?: string; file?: string }[];
 }
@@ -243,6 +270,8 @@ export function emptyState(): DeviceState {
     bgp: [],
     sla: [],
     sdwanServices: [],
+    managedSwitches: [],
+    switchMacs: [],
     commands: [],
   };
 }

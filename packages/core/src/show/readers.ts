@@ -796,6 +796,65 @@ const fortiSdwanService: ReadFn = (r) => {
   return read;
 };
 
+/**
+ * The FortiSwitches managed by the FortiGate (#15, part 4): one row per switch, from the serial
+ * number to the name. The format is to be confirmed with a real output.
+ */
+const fortiSwitchStatus: ReadFn = (r) => {
+  const [a, b] = range(r);
+  let read = false;
+  for (let i = a; i <= b; i++) {
+    const m =
+      /^(S[0-9A-Z]{10,})\s+(v\S+(?:\s+\(\d+\))?)\s+(\S+)\s+(?:(\S+)\s+)?(\d+\.\d+\.\d+\.\d+)\s+(.*?)\s+(\S+)\s*$/.exec(
+        r.lines[i]!,
+      );
+    if (!m) continue;
+    const text = m[3]!;
+    r.state.managedSwitches.push({
+      serial: m[1]!,
+      version: m[2]!,
+      statusText: text,
+      status: /\/up$/i.test(text) ? 'up' : 'down',
+      address: m[5]!,
+      name: m[7]!,
+      src: at(i),
+    });
+    read = true;
+  }
+  return read;
+};
+
+/**
+ * MAC addresses on the ports of the managed FortiSwitches: a block for every switch, under its
+ * serial number. The format is to be confirmed with a real output.
+ */
+const fortiSwitchMacs: ReadFn = (r) => {
+  const [a, b] = range(r);
+  let read = false;
+  let current: string | null = null;
+  for (let i = a; i <= b; i++) {
+    const line = r.lines[i]!;
+    const head = /^(S[0-9A-Z]{10,})\s*:\s*$/.exec(line.trim());
+    if (head) {
+      current = head[1]!;
+      continue;
+    }
+    const m = /^\s*([0-9a-f]{2}(?::[0-9a-f]{2}){5})\s+(\S+)\s+(\d+)(?:\s+(\S+))?/i.exec(line);
+    if (!m || !current) continue;
+    const type = (m[4] ?? 'dynamic').toLowerCase();
+    r.state.switchMacs.push({
+      switch: current,
+      mac: m[1]!.toLowerCase(),
+      port: m[2]!,
+      vlan: Number(m[3]),
+      type: type === 'dynamic' || type === 'static' ? type : 'other',
+      src: at(i),
+    });
+    read = true;
+  }
+  return read;
+};
+
 const READERS: Partial<Record<ShowCommandId, ReadFn>> = {
   'show version': ciscoVersion,
   'show inventory': ciscoInventory,
@@ -818,6 +877,8 @@ const READERS: Partial<Record<ShowCommandId, ReadFn>> = {
   'get router info bgp summary': fortiBgpSummary,
   'diagnose sys sdwan health-check': fortiHealthCheck,
   'diagnose sys sdwan service': fortiSdwanService,
+  'execute switch-controller get-conn-status': fortiSwitchStatus,
+  'diagnose switch-controller switch-info mac-table': fortiSwitchMacs,
 };
 
 /** Reads one output into the state; returns whether anything was read. */

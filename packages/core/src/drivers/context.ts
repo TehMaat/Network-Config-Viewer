@@ -21,7 +21,8 @@ export type SymbolKind =
   | 'schedule'
   | 'phase1'
   | 'sdwan-zone'
-  | 'health-check';
+  | 'health-check'
+  | 'wtp-profile';
 
 interface PendingReference {
   line: number;

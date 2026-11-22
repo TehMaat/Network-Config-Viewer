@@ -281,7 +281,7 @@ test('imports the example client of the samples, ready to try', async ({ page })
   await page.getByTestId('btn-start-import').click();
   await page.getByTestId('client-import-input').setInputFiles(samplePath('cliente-esempio.zip'));
   await expect(page.getByTestId('client-menu')).toHaveAttribute('data-client', 'Esempio Rete Srl');
-  await expect(saved(page)).toHaveCount(23);
+  await expect(saved(page)).toHaveCount(24);
   await expect(page.getByTestId('device-group')).toHaveCount(12);
   const core = page.locator('[data-testid="device-group"][data-device="SW-HQ-CORE"]');
   await expect(core.locator('[data-role="version"]')).toHaveCount(1);
