@@ -28,6 +28,7 @@
     "@tanstack/react-virtual": "^3.14.26",
     "@xyflow/react": "12.12.1",
     "exceljs": "^4.4.0",
+    "html-to-image": "1.11.13",
     "i18next": "^27.2.1",
     "i18next-browser-languagedetector": "^8.3.1",
     "react": "^19.3.1",

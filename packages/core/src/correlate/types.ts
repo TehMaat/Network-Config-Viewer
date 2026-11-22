@@ -46,6 +46,11 @@ export interface Site {
   name: string;
   source: SiteSource;
   devices: string[];
+  /**
+   * With changes made by hand: the names proposed for its nodes before them ("Magazzino" for a
+   * site renamed "Sede"). Without changes, the site has the name proposed.
+   */
+  proposed?: string[];
 }
 
 /**
@@ -53,13 +58,7 @@ export interface Site {
  * by hand (#15, part 3); a device of a link added by hand that is not in the client any more.
  */
 export type ExternalKind =
-  | 'internet'
-  | 'provider'
-  | 'peer'
-  | 'neighbor'
-  | 'segment'
-  | 'manual'
-  | 'missing';
+  'internet' | 'provider' | 'peer' | 'neighbor' | 'segment' | 'manual' | 'missing';
 
 /** A node that is not a device of the client. */
 export interface ExternalNode {
@@ -74,15 +73,7 @@ export interface ExternalNode {
 
 /** "wan": a private WAN (MPLS, point to point of a provider), only added by hand. */
 export type LinkKind =
-  | 'cable'
-  | 'lag'
-  | 'wan'
-  | 'subnet'
-  | 'internet'
-  | 'ipsec'
-  | 'bgp'
-  | 'ospf'
-  | 'shortcut';
+  'cable' | 'lag' | 'wan' | 'subnet' | 'internet' | 'ipsec' | 'bgp' | 'ospf' | 'shortcut';
 
 /**
  * Where a link comes from. Shows verify (LLDP, CDP, tunnels and BGP sessions seen up), the

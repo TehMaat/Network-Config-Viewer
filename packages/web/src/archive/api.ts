@@ -2,6 +2,8 @@
 // Only this computer: the server answers only to localhost and refuses changes without the
 // header below, which pages of other sites cannot send.
 
+import type { MapEdits } from '@ncv/core';
+
 export interface ClientSummary {
   id: string;
   name: string;
@@ -125,6 +127,11 @@ export const archiveApi = {
 
   removeFile: (id: string, fileId: string) =>
     call<void>(`clients/${id}/files/${fileId}`, { method: 'DELETE', headers: CHANGE }),
+
+  /** The map of the client changed by hand (#15, part 3): an empty one when there is none. */
+  getMap: (id: string) => call<MapEdits>(`clients/${id}/map`),
+
+  putMap: (id: string, map: MapEdits) => call<MapEdits>(`clients/${id}/map`, json('PUT', map)),
 
   exportUrl: (id: string) => url(`clients/${id}/export`),
 

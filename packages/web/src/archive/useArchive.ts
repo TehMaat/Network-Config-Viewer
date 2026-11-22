@@ -1,7 +1,9 @@
+import { isEmptyEdits, type MapEdits } from '@ncv/core';
 import { useCallback, useEffect, useRef, useState, type Dispatch } from 'react';
 import { baseName } from '../format';
 import { contentStore } from '../state/content';
 import type { FileEntry, FilesAction, Overrides, TextEntry } from '../state/files';
+import { mapFile, mergeEdits } from '../state/mapEdits';
 import type { AnalyzerClient } from '../worker/client';
 import { archiveApi, ArchiveRequestError, type ClientSummary, type FileRecord } from './api';
 
@@ -23,6 +25,8 @@ interface Deps {
   files: { readonly current: readonly FileEntry[] };
   /** Removes every file from the page, without touching the archive. */
   closeFiles(): void;
+  /** The changes made by hand to the map without a client open: they go with the files. */
+  tabMap: { readonly current: MapEdits };
 }
 
 const code = (error: unknown) => (error instanceof ArchiveRequestError ? error.code : 'error');
@@ -84,7 +88,7 @@ const summaryOf = (index: {
  * The archive of the clients (#10): clients kept on the computer by the server of the app.
  * Without a client open, the files stay only on the page, as before.
  */
-export function useArchive({ dispatch, analyzer, files, closeFiles }: Deps) {
+export function useArchive({ dispatch, analyzer, files, closeFiles, tabMap }: Deps) {
   const [state, setState] = useState<ArchiveState>({
     available: null,
     clients: [],
@@ -287,6 +291,11 @@ export function useArchive({ dispatch, analyzer, files, closeFiles }: Deps) {
       setState((s) => ({ ...s, opening: true, error: null }));
       try {
         await mapLimit(unsaved(), 4, (entry) => upload(clientId, entry));
+        // The map changed in the tab goes with its files, added to the map of the client.
+        if (!isEmptyEdits(tabMap.current)) {
+          const map = await archiveApi.getMap(clientId);
+          await archiveApi.putMap(clientId, mapFile(mergeEdits(map, tabMap.current)));
+        }
         await refresh();
       } catch (error) {
         fail(error);
@@ -295,7 +304,7 @@ export function useArchive({ dispatch, analyzer, files, closeFiles }: Deps) {
       }
       await open(clientId);
     },
-    [fail, open, refresh, unsaved, upload],
+    [fail, open, refresh, tabMap, unsaved, upload],
   );
 
   const create = useCallback(

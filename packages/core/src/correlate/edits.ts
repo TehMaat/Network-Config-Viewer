@@ -140,6 +140,10 @@ export function editSites(
     const site = sites.get(id)!;
     site.devices.push(n.key);
     if (manual) site.source = 'manual';
+    // The names proposed for the nodes of the site, to rename it as a whole.
+    if (proposedName && !chosen.get(n.key) && !(site.proposed ?? []).includes(proposedName)) {
+      site.proposed = [...(site.proposed ?? []), proposedName];
+    }
     siteOf.set(n.key, id);
   }
   return { sites: [...sites.values()], siteOf };
@@ -241,7 +245,9 @@ export function editLinks(
       kind: m.kind,
       a,
       b,
-      sources: [{ kind: 'manual', device: source, ...(m.note ? { text: m.note } : {}), evidence: [] }],
+      sources: [
+        { kind: 'manual', device: source, ...(m.note ? { text: m.note } : {}), evidence: [] },
+      ],
       verified: false,
       manual: true,
       ...(m.note ? { note: m.note } : {}),

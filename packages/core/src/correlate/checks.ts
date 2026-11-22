@@ -141,14 +141,10 @@ function checkManual(input: CheckInput, host: (key: string) => string, out: Prob
     if (!link) continue;
     const other = link.a.node.startsWith('missing:') ? link.b.node : link.a.node;
     const devices = input.byKey.has(other) ? [other] : [];
-    out.add(
-      'manual-orphan',
-      'warning',
-      devices,
-      { device: o.hostname, other: label(other) },
-      [],
-      { link: link.id, key: o.hostname.toLowerCase() },
-    );
+    out.add('manual-orphan', 'warning', devices, { device: o.hostname, other: label(other) }, [], {
+      link: link.id,
+      key: o.hostname.toLowerCase(),
+    });
   }
   for (const u of input.unknownPorts ?? []) {
     out.add(

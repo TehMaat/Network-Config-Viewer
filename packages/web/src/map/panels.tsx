@@ -17,12 +17,15 @@ import {
   side,
   type ModelOf,
 } from './details';
+import { DeviceSite, ExternalActions, LinkActions, type MapEditing } from './editing';
 
 export interface PanelProps {
   infra: Infrastructure;
   modelOf: ModelOf;
   onOpenFile(id: string, line?: number): void;
   onSelectLink(id: string): void;
+  /** The changes made by hand (#15, part 3): missing where the links are only shown. */
+  editing?: MapEditing;
 }
 
 function sourceText(source: LinkSource, infra: Infrastructure, t: TFunction) {
@@ -93,15 +96,26 @@ export function LinkPanel({ link, ...props }: PanelProps & { link: Link }) {
           <Badge variant="light" tt="none">
             {kindLabel(link.kind, t)}
           </Badge>
-          <Badge
-            variant="light"
-            color={link.verified ? 'teal' : 'gray'}
-            tt="none"
-            data-testid="map-link-verified"
-            data-verified={link.verified}
-          >
-            {link.verified ? t('map.verified') : t('map.inferred')}
-          </Badge>
+          {link.manual ? (
+            <Badge variant="light" color="grape" tt="none" data-testid="map-link-manual">
+              {t('map.manual')}
+            </Badge>
+          ) : (
+            <Badge
+              variant="light"
+              color={link.verified ? 'teal' : 'gray'}
+              tt="none"
+              data-testid="map-link-verified"
+              data-verified={link.verified}
+            >
+              {link.verified ? t('map.verified') : t('map.inferred')}
+            </Badge>
+          )}
+          {link.confirmed && (
+            <Badge variant="light" color="teal" tt="none" data-testid="map-link-confirmed">
+              {t('map.confirmed')}
+            </Badge>
+          )}
           {link.dialup && (
             <Badge variant="light" color="grape" tt="none">
               {t('map.dialup')}
@@ -133,6 +147,7 @@ export function LinkPanel({ link, ...props }: PanelProps & { link: Link }) {
           {a.name} ↔ {b.name}
         </Title>
       </Box>
+      {props.editing && <LinkActions link={link} infra={infra} editing={props.editing} />}
       <Table withTableBorder withColumnBorders fz="xs" data-testid="map-link-rows">
         <Table.Thead>
           <Table.Tr>
@@ -213,6 +228,10 @@ export function NodePanel({ node, ...props }: PanelProps & { node: string }) {
     : [
         [t('map.row.type'), external ? t(`map.external.${external.kind}`) : ''],
         [t('map.row.detail'), external?.detail ?? ''],
+        [
+          t('map.row.site'),
+          external?.site ? (infra.sites.find((s) => s.id === external.site)?.name ?? '') : '',
+        ],
       ];
   return (
     <Stack gap="sm" data-testid="map-node-panel" data-node={node}>
@@ -242,6 +261,11 @@ export function NodePanel({ node, ...props }: PanelProps & { node: string }) {
           </Tooltip>
         ))}
       </Group>
+      {external?.kind === 'missing' && (
+        <Text size="sm" c="orange" data-testid="map-node-missing">
+          {t('mapEdit.missing')}
+        </Text>
+      )}
       {device && (
         <Button
           rightSection={<IconArrowRight size={14} />}
@@ -250,6 +274,12 @@ export function NodePanel({ node, ...props }: PanelProps & { node: string }) {
         >
           {t('map.openViews')}
         </Button>
+      )}
+      {device && props.editing && (
+        <DeviceSite hostname={device.hostname} infra={infra} editing={props.editing} />
+      )}
+      {external && props.editing && (
+        <ExternalActions externalId={external.id} editing={props.editing} />
       )}
       <ProblemsSection problems={problems} testId="map-node-problem-list" />
       {links.length > 0 && (

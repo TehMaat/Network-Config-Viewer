@@ -634,3 +634,26 @@ body {
 .ncv-problem-dot-info {
   background: var(--mantine-color-blue-filled);
 }
+
+/* Nodes added by hand, and devices of links added by hand that are not in the client any more
+   (#15, part 3). */
+.ncv-map-external-manual {
+  border-color: var(--mantine-color-grape-6);
+}
+
+.ncv-map-external-missing {
+  border-style: dashed;
+  border-color: var(--mantine-color-orange-6);
+  color: var(--mantine-color-orange-7);
+}
+
+/* Nodes can be moved by hand. */
+.react-flow__node-device,
+.react-flow__node-external {
+  cursor: grab;
+}
+
+.react-flow__node-device.dragging,
+.react-flow__node-external.dragging {
+  cursor: grabbing;
+}

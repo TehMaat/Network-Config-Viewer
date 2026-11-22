@@ -930,7 +930,8 @@
       "ipsec": "Tunnel IPsec",
       "bgp": "Sessione BGP",
       "ospf": "Adiacenza OSPF",
-      "shortcut": "Scorciatoia ADVPN"
+      "shortcut": "Scorciatoia ADVPN",
+      "wan": "WAN privata"
     },
     "type": {
       "firewall": "FW",
@@ -945,7 +946,9 @@
       "provider": "provider",
       "peer": "peer fuori dal cliente",
       "neighbor": "vicino non caricato",
-      "segment": "subnet condivisa"
+      "segment": "subnet condivisa",
+      "manual": "aggiunto a mano",
+      "missing": "non più nel cliente"
     },
     "state": {
       "up": "su",
@@ -979,7 +982,8 @@
       "bgp-neighbor": "Neighbor BGP {{text}} nella config di {{device}}",
       "ospf": "OSPF su {{device}} ({{text}})",
       "tunnel-state": "Tunnel su negli show di {{device}}",
-      "bgp-state": "Sessione stabilita negli show di {{device}}"
+      "bgp-state": "Sessione stabilita negli show di {{device}}",
+      "manual": "Aggiunto a mano, nella mappa del cliente"
     },
     "sourceKind": {
       "lldp": "LLDP",
@@ -992,7 +996,8 @@
       "bgp-neighbor": "neighbor BGP",
       "ospf": "OSPF",
       "tunnel-state": "tunnel negli show",
-      "bgp-state": "BGP negli show"
+      "bgp-state": "BGP negli show",
+      "manual": "a mano"
     },
     "row": {
       "vdom": "VDOM",
@@ -1069,8 +1074,12 @@
       "inferred": "lo dice la config (descrizioni, indirizzi, peer)",
       "state": "In rosso i collegamenti giù negli show, in arancione quelli in parte giù.",
       "click": "Clicca un collegamento per vedere i due lati affiancati, un apparato per aprirne le viste.",
-      "problems": "Problemi trovati dai controlli tra gli apparati: rosso gli errori, arancione gli avvisi, blu le informazioni."
-    }
+      "problems": "Problemi trovati dai controlli tra gli apparati: rosso gli errori, arancione gli avvisi, blu le informazioni.",
+      "manual": "aggiunto a mano, o dedotto e confermato a mano: sta nella mappa del cliente",
+      "move": "Trascina gli apparati per spostarli: la posizione resta nella mappa del cliente."
+    },
+    "manual": "a mano",
+    "confirmed": "confermato a mano"
   },
   "problems": {
     "title": "Problemi",
@@ -1283,6 +1292,16 @@
         "title": "{{hub}}: le reti delle filiali non vengono riflesse",
         "why": "Le filiali sono vicini iBGP di {{hub}}, ma nessun loro gruppo è client del route reflector: una filiale non impara le reti delle altre.",
         "fix": "Sull'hub imposta route-reflector-client nei gruppi delle filiali."
+      },
+      "manual-orphan": {
+        "title": "Collegamento a mano verso {{device}}, che non c'è più",
+        "why": "Il collegamento aggiunto a mano da {{other}} porta a {{device}}, che non è tra gli apparati caricati: forse è stato dismesso, o ha cambiato nome.",
+        "fix": "Se {{device}} non c'è più, elimina il collegamento; se ha un altro nome, correggi il collegamento o carica la sua config."
+      },
+      "manual-interface": {
+        "title": "{{device}} {{interface}}: interfaccia non nella config",
+        "why": "Il collegamento aggiunto a mano usa l'interfaccia {{interface}}, che nella config attuale di {{device}} non c'è.",
+        "fix": "Correggi l'interfaccia del collegamento, o controlla se la porta ha cambiato nome."
       }
     }
   },
@@ -1340,6 +1359,89 @@
       "activeWhy": "Vista negli show: le due filiali si parlano già direttamente.",
       "possibleWhy": "Niente la blocca nelle config: parte con il primo traffico tra le due filiali.",
       "down": "I tunnel verso l'hub sono giù negli show."
+    }
+  },
+  "mapEdit": {
+    "tools": {
+      "addLink": "Aggiungi collegamento",
+      "addNode": "Aggiungi nodo",
+      "sites": "Siti",
+      "resetLayout": "Disposizione automatica",
+      "export": "Esporta"
+    },
+    "save": {
+      "tab": "Senza un cliente aperto le modifiche alla mappa restano in questa scheda: salva i file in un cliente per conservarle.",
+      "loading": "Lettura della mappa del cliente…",
+      "saving": "Salvataggio della mappa…",
+      "saved": "Modifiche salvate nel cliente",
+      "error": "Le modifiche alla mappa non sono state salvate: riprova."
+    },
+    "link": {
+      "edit": "Modifica",
+      "delete": "Elimina",
+      "confirm": "Conferma",
+      "unconfirm": "Annulla la conferma",
+      "discard": "Scarta",
+      "correct": "Correggi"
+    },
+    "discarded": {
+      "title_one": "{{count}} collegamento scartato",
+      "title_other": "{{count}} collegamenti scartati",
+      "restore": "Ripristina"
+    },
+    "device": {
+      "site": "Sposta in un altro sito",
+      "sitePlaceholder": "Nome del sito",
+      "move": "Sposta",
+      "siteReset": "Torna al sito proposto",
+      "positionReset": "Posizione automatica",
+      "addLink": "Collegamento da qui"
+    },
+    "external": {
+      "edit": "Modifica",
+      "delete": "Elimina",
+      "editTitle": "Modifica il nodo",
+      "addTitle": "Aggiungi un nodo fuori dal cliente",
+      "intro": "Un apparato di cui non hai la config: un router del provider, un NAS, uno switch non gestito. Poi collegalo con \"Aggiungi collegamento\".",
+      "label": "Nome",
+      "labelPlaceholder": "Router MPLS, NAS dei backup…",
+      "detail": "Descrizione",
+      "detailPlaceholder": "Cosa è, chi lo gestisce",
+      "site": "Sito"
+    },
+    "form": {
+      "devices": "Apparati",
+      "nodes": "Nodi aggiunti a mano",
+      "interface": "Interfaccia",
+      "note": "Nota",
+      "notePlaceholder": "Dove l'hai visto, chi l'ha detto…",
+      "save": "Salva",
+      "same": "I due lati sono la stessa porta.",
+      "addTitle": "Aggiungi un collegamento a mano",
+      "editTitle": "Modifica il collegamento",
+      "correctTitle": "Correggi il collegamento dedotto",
+      "correctIntro": "Il collegamento corretto prende il posto di quello dedotto, che va tra gli scartati. Se elimini la correzione, torna quello dedotto."
+    },
+    "sites": {
+      "title": "Siti",
+      "intro": "Rinomina i siti; per unire due siti, dai loro lo stesso nome. I nomi restano anche con le nuove versioni delle config.",
+      "name": "Nome",
+      "devices": "Apparati",
+      "source": "Da dove viene",
+      "from": {
+        "snmp": "location SNMP",
+        "hostname": "hostname",
+        "cables": "cavi",
+        "manual": "a mano",
+        "none": "nessuno"
+      }
+    },
+    "missing": "Questo apparato non è più tra quelli caricati: il collegamento a mano resta, così decidi tu se eliminarlo.",
+    "export": {
+      "drawio": "draw.io, da ritoccare",
+      "png": "Immagine PNG",
+      "svg": "Immagine SVG",
+      "error": "L'export della mappa non è riuscito: riprova."
     }
   }
 }

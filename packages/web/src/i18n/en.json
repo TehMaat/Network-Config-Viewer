@@ -930,7 +930,8 @@
       "ipsec": "IPsec tunnel",
       "bgp": "BGP session",
       "ospf": "OSPF adjacency",
-      "shortcut": "ADVPN shortcut"
+      "shortcut": "ADVPN shortcut",
+      "wan": "Private WAN"
     },
     "type": {
       "firewall": "FW",
@@ -945,7 +946,9 @@
       "provider": "provider",
       "peer": "peer outside the client",
       "neighbor": "neighbour not loaded",
-      "segment": "shared subnet"
+      "segment": "shared subnet",
+      "manual": "added by hand",
+      "missing": "no longer in the client"
     },
     "state": {
       "up": "up",
@@ -979,7 +982,8 @@
       "bgp-neighbor": "BGP neighbour {{text}} in the config of {{device}}",
       "ospf": "OSPF on {{device}} ({{text}})",
       "tunnel-state": "Tunnel up in the shows of {{device}}",
-      "bgp-state": "Session established in the shows of {{device}}"
+      "bgp-state": "Session established in the shows of {{device}}",
+      "manual": "Added by hand, in the map of the client"
     },
     "sourceKind": {
       "lldp": "LLDP",
@@ -992,7 +996,8 @@
       "bgp-neighbor": "BGP neighbour",
       "ospf": "OSPF",
       "tunnel-state": "tunnel in the shows",
-      "bgp-state": "BGP in the shows"
+      "bgp-state": "BGP in the shows",
+      "manual": "by hand"
     },
     "row": {
       "vdom": "VDOM",
@@ -1069,8 +1074,12 @@
       "inferred": "the config says it (descriptions, addresses, peers)",
       "state": "In red the links down in the shows, in orange those partly down.",
       "click": "Click a link to see its two sides together, a device to open its views.",
-      "problems": "Problems found by the checks between the devices: red errors, orange warnings, blue notes."
-    }
+      "problems": "Problems found by the checks between the devices: red errors, orange warnings, blue notes.",
+      "manual": "added by hand, or inferred and confirmed by hand: it is in the map of the client",
+      "move": "Drag the devices to move them: their position stays in the map of the client."
+    },
+    "manual": "by hand",
+    "confirmed": "confirmed by hand"
   },
   "problems": {
     "title": "Problems",
@@ -1283,6 +1292,16 @@
         "title": "{{hub}}: the networks of the branches are not reflected",
         "why": "The branches are iBGP neighbors of {{hub}}, but none of their groups is a route reflector client: a branch does not learn the networks of the others.",
         "fix": "On the hub set route-reflector-client in the groups of the branches."
+      },
+      "manual-orphan": {
+        "title": "Link by hand to {{device}}, which is no longer there",
+        "why": "The link added by hand from {{other}} goes to {{device}}, which is not among the devices loaded: maybe it was dismissed, or renamed.",
+        "fix": "If {{device}} is gone, delete the link; if it has another name, correct the link or load its configuration."
+      },
+      "manual-interface": {
+        "title": "{{device}} {{interface}}: interface not in the configuration",
+        "why": "The link added by hand uses the interface {{interface}}, which the current configuration of {{device}} does not have.",
+        "fix": "Correct the interface of the link, or check whether the port was renamed."
       }
     }
   },
@@ -1340,6 +1359,89 @@
       "activeWhy": "Seen in the shows: the two branches already talk directly.",
       "possibleWhy": "Nothing blocks it in the configurations: it starts with the first traffic between the two branches.",
       "down": "The tunnels to the hub are down in the shows."
+    }
+  },
+  "mapEdit": {
+    "tools": {
+      "addLink": "Add a link",
+      "addNode": "Add a node",
+      "sites": "Sites",
+      "resetLayout": "Automatic layout",
+      "export": "Export"
+    },
+    "save": {
+      "tab": "Without a client open, the changes to the map stay in this tab: save the files in a client to keep them.",
+      "loading": "Reading the map of the client…",
+      "saving": "Saving the map…",
+      "saved": "Changes saved in the client",
+      "error": "The changes to the map were not saved: try again."
+    },
+    "link": {
+      "edit": "Change",
+      "delete": "Delete",
+      "confirm": "Confirm",
+      "unconfirm": "Undo the confirmation",
+      "discard": "Discard",
+      "correct": "Correct"
+    },
+    "discarded": {
+      "title_one": "{{count}} link discarded",
+      "title_other": "{{count}} links discarded",
+      "restore": "Restore"
+    },
+    "device": {
+      "site": "Move to another site",
+      "sitePlaceholder": "Name of the site",
+      "move": "Move",
+      "siteReset": "Back to the site proposed",
+      "positionReset": "Automatic position",
+      "addLink": "Link from here"
+    },
+    "external": {
+      "edit": "Change",
+      "delete": "Delete",
+      "editTitle": "Change the node",
+      "addTitle": "Add a node outside the client",
+      "intro": "A device whose configuration you do not have: a router of the provider, a NAS, an unmanaged switch. Then link it with \"Add a link\".",
+      "label": "Name",
+      "labelPlaceholder": "MPLS router, backup NAS…",
+      "detail": "Description",
+      "detailPlaceholder": "What it is, who manages it",
+      "site": "Site"
+    },
+    "form": {
+      "devices": "Devices",
+      "nodes": "Nodes added by hand",
+      "interface": "Interface",
+      "note": "Note",
+      "notePlaceholder": "Where you saw it, who said so…",
+      "save": "Save",
+      "same": "The two sides are the same port.",
+      "addTitle": "Add a link by hand",
+      "editTitle": "Change the link",
+      "correctTitle": "Correct the inferred link",
+      "correctIntro": "The corrected link takes the place of the inferred one, which goes among the discarded ones. If you delete the correction, the inferred one is back."
+    },
+    "sites": {
+      "title": "Sites",
+      "intro": "Rename the sites; to merge two sites, give them the same name. The names stay also with new versions of the configurations.",
+      "name": "Name",
+      "devices": "Devices",
+      "source": "Where it comes from",
+      "from": {
+        "snmp": "SNMP location",
+        "hostname": "hostname",
+        "cables": "cables",
+        "manual": "by hand",
+        "none": "none"
+      }
+    },
+    "missing": "This device is no longer among the ones loaded: the link added by hand stays, so that you decide whether to delete it.",
+    "export": {
+      "drawio": "draw.io, to retouch",
+      "png": "PNG picture",
+      "svg": "SVG picture",
+      "error": "The export of the map did not work: try again."
     }
   }
 }
