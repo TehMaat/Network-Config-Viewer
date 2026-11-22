@@ -11,6 +11,8 @@ const EDGE: Record<LinkKind, { color: string; width: number; dash?: string }> = 
   cable: { color: '#6b7280', width: 2 },
   lag: { color: '#6b7280', width: 4 },
   wan: { color: '#64748b', width: 2.5, dash: '12 4' },
+  fortilink: { color: '#6b7280', width: 3, dash: '10 2 2 2' },
+  capwap: { color: '#94a3b8', width: 1.5, dash: '3 3' },
   internet: { color: '#94a3b8', width: 1.5 },
   subnet: { color: '#9ca3af', width: 1.5, dash: '2 3' },
   ipsec: { color: '#0d9488', width: 2, dash: '7 4' },

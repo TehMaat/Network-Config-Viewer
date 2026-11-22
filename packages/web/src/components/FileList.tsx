@@ -20,6 +20,7 @@ import {
   IconPin,
   IconPinnedOff,
   IconServer2,
+  IconSitemap,
   IconTerminal2,
   IconTopologyStar3,
   IconTrash,
@@ -30,7 +31,7 @@ import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { baseName, formatOrigin, formatPath } from '../format';
 import type { ShowLinks } from '../state/devices';
-import { problemsOf, worstSeverity } from '../state/infra';
+import { managedViewId, problemsOf, worstSeverity } from '../state/infra';
 import { problemsSummary, SEVERITY_COLOR } from '../views/problems';
 import { effectiveDetection } from '../state/effective';
 import type { FileEntry, TextEntry } from '../state/files';
@@ -272,6 +273,34 @@ export function FileList({
                 {item(group.current, CURRENT, { pinned: group.pinned })}
                 {group.versions.map((v) => item(v, VERSION, { pinnable: true }))}
                 {shows.map((s) => item(s, SHOW))}
+                {/* The FortiSwitches the FortiGate manages, each with its page (#15, part 4). */}
+                {infra.devices
+                  .filter((d) => d.managedBy === group.key && d.serial)
+                  .map((d) => {
+                    const id = managedViewId(d.file, d.serial!);
+                    return (
+                      <NavLink
+                        key={d.key}
+                        component="button"
+                        type="button"
+                        active={selectedId === id}
+                        onClick={() => onSelect(id)}
+                        className="ncv-file-item ncv-file-managed"
+                        label={
+                          <Group gap={6} wrap="nowrap">
+                            <Text size="sm" fw={500} truncate="end">
+                              {d.hostname}
+                            </Text>
+                            <ProblemDot problems={problemsOf(infra, d.key)} />
+                          </Group>
+                        }
+                        description={t('managed.navDescription', { model: d.model ?? '' })}
+                        leftSection={<IconSitemap size={18} />}
+                        data-testid="managed-item"
+                        data-device={d.hostname}
+                      />
+                    );
+                  })}
               </Box>
             ))}
           </Box>

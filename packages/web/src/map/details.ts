@@ -163,6 +163,28 @@ function cableRows(link: Link, a: Side, b: Side, t: TFunction): Rows {
   return rows;
 }
 
+/** A FortiGate and a FortiSwitch it manages (#15, part 4). */
+function fortilinkRows(a: Side, b: Side, t: TFunction): Rows {
+  const ia = iface(a);
+  const ib = iface(b);
+  return [
+    ['interface', a.end.interface ?? '', b.end.interface ?? ''],
+    ['members', (ia?.members ?? []).join(', '), (ib?.members ?? []).join(', ')],
+    ['address', address(ia, t), ''],
+    ['serial', '', b.device?.serial ?? ''],
+    ['model', '', b.device?.model ?? ''],
+  ];
+}
+
+/** A FortiGate and its FortiAPs. */
+function capwapRows(a: Side, b: Side): Rows {
+  const wireless = a.model?.wireless;
+  return [
+    ['accessPoints', '', b.external?.detail ?? ''],
+    ['ssids', (wireless?.ssids ?? []).map((s) => s.ssid).join(', '), ''],
+  ];
+}
+
 function subnetRows(link: Link, a: Side, b: Side, t: TFunction): Rows {
   const ia = iface(a);
   const ib = iface(b);
@@ -379,6 +401,12 @@ export function linkRows(
       break;
     case 'shortcut':
       rows = shortcutRows(a, b);
+      break;
+    case 'fortilink':
+      rows = fortilinkRows(a, b, t);
+      break;
+    case 'capwap':
+      rows = capwapRows(a, b);
       break;
   }
   if (a.end.context && a.device && a.device.contexts.length > 0) {

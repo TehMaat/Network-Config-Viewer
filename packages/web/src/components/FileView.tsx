@@ -42,9 +42,10 @@ import { baseName, formatBytes, formatOrigin, formatPath } from '../format';
 import { contentStore, type FileContent } from '../state/content';
 import { effectiveDetection } from '../state/effective';
 import type { LinkedShow } from '../state/devices';
-import { peersOf, type MapFocus } from '../state/infra';
+import { managedViewId, peersOf, type MapFocus } from '../state/infra';
 import type { FileEntry, Overrides, TextEntry } from '../state/files';
 import { AclsView } from '../views/AclsView';
+import { FortiSwitchView, WifiView } from '../views/ManagedViews';
 import { FirewallVlansView, InterfacesView } from '../views/InterfacesView';
 import { ObjectsView } from '../views/ObjectsView';
 import { PoliciesView } from '../views/PoliciesView';
@@ -125,6 +126,8 @@ type Tab =
   | 'routing'
   | 'vpn'
   | 'sdwan'
+  | 'fortiswitch'
+  | 'wifi'
   | 'config';
 
 /** Views that show one logical context (VDOM) at a time. */
@@ -144,6 +147,9 @@ function tabsFor(model: DeviceModel): Tab[] {
     const tabs: Tab[] = ['summary', 'interfaces', 'vlans', 'policies', 'objects', 'routing'];
     if (model.contexts.some((c) => c.ipsec.length > 0)) tabs.push('vpn');
     if (model.contexts.some((c) => c.sdwan)) tabs.push('sdwan');
+    // What the FortiGate manages (#15, part 4).
+    if (model.managedSwitches?.length) tabs.push('fortiswitch');
+    if (model.wireless) tabs.push('wifi');
     tabs.push('config');
     return tabs;
   }
@@ -429,6 +435,15 @@ function TextView({
         return <VpnView context={context} />;
       case 'sdwan':
         return <SdwanView context={context} />;
+      case 'fortiswitch':
+        return (
+          <FortiSwitchView
+            model={model}
+            onOpenSwitch={(serial) => onOpenFile(managedViewId(entry.id, serial))}
+          />
+        );
+      case 'wifi':
+        return <WifiView model={model} />;
       default:
         return null;
     }

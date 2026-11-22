@@ -2,6 +2,7 @@
 
 import { Badge, Group, Text } from '@mantine/core';
 import {
+  IconAccessPoint,
   IconAlertTriangle,
   IconBox,
   IconBuildingBroadcastTower,
@@ -110,13 +111,14 @@ function DeviceBox({ data }: NodeProps<DeviceNode>) {
     >
       <CenterHandles />
       {data.problems && <ProblemDot mark={data.problems} testId="map-device-problems" />}
-      <Group gap={8} wrap="nowrap" align="center">
+      <Group gap={8} wrap="nowrap" align="center" miw={0}>
         <Badge
           variant="light"
           color={d.type === 'firewall' ? 'red' : 'indigo'}
           radius="sm"
           size="sm"
           className="ncv-map-type"
+          style={{ flexShrink: 0 }}
         >
           {t(`map.type.${d.type}`)}
         </Badge>
@@ -147,6 +149,7 @@ const EXTERNAL_ICON = {
   segment: IconNetwork,
   manual: IconBox,
   missing: IconAlertTriangle,
+  'ap-group': IconAccessPoint,
 } as const;
 
 function ExternalBox({ data }: NodeProps<ExternalMapNode>) {
@@ -160,8 +163,8 @@ function ExternalBox({ data }: NodeProps<ExternalMapNode>) {
       data-external={e.id}
     >
       <CenterHandles />
-      <Group gap={6} wrap="nowrap">
-        <Icon size={18} aria-hidden />
+      <Group gap={6} wrap="nowrap" miw={0}>
+        <Icon size={18} aria-hidden style={{ flexShrink: 0 }} />
         <div style={{ minWidth: 0 }}>
           <Text size="xs" fw={700} truncate="end">
             {e.label}
@@ -182,6 +185,9 @@ const STYLE: Record<LinkKind, { color: string; dash?: string; width: number }> =
   cable: { color: 'var(--ncv-map-cable)', width: 1.6 },
   lag: { color: 'var(--ncv-map-cable)', width: 3.2 },
   wan: { color: 'var(--ncv-map-wan)', dash: '12 4', width: 2.4 },
+  // A FortiGate and the FortiSwitches and FortiAPs it manages (#15, part 4).
+  fortilink: { color: 'var(--ncv-map-cable)', dash: '10 2 2 2', width: 3 },
+  capwap: { color: 'var(--ncv-map-wan)', dash: '3 3', width: 1.6 },
   internet: { color: 'var(--ncv-map-wan)', width: 1.4 },
   subnet: { color: 'var(--ncv-map-subnet)', dash: '2 3', width: 1.2 },
   ipsec: { color: 'var(--ncv-map-vpn)', dash: '7 4', width: 1.8 },

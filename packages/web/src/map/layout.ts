@@ -15,6 +15,8 @@ export const LAYER_OF: Record<LinkKind, Layer> = {
   cable: 'cables',
   lag: 'cables',
   wan: 'cables',
+  fortilink: 'cables',
+  capwap: 'cables',
   internet: 'cables',
   subnet: 'subnets',
   ipsec: 'vpn',
@@ -24,7 +26,7 @@ export const LAYER_OF: Record<LinkKind, Layer> = {
 };
 
 export const DEVICE_SIZE = { width: 196, height: 60 };
-export const EXTERNAL_SIZE = { width: 156, height: 44 };
+export const EXTERNAL_SIZE = { width: 180, height: 44 };
 const PADDING = 28;
 const HEADER = 34;
 const SEGMENT_GAP = 26;
@@ -104,7 +106,8 @@ export function visibleExternals(infra: Infrastructure, links: readonly Link[]):
   return infra.externals.filter((e) => used.has(e.id) || e.kind === 'manual');
 }
 
-const CABLE: ReadonlySet<LinkKind> = new Set(['cable', 'lag']);
+/** Links that place the nodes of a site from the top down: cables, FortiLink, the FortiAPs. */
+const CABLE: ReadonlySet<LinkKind> = new Set(['cable', 'lag', 'fortilink', 'capwap']);
 
 export function computeLayout(
   infra: Infrastructure,
@@ -124,7 +127,11 @@ export function computeLayout(
   for (const e of infra.externals) {
     if (e.kind === 'segment' && e.site && siteNodes.has(e.site)) {
       segments.set(e.site, [...(segments.get(e.site) ?? []), e]);
-    } else if ((e.kind === 'neighbor' || e.kind === 'manual') && e.site && siteNodes.has(e.site)) {
+    } else if (
+      (e.kind === 'neighbor' || e.kind === 'manual' || e.kind === 'ap-group') &&
+      e.site &&
+      siteNodes.has(e.site)
+    ) {
       // Neighbours that were not loaded, and nodes added by hand in a site, are drawn in it.
       siteNodes.get(e.site)!.push({ id: externalNodeId(e.id), ...EXTERNAL_SIZE });
     } else {
@@ -175,7 +182,9 @@ export function computeLayout(
       const a = endNodeId(infra, l.a.node);
       const b = endNodeId(infra, l.b.node);
       if (!inside.has(a) || !inside.has(b) || a === b) continue;
-      const [from, to] = depthOf(a) <= depthOf(b) ? [a, b] : [b, a];
+      // Two nodes at the same depth (the switches of an MCLAG pair) stay side by side.
+      if (depthOf(a) === depthOf(b)) continue;
+      const [from, to] = depthOf(a) < depthOf(b) ? [a, b] : [b, a];
       g.setEdge(from, to);
     }
     dagre.layout(g);

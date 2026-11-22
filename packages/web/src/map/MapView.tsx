@@ -152,6 +152,8 @@ function edgeLabel(link: Link, t: ReturnType<typeof useTranslation>['t']): strin
       return t('map.edge.lag', { count: Math.max(link.cables?.length ?? 0, 1) });
     case 'wan':
       return t('map.kind.wan');
+    case 'fortilink':
+      return t('map.kind.fortilink');
     case 'ipsec':
       return [link.a.tunnel, link.b.tunnel].filter(Boolean).join(' ↔ ') || undefined;
     case 'bgp':
@@ -856,6 +858,8 @@ function Legend() {
     'lag',
     'cable',
     'wan',
+    'fortilink',
+    'capwap',
     'internet',
     'ipsec',
     'shortcut',
