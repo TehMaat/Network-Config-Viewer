@@ -41,6 +41,13 @@ test('never contacts another site, and cannot', async ({ page, baseURL }) => {
   }
   // The Excel file is made in the page: nothing is fetched from outside.
   await Promise.all([page.waitForEvent('download'), page.getByTestId('btn-export-device').click()]);
+  // The map, loaded only now with its libraries, and the detail of a link (#15).
+  await page.getByTestId('nav-map').click();
+  await expect(page.getByTestId('map-canvas')).toBeVisible();
+  await page.getByTestId('row-links').first().click();
+  await expect(page.getByTestId('map-link-panel')).toBeVisible();
+  await Promise.all([page.waitForEvent('download'), page.getByTestId('export-links').click()]);
+  await fileItem(page, 'fgt-campus-200f-fortios-7.6.conf').click();
   await openConfigTab(page);
   await page.getByTestId('btn-search').click();
   await page.getByTestId('language-switch').getByText('EN').click();

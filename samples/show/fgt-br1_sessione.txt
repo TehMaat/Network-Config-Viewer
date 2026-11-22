@@ -47,6 +47,7 @@ Service(2): Address Mode(IPV4) flags=0x200 use-shortcut-sla
 FGT-BR1 # get vpn ipsec tunnel summary
 'HUB-WAN1' 203.0.113.2:0  selectors(total,up): 1/1  rx(pkt,err): 1490112/0  tx(pkt,err): 1532077/0
 'HUB-WAN2' 198.51.100.10:0  selectors(total,up): 1/1  rx(pkt,err): 118230/0  tx(pkt,err): 120044/0
+'HUB-WAN1_0' 192.0.2.38:0  selectors(total,up): 1/1  rx(pkt,err): 20481/0  tx(pkt,err): 19876/0
 
 FGT-BR1 # get router info routing-table all
 Codes: K - kernel, C - connected, S - static, R - RIP, B - BGP

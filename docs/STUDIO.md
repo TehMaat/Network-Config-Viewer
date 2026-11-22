@@ -1,6 +1,6 @@
 # Studio preliminare: Network Config Viewer
 
-> **Stato:** novembre 2026. La [fase 0](#fase-0-fondamenta-realizzata) è realizzata: l'app si avvia in locale con Docker, riconosce le config FortiGate e Cisco e le mostra navigabili. Anche la [fase 1](#fase-1-lettura-dei-singoli-apparati-fortigate-cisco-iosios-xe-e-cisco-small-business-mvp-realizzata) è realizzata: i driver FortiOS, Cisco IOS/IOS-XE e Small Business leggono le config e l'app mostra le viste di ogni apparato (vedi il [README](../README.md)); gli output dei comandi show vanno con il loro apparato e aggiungono lo stato reale alle viste; i file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato; ogni apparato e ogni tabella si esportano in Excel. Il resto del documento raccoglie le decisioni prese e il piano delle fasi successive. Il [mockup](mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scarica il file e aprilo nel browser.
+> **Stato:** novembre 2026. La [fase 0](#fase-0-fondamenta-realizzata) è realizzata: l'app si avvia in locale con Docker, riconosce le config FortiGate e Cisco e le mostra navigabili. Anche la [fase 1](#fase-1-lettura-dei-singoli-apparati-fortigate-cisco-iosios-xe-e-cisco-small-business-mvp-realizzata) è realizzata: i driver FortiOS, Cisco IOS/IOS-XE e Small Business leggono le config e l'app mostra le viste di ogni apparato (vedi il [README](../README.md)); gli output dei comandi show vanno con il loro apparato e aggiungono lo stato reale alle viste; i file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato; ogni apparato e ogni tabella si esportano in Excel. La [fase 2](#fase-2-mappa-dellinfrastruttura) è in corso ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)): con la prima parte gli apparati di un cliente si vedono insieme nella mappa dell'infrastruttura, con i siti, i cavi e i LAG, le subnet condivise, le uscite Internet, i tunnel IPsec, le sessioni BGP e le adiacenze OSPF, ognuno con i due lati affiancati e le righe da cui viene. Il resto del documento raccoglie le decisioni prese e il piano delle fasi successive. Il [mockup](mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scarica il file e aprilo nel browser.
 
 ## 1. In breve
 
@@ -47,6 +47,13 @@
 | Copertura della lettura | Ogni riga è compresa, ignorata di proposito (commenti, banner, certificati, messaggi sostitutivi) o sconosciuta. Il riepilogo mostra la percentuale e le sezioni non interpretate; le righe sconosciute sono evidenziate nella config |
 | Valori di default | Tabelle per marca e versione; nelle viste i valori che vengono da un default sono in corsivo, e quelli non ancora confermati su apparati reali sono segnati "da verificare" |
 | Collegamenti tra apparati | Verificati con LLDP/CDP, dedotti da descrizioni e indirizzi, oppure inseriti a mano; le differenze tra le fonti vengono segnalate |
+| Correlazione | In `packages/core`, senza dipendenze dal browser: dalla versione attuale di ogni apparato di un cliente e dai suoi show ricava siti, collegamenti e nodi fuori dal cliente (Internet, provider, peer, vicini non caricati). Ogni collegamento dice da dove viene: *verificato* da uno show (LLDP, CDP, tunnel, BGP) o *dedotto* dalla config (descrizioni, indirizzi, `remote-gw`, DDNS, neighbor), con le righe di config e show dei due lati |
+| Siti | Proposti dalla location SNMP (la parte prima del primo separatore: `Sede - CED piano terra` → "Sede"), poi dal codice nell'hostname (`FGT-BR1` e `SW-BR1-ACC` → "BR1"), poi dai cavi: due apparati collegati da un cavo stanno nello stesso sito. Si correggono a mano (fase 2, parte 3) |
+| Mappa | React Flow con la disposizione automatica di dagre, caricati solo quando si apre la mappa. Dentro ogni sito gli apparati dall'alto in basso lungo i cavi (firewall, centro stella, accesso), i siti intorno a Internet. Livelli che si accendono e si spengono, con la scelta salvata nel browser. La stessa subnet in siti diversi è una sovrapposizione di indirizzi, non un collegamento, salvo le reti punto-punto (/30, /31). Le VDOM link restano dentro l'apparato |
+| Gravità dei problemi | Errore, avviso, informazione. Un valore che viene da un default non confermato non dà mai errore, ma un avviso "da verificare" (fase 2, parte 2) |
+| Dati della mappa | Siti corretti, collegamenti a mano, decisioni sui collegamenti dedotti e posizioni stanno in `map.json`, nella cartella del cliente accanto a `client.json`, leggibile a mano. Apparati e porte si indicano per hostname e interfaccia, così una nuova versione della config li tiene. Senza un cliente aperto le modifiche restano nella scheda (fase 2, parte 3) |
+| FortiSwitch e FortiAP gestiti | Apparati del cliente ricavati dalla config del FortiGate, sotto il loro FortiGate (fase 2, parte 4) |
+| Fase 2 in quattro parti | Ognuna con la sua pull request e la sua versione: mappa e collegamenti (0.2.0), controlli e VPN, modifiche a mano ed export, FortiSwitch e FortiAP gestiti ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)) |
 | Indirizzi MAC sulle porte | Ogni porta configurata degli switch riporta i MAC dei dispositivi collegati, con la VLAN, letti dalla tabella MAC dello switch (`show mac address-table`), non dalla config. Lo strumento li mostra e segnala le porte senza MAC e lo show mancante (vedi [5.5](#55-pannello-porte-dello-switch)) |
 | Show e apparati | Ogni file di show va con il suo apparato: per hostname (dal prompt o dall'output), poi per numero di serie, poi per nome del file; se serve, si corregge a mano l'hostname del file di show. Un log di sessione si divide per prompt, anche dentro le VDOM del FortiGate, oppure dalla forma degli output. Lo stato reale si mostra accanto alla config, mai al suo posto, e ogni dato rimanda alla sua riga dello show |
 | Export Excel | Nel browser, con ExcelJS caricato solo al primo export. Per ogni apparato un file con un foglio per vista, con le stesse colonne delle tabelle dell'app: porte, VLAN, ACL, routing e MAC degli switch; interfacce e VLAN del FortiGate, e policy, oggetti, routing, VPN e SD-WAN di ogni VDOM; con gli show anche lo stato reale. Su ogni tabella un pulsante la esporta così come è filtrata e ordinata. I valori restano valori: nessun testo diventa una formula |
@@ -64,7 +71,7 @@
 | Documentazione e screenshot | Solo con dati sintetici, generati dalle config di esempio in `samples/` |
 | Licenza | Open source, MIT |
 | Codice | Scritto da Claude: lo stack si sceglie per semplicità d'uso, non per familiarità |
-| Strumenti | TypeScript, npm workspaces, React + Vite, Mantine, i18next, CodeMirror 6, TanStack Table e TanStack Virtual, fflate, ExcelJS, Fastify, Vitest, Playwright (vedi [capitolo 8](#8-scelte-tecniche)) |
+| Strumenti | TypeScript, npm workspaces, React + Vite, Mantine, i18next, CodeMirror 6, TanStack Table e TanStack Virtual, React Flow e dagre, fflate, ExcelJS, Fastify, Vitest, Playwright (vedi [capitolo 8](#8-scelte-tecniche)) |
 | Test automatici | Su GitHub Actions a ogni pull request: lint, tipi, test, build, immagine Docker e test nel browser sul container, su Chromium, Firefox e WebKit, anche dopo il riavvio del container. Su `main`, con tutto verde, la CI crea il tag e la release della versione con le note del registro; non si pubblicano pacchetti, immagini o pagine |
 | Metodo di lavoro | Ogni proposta viene analizzata e diventa un'issue; si lavora solo dopo l'okay. Registro delle modifiche in `CHANGELOG.md`, documentazione sempre aggiornata, Semantic Versioning: ogni pull request unita è una versione, rilasciata dalla CI con tag e note del registro. Regole complete in [`CLAUDE.md`](../CLAUDE.md) |
 
@@ -132,6 +139,17 @@ Nella fase 1 ci sono i driver di marca dell'MVP, in `packages/core/src/drivers`:
 - **FortiOS 7.0–8.0**: VDOM come contesti separati, interfacce e zone, indirizzi e gruppi (con le esclusioni), servizi, VIP, IP pool, policy nell'ordine reale, rotte statiche anche verso le zone SD-WAN, policy route, BGP con gruppi e range dinamici, OSPF, route-map, prefix-list, IPsec con fase 1, fase 2 e ruolo ADVPN, SD-WAN. Gli oggetti predefiniti (`all`, `ALL`, `HTTP`, `HTTPS`, `DNS`…) si aggiungono quando le policy li usano senza definirli.
 
 Ogni driver classifica le righe (copertura), collega i nomi alla loro definizione e segna i valori di default. Il modello si costruisce nel Web Worker: un FortiGate con 10.000 policy si legge in meno di mezzo secondo.
+
+Nella fase 2 c'è la correlazione, in `packages/core/src/correlate` (principio 2):
+
+- **cavi e LAG**: dai vicini LLDP e CDP degli show, e dalle descrizioni delle porte che contengono l'hostname di un altro apparato, con la sua porta se c'è; i cavi tra i membri di due port-channel o aggregati diventano un solo LAG;
+- **subnet condivise**: due apparati nella stessa subnet sono un collegamento L3, più apparati un segmento (per esempio la rete di gestione);
+- **uscite Internet**: interfacce WAN, membri underlay SD-WAN e rotte di default verso un next hop pubblico fuori dal cliente;
+- **tunnel IPsec**: il `remote-gw` (o il nome DDNS) porta all'interfaccia di un altro apparato, dove si cerca il tunnel statico che punta indietro o quello dial-up; il peer fuori dal cliente lascia il tunnel con un solo lato;
+- **sessioni BGP**: l'IP del neighbor è di un altro apparato, dove c'è il neighbor opposto o un `neighbor-range` che lo contiene; una sessione sugli IP dei tunnel ricorda il tunnel che la porta;
+- **adiacenze OSPF** tra interfacce di due apparati nella stessa subnet, e **scorciatoie ADVPN** dagli show delle filiali.
+
+Gli indici per IP, hostname e interfaccia evitano di confrontare ogni apparato con tutti gli altri: un cliente di 150 apparati si mette insieme in pochi millisecondi.
 
 ### Come ottenere l'input per ogni marca
 
@@ -247,7 +265,16 @@ Cliente (nell'archivio dell'app, sul PC)
 - i clienti dell'archivio, con i file raggruppati per apparato in versione attuale, versioni precedenti e show (`packages/web/src/state/groups.ts`), e la data di ogni config, scritta dentro o nel nome del file (`packages/core/src/detect/date.ts`);
 - lo stato dagli show, in `packages/core/src/show/`, tenuto separato dal modello della config: porte, VLAN, port-channel, vicini CDP e LLDP, tabella MAC, ARP, PoE, membri dello stack e numeri di serie, tunnel IPsec, rotte, sessioni BGP, health check e regole SD-WAN, ognuno con il file e la riga da cui viene. Più file di show dello stesso apparato si sommano.
 
-Ogni elemento ha le righe da cui proviene e l'elenco dei campi che vengono da un default, con quelli ancora da verificare. Rack, collegamenti tra apparati, servizi di gestione, apparati gestiti e wireless arrivano nelle fasi successive.
+Ogni elemento ha le righe da cui proviene e l'elenco dei campi che vengono da un default, con quelli ancora da verificare.
+
+**Cosa c'è già (fase 2, parte 1).** Il grafo dell'infrastruttura del cliente, in `packages/core/src/correlate/types.ts`:
+
+- gli apparati con sito, tipo, modello, HA e VDOM; nel modello dell'apparato anche la location SNMP e, per FortiOS, i nomi DDNS;
+- i siti, con la fonte che li ha proposti (location SNMP, hostname, cavi);
+- i nodi fuori dal cliente: Internet, i provider dei peer BGP esterni, i peer IPsec, i vicini LLDP/CDP non caricati, i segmenti delle subnet condivise;
+- i collegamenti, con tipo (cavo, LAG, subnet, uscita Internet, tunnel IPsec, sessione BGP, adiacenza OSPF, scorciatoia ADVPN), i due estremi (apparato, VDOM, interfaccia, tunnel, neighbor, IP), le fonti con le righe di config e show, e lo stato reale dei due lati.
+
+Rack, servizi di gestione, apparati gestiti e wireless arrivano nelle fasi successive.
 
 ## 5. Le viste grafiche
 
@@ -269,9 +296,22 @@ Il [mockup](mockup/index.html) contiene le viste 5.1–5.7, 5.9 e 5.11, con un c
 - Siti proposti in automatico (per esempio dal prefisso dell'hostname) e modificabili. Disposizione automatica, con posizioni modificabili e salvate nel progetto.
 - **Esportazione in draw.io e immagine**, per la documentazione da consegnare al cliente.
 
+**Nella fase 2, parte 1** ([#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15)), la mappa si apre dall'elenco a sinistra, sopra gli apparati raggruppati per sito:
+
+- siti come riquadri, apparati come schede (tipo, hostname, modello, HA, VDOM), Internet, provider, peer e vicini non caricati;
+- livelli: cavi e LAG, VPN e overlay SD-WAN, scorciatoie ADVPN, sessioni BGP e OSPF, subnet condivise;
+- il clic su un collegamento mostra i due lati affiancati, parametro per parametro, con la fonte (verificato o dedotto) e i pulsanti che aprono la config o lo show alla riga; il clic su un apparato ne mostra il riepilogo e apre le sue viste;
+- con gli show, lo stato reale dei due lati: porte, tunnel (anche le istanze dial-up dell'hub, abbinate allo spoke dall'IP pubblico), sessioni BGP, health check SD-WAN; in rosso i collegamenti giù;
+- sotto la mappa, l'elenco dei collegamenti in una tabella con filtro ed export Excel;
+- nelle viste dell'apparato, l'altro estremo di una porta, di un tunnel o di una sessione BGP apre l'altro apparato.
+
+I controlli di coerenza, la vista VPN con ADVPN, le modifiche a mano, l'export in draw.io e i FortiSwitch e FortiAP gestiti arrivano con le parti successive.
+
+![La mappa del cliente di esempio: sede, filiali, campus e datacenter, con il dettaglio della sessione BGP tra la filiale 1 e l'hub](img/app-mappa.png)
+
 ### 5.2 VPN
 
-**Nella fase 1**, per ogni FortiGate e per ogni VDOM: elenco dei tunnel con tipo, interfaccia, gateway remoto, versione IKE, proposte, ruolo ADVPN e fasi 2 (selettori, proposte, PFS, gruppi DH, negoziazione automatica, durata della chiave), con i valori di default indicati come tali. Con gli show, lo stato di ogni tunnel: quante istanze sono su e quante giù (i dial-up ne hanno una per peer), con i selettori attivi e lo stato di IKE. L'abbinamento dei due estremi arriva con la mappa (fase 2).
+**Nella fase 1**, per ogni FortiGate e per ogni VDOM: elenco dei tunnel con tipo, interfaccia, gateway remoto, versione IKE, proposte, ruolo ADVPN e fasi 2 (selettori, proposte, PFS, gruppi DH, negoziazione automatica, durata della chiave), con i valori di default indicati come tali. Con gli show, lo stato di ogni tunnel: quante istanze sono su e quante giù (i dial-up ne hanno una per peer), con i selettori attivi e lo stato di IKE. Dalla fase 2 (parte 1) i due estremi di ogni tunnel sono abbinati sulla mappa, con lo stato di entrambi i lati, e il dettaglio del tunnel porta all'apparato dall'altra parte; la vista VPN di tutto il cliente arriva con la parte 2.
 
 Elenco dei tunnel di tutto il progetto con i due estremi abbinati, e per ciascuno:
 
@@ -506,7 +546,7 @@ Il punto forte di Python (librerie SSH come Netmiko) serve solo per la lettura l
 | Gestore pacchetti | npm workspaces: nessuno strumento in più da installare |
 | Tabelle grandi (migliaia di policy) | TanStack Table e TanStack Virtual (MIT): ordinamento, filtro e righe virtualizzate. Un test verifica che la tabella di 10.000 policy resti fluida |
 | Pannelli porte | SVG disegnato da codice |
-| Mappa e schemi LAG/vPC | React Flow con layout automatico, esportazione in draw.io |
+| Mappa e schemi LAG/vPC | React Flow (`@xyflow/react` 12.12.1, MIT) con la disposizione automatica di dagre (`@dagrejs/dagre`, MIT), caricati solo quando si apre la mappa; le loro dipendenze hanno licenze MIT, ISC e BSD-3-Clause. Scartato elkjs (EPL-2.0 o GPL). Esportazione in draw.io scritta nel progetto (fase 2, parte 3) |
 | Config originale | CodeMirror 6 (evidenziazione, piegatura, salto alla riga) |
 | Elaborazione | Web Worker, così l'interfaccia non si blocca sui file grandi |
 | Archivi zip, tar, tar.gz e gz | fflate per zip e gzip, lettore tar scritto nel progetto; archivi annidati, con limiti di profondità e dimensione |
@@ -535,7 +575,7 @@ Docker Desktop è gratuito per uso personale e per le aziende con meno di 250 di
 - **Config 1:1**: lo strumento non modifica mai i file caricati. Ciò che si vede, si copia o si scarica è identico all'originale, compresi spazi, fine riga e segreti. Per questo non c'è un anonimizzatore: le config restano sul PC e non serve.
 - **La repo è pubblica, quindi niente config reali nella repo.** Config di esempio, test, documentazione e screenshot usano solo dati sintetici.
 - **Config reali per lo sviluppo**: nessuna repo con config dei clienti, nemmeno privata. Si sviluppa su config sintetiche; quando un parser sbaglia su una config reale, servono solo le righe che danno problemi, passate in chat con i valori sensibili cambiati a mano.
-- **Il server dell'archivio** risponde solo a `localhost` e `127.0.0.1`, accetta modifiche solo dall'app e non dà permessi ad altri siti; sceglie lui i nomi dei file sul disco e gira senza root, con il filesystem in sola lettura tranne il volume dei dati. Ogni protezione ha il suo test automatico.
+- **Il server dell'archivio** risponde solo a `localhost`, `127.0.0.1` e `[::1]`, accetta modifiche solo dall'app e non dà permessi ad altri siti; sceglie lui i nomi dei file sul disco e gira senza root, con il filesystem in sola lettura tranne il volume dei dati. Ogni protezione ha il suo test automatico.
 - **Segreti mascherati** nell'interfaccia, visibili con un clic (fase successiva): cambia solo la visualizzazione, utile quando si condivide lo schermo, e non tocca la config.
 - **File dei clienti** salvati in locale, nell'archivio dell'app; la cifratura opzionale con una password resta da fare.
 - **Licenza MIT**: chiunque può usare, modificare e ridistribuire il codice, anche commercialmente, mantenendo l'avviso di copyright (vedi [LICENSE](../LICENSE)).
@@ -543,7 +583,7 @@ Docker Desktop è gratuito per uso personale e per le aziende con meno di 250 di
 ## 10. Qualità e test
 
 - **Raccolta di config di esempio** per ogni marca e versione, solo sintetiche, in [`samples/`](../samples/README.md), con il risultato atteso salvato accanto: il riconoscimento in `expected.json` e il riassunto del modello di ogni config in `expected-models.json`. Ogni modifica ai parser e ai driver viene verificata su tutta la raccolta.
-- **Progetti di esempio multi-apparato** (sede e filiali con VPN, SD-WAN e BGP) per verificare la correlazione e i controlli di coerenza.
+- **Progetti di esempio multi-apparato** (sede e filiali con VPN, SD-WAN e BGP) per verificare la correlazione e i controlli di coerenza: gli esempi in `samples/` sono una rete sola, e i collegamenti attesi sono in `expected-links.json`, verificato dai test.
 - **Copertura** misurata per ogni file: percentuale di righe comprese, verificata dai riassunti attesi.
 - **Prestazioni**: una config da 20 MB si apre senza bloccare l'interfaccia e la tabella di 10.000 policy resta fluida durante lo scorrimento (test nel browser).
 - **Server e archivio**: test unitari delle protezioni (nomi accettati, intestazione dell'app, origine, nomi dei file, limiti), dell'archivio e dell'esportazione e importazione byte per byte; nel browser, clienti, versioni, correzioni ed esportazione. In CI un test verifica che l'archivio resti dopo il riavvio e l'aggiornamento del container.
@@ -581,11 +621,17 @@ Issue [#10](https://github.com/TehMaat/Network-Config-Viewer/issues/10).
 - **Risultato**: ogni FortiGate e ogni Catalyst leggibile in forma grafica, con i file di ogni cliente conservati sul PC.
 
 ### Fase 2: mappa dell'infrastruttura
+Issue [#15](https://github.com/TehMaat/Network-Config-Viewer/issues/15), in corso, in quattro parti con una pull request e una versione ciascuna.
 - Progetto con più apparati e siti; correlazione (cavi, LAG, subnet, IPsec, overlay SD-WAN, BGP).
 - Mappa a livelli, vista VPN con ADVPN, dettaglio dei collegamenti, controlli di coerenza, stato reale dagli show.
 - Verifica dei cavi con LLDP/CDP e collegamenti inseriti a mano.
 - FortiSwitch e FortiAP gestiti dal FortiGate: pannello porte con la tabella MAC, MCLAG, SSID e access point.
 - Esportazione in draw.io e immagine.
+- Le parti:
+  1. **Mappa e collegamenti** (realizzata, versione 0.2.0): correlazione nel core, siti, mappa a livelli con il dettaglio dei due lati di ogni collegamento, stato reale dagli show, elenco dei collegamenti con export Excel, altro estremo nelle viste dell'apparato;
+  2. **controlli e VPN**: controlli di coerenza e problemi sulla mappa, vista VPN con ADVPN, gateway delle VLAN su altri apparati, rotte attese che mancano;
+  3. **modifiche a mano ed export**: siti, posizioni, collegamenti a mano e decisioni sui collegamenti dedotti salvati nel cliente; export in draw.io e immagine;
+  4. **FortiSwitch e FortiAP gestiti**: driver, viste, mappa e show degli apparati gestiti dal FortiGate.
 - **Risultato**: carichi le config di sede e filiali e vedi la rete del cliente, con i problemi evidenziati.
 
 ### Fase 3: analisi e rack

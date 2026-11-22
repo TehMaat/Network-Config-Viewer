@@ -123,7 +123,9 @@ class FortiosReader {
   private readonly sections = new Map<number, string>();
   private readonly warnings: ModelWarning[] = [];
   private readonly switchMembers = new Map<string, string[]>();
+  private readonly ddns: NonNullable<DeviceModel['ddns']> = [];
   private hostname?: string;
+  private location?: DeviceModel['location'];
   private multiVdom = false;
 
   constructor(private readonly input: DriverInput) {
@@ -153,6 +155,8 @@ class FortiosReader {
       vlans: [],
       contexts: [...this.contexts.values()],
       ...this.management(),
+      ...(this.location ? { location: this.location } : {}),
+      ...(this.ddns.length > 0 ? { ddns: this.ddns } : {}),
       features: [...this.features].sort(),
       references: this.ctx.references(),
       coverage: this.ctx.coverage((line) => this.sections.get(line) ?? 'other'),
@@ -285,6 +289,8 @@ class FortiosReader {
     if (/^(vpn certificate |system replacemsg)/.test(path)) return this.ctx.ignoredAll(node);
     const handlers: Record<string, () => void> = {
       'system global': () => this.readSystemGlobal(node),
+      'system snmp sysinfo': () => this.readSnmpSysinfo(node),
+      'system ddns': () => this.readDdns(node),
       'system interface': () => this.readInterfaces(node),
       'system virtual-switch': () => this.readVirtualSwitch(node),
       'system zone': () => this.readZones(node, vdom),
@@ -320,6 +326,30 @@ class FortiosReader {
     if (hostname) this.hostname = hostname;
     this.get(s, 'alias');
     this.get(s, 'vdom-mode');
+  }
+
+  /** The SNMP location: the first hint of the site of the device (#15). */
+  private readSnmpSysinfo(node: SyntaxNode) {
+    const s = this.settings(node);
+    const set = s.sets.get('location');
+    const text = this.one(s, 'location')?.trim();
+    if (!set || !text) return;
+    this.structure(node);
+    this.get(s, 'status');
+    this.location = { text, src: nodeSrc(set.node) };
+  }
+
+  /** Dynamic DNS names: a peer may use one of them as its IPsec remote gateway (#15). */
+  private readDdns(node: SyntaxNode) {
+    this.structure(node);
+    for (const e of this.entries(node)) {
+      this.begin(e);
+      const domain = this.one(e, 'ddns-domain');
+      this.get(e, 'ddns-server');
+      const monitor = this.one(e, 'monitor-interface');
+      if (!domain) continue;
+      this.ddns.push({ domain, ...(monitor ? { interface: monitor } : {}), src: nodeSrc(e.node) });
+    }
   }
 
   private readHa(node: SyntaxNode) {

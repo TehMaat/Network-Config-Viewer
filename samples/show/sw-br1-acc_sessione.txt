@@ -218,4 +218,28 @@ Gi1/0/37  auto   on         4.6     IP Phone 7841       2     30.0
 Gi1/0/38  auto   on         4.6     IP Phone 7841       2     30.0
 Gi2/0/1   auto   on         4.6     IP Phone 7841       2     30.0
 
+SW-BR1-ACC#show lldp neighbors detail
+------------------------------------------------
+Local Intf: Gi1/0/48
+Chassis id: 0000.5e00.53f3
+Port id: internal1
+Port Description: internal1
+System Name: FGT-BR1
+
+System Description: 
+FortiGate-60F v7.0.15,build0632,240408 (GA.M)
+
+Time remaining: 98 seconds
+System Capabilities: B,R
+Enabled Capabilities: R
+Management Addresses:
+    IP: 10.21.99.1
+Auto Negotiation - not supported
+Physical media capabilities - not advertised
+Media Attachment Unit type - not advertised
+Vlan ID: - not advertised
+
+
+Total entries displayed: 1
+
 SW-BR1-ACC#

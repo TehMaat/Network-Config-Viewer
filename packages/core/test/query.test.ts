@@ -29,7 +29,7 @@ describe('VLAN usage', () => {
     const vlan70 = usage.find((u) => u.vlan.id === 70)!;
     expect(vlan70.gateways).toEqual([{ interface: 'Vlan70', ip: '10.10.70.1', prefix: 24 }]);
     // Port-channels count once: their members are not listed.
-    expect(vlan70.ports.tagged).toEqual(['Port-channel10', 'Port-channel11']);
+    expect(vlan70.ports.tagged).toEqual(['Port-channel10', 'Port-channel11', 'Port-channel12']);
     expect(vlan70.ports.access).toEqual([]);
 
     const vlan100 = usage.find((u) => u.vlan.id === 100)!;

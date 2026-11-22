@@ -202,7 +202,8 @@
       "show version",
       "show interfaces status",
       "show mac address-table",
-      "show power inline"
+      "show power inline",
+      "show lldp neighbors detail"
     ]
   },
   "show/sw-br3-acc_sessione.txt": {

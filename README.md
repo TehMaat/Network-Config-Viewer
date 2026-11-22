@@ -8,7 +8,7 @@ Strumento per vedere l'infrastruttura di rete di un cliente partendo dai backup 
 
 Le fasi 0 e 1 della roadmap sono realizzate: trascini un backup FortiGate o Cisco e l'app lo legge e lo mostra in forma grafica, apparato per apparato, sempre collegato alla config originale, identica al file. Se aggiungi gli output dei comandi show, le viste mostrano anche lo stato reale. I file di ogni cliente restano nell'archivio dell'app, sul PC, raggruppati per apparato, e ogni apparato si esporta in Excel.
 
-Le fasi successive (mappa dell'infrastruttura, analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
+La fase 2 è in corso: con la prima parte gli apparati di un cliente si vedono insieme nella **mappa dell'infrastruttura**. Le parti successive (controlli di coerenza, vista VPN, modifiche a mano ed export della mappa, FortiSwitch e FortiAP gestiti) e le altre fasi (analisi, rack, migrazioni) sono descritte nello [studio](docs/STUDIO.md). Il [mockup](docs/mockup/index.html) mostra con dati di esempio come potrebbero apparire le viste future: scaricalo e aprilo nel browser.
 
 ## Cosa fa oggi
 
@@ -28,6 +28,12 @@ Le fasi successive (mappa dell'infrastruttura, analisi, rack, migrazioni) sono d
 - **Legge gli output dei comandi show** di Cisco IOS e IOS-XE, Cisco Small Business e FortiGate, da file singoli o da log di sessione, e li abbina da solo al loro apparato: per hostname, numero di serie o nome del file, con la correzione a mano. Le viste mostrano lo stato reale accanto alla config, e ogni dato porta alla sua riga dello show:
   - **switch**: stato delle porte, vicini CDP e LLDP, PoE, nomi delle VLAN tenute dal VTP e i **MAC dei dispositivi collegati** a ogni porta configurata (con l'IP, se lo switch ha la tabella ARP), con un segno sulle porte configurate senza MAC: forse non sono usate;
   - **FortiGate**: stato delle interfacce e dei tunnel IPsec (anche dial-up), tabella di routing reale, sessioni BGP, health check SD-WAN e membro in uso da ogni regola.
+- **Mette insieme gli apparati di un cliente nella mappa dell'infrastruttura**, che si apre dall'elenco a sinistra, sopra gli apparati raggruppati per sito:
+  - i siti vengono dalla location SNMP, dal codice nell'hostname (FGT-BR1, SW-BR1-ACC) o dai cavi;
+  - i collegamenti: cavi e LAG dai vicini LLDP e CDP o dalle descrizioni delle porte, subnet condivise, uscite Internet, tunnel IPsec (anche verso hub dial-up), sessioni BGP (anche nei `neighbor-range` dell'hub), adiacenze OSPF e scorciatoie ADVPN viste negli show; ognuno dice se è **verificato** da uno show o **dedotto** dalla config;
+  - livelli che si accendono e si spengono; il clic su un collegamento mostra i due lati affiancati, parametro per parametro, con i pulsanti che aprono la config o lo show alla riga, e il clic su un apparato apre le sue viste;
+  - con gli show, lo stato reale dei due lati: porte, tunnel, sessioni BGP, health check SD-WAN;
+  - sotto la mappa, l'elenco dei collegamenti con filtro ed export Excel; nelle viste di ogni apparato, l'altro estremo di porte, tunnel e sessioni BGP porta all'altro apparato.
 - **Esporta in Excel**, con il file creato nel browser:
   - ogni apparato, con un foglio per vista: porte, VLAN, ACL, routing e MAC degli switch; interfacce e VLAN del FortiGate, e policy, oggetti, routing, VPN e SD-WAN di ogni VDOM. Con gli show c'è anche lo stato reale;
   - ogni tabella, così come è filtrata e ordinata, con il pulsante accanto al filtro.
@@ -37,6 +43,8 @@ Le fasi successive (mappa dell'infrastruttura, analisi, rack, migrazioni) sono d
 - **Segnala i file che non si possono leggere**: binari, vuoti, archivi danneggiati o protetti da password, backup FortiGate cifrati.
 - Interfaccia in **italiano e inglese**, a scelta.
 - Tema **chiaro, scuro o come il sistema**, a scelta. La scelta resta salvata nel browser.
+
+![La mappa del cliente di esempio: sede, filiali, campus e datacenter, con il dettaglio della sessione BGP tra la filiale 1 e l'hub](docs/img/app-mappa.png)
 
 ![Il pannello delle porte di uno stack Catalyst 9300 in tema scuro, con il dettaglio di un uplink in port-channel](docs/img/app-cisco-scuro.png)
 
@@ -72,7 +80,7 @@ La prima volta Docker scarica il necessario e costruisce l'immagine: serve inter
 
 - I file vengono letti ed elaborati nel browser. Quando li salvi in un cliente vanno al container, sul tuo PC, che li conserva nel suo volume così come sono: non arrivano a nessun altro server.
 - L'app risponde solo al tuo PC (`127.0.0.1`): gli altri computer della rete non la raggiungono.
-- Il server dell'archivio accetta solo richieste indirizzate a `localhost` o `127.0.0.1` e modifiche che arrivano dall'app: una pagina di un altro sito aperta nel browser non può leggere né cambiare l'archivio. Gira senza privilegi di amministratore, con il filesystem in sola lettura tranne il volume dei dati, e sceglie lui i nomi dei file sul disco.
+- Il server dell'archivio accetta solo richieste indirizzate a `localhost`, `127.0.0.1` o `[::1]` e modifiche che arrivano dall'app: una pagina di un altro sito aperta nel browser non può leggere né cambiare l'archivio. Gira senza privilegi di amministratore, con il filesystem in sola lettura tranne il volume dei dati, e sceglie lui i nomi dei file sul disco.
 - Il browser riceve una regola di sicurezza (Content Security Policy) che blocca qualsiasi collegamento ad altri siti. I test automatici lo verificano.
 - Nessuna telemetria, nessun font o script scaricato da fuori.
 - Nella repo, nei test, nella documentazione e negli screenshot ci sono solo dati inventati: vedi [`samples/`](samples/README.md).
@@ -94,10 +102,10 @@ Serve Node.js 22.12 o successivo (i test automatici usano la versione 24).
 La prima volta, per i test nel browser: `npx playwright install chromium`, e con `NCV_ALL_BROWSERS=1` anche `firefox webkit`.
 
 Struttura del codice:
-- `packages/core`: lettura dei file e degli archivi, riconoscimento, parser, driver di marca, modello neutro e funzioni di ricerca sul modello. TypeScript senza dipendenze dal browser, così potrà girare anche sul server.
-- `packages/web`: interfaccia React con Mantine, CodeMirror, TanStack Table e i18next. Le viste degli apparati sono in `packages/web/src/views`, i clienti e l'archivio in `packages/web/src/archive`, le traduzioni in `packages/web/src/i18n`.
+- `packages/core`: lettura dei file e degli archivi, riconoscimento, parser, driver di marca, modello neutro, funzioni di ricerca sul modello e correlazione degli apparati di un cliente (`src/correlate`). TypeScript senza dipendenze dal browser, così potrà girare anche sul server.
+- `packages/web`: interfaccia React con Mantine, CodeMirror, TanStack Table e i18next. Le viste degli apparati sono in `packages/web/src/views`, la mappa in `packages/web/src/map` (React Flow e dagre), i clienti e l'archivio in `packages/web/src/archive`, le traduzioni in `packages/web/src/i18n`.
 - `packages/server`: il server dell'app, con Fastify: serve l'app e conserva l'archivio dei clienti. Le regole di sicurezza inviate al browser sono in `packages/server/src/security-headers.json`, unica fonte anche per i test.
-- `samples`: config di esempio sintetiche, con il riconoscimento atteso in `expected.json`, il riassunto atteso del modello in `expected-models.json` e il cliente di esempio `cliente-esempio.zip`.
+- `samples`: config di esempio sintetiche, con il riconoscimento atteso in `expected.json`, il riassunto atteso del modello in `expected-models.json`, i collegamenti attesi tra gli apparati in `expected-links.json` e il cliente di esempio `cliente-esempio.zip`.
 - `Dockerfile` e `compose.yaml` sono nella radice.
 
 Gli screenshot in `docs/img/app-*.png`, in tema chiaro e in tema scuro (`-scuro`), si rigenerano con `NCV_SCREENSHOTS=1 npm run test:e2e -- screenshots`, da soli: svuotano l'archivio del server di prova e importano il cliente di esempio.

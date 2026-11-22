@@ -152,6 +152,11 @@ interface Port-channel11
  switchport trunk allowed vlan 10,20,60,70,99
  switchport mode trunk
 !
+interface Port-channel12
+ description SW-HQ-ACC3
+ switchport trunk allowed vlan 10,20,60,70,99
+ switchport mode trunk
+!
 interface GigabitEthernet0/0
  vrf forwarding Mgmt-vrf
  no ip address
@@ -1139,20 +1144,16 @@ interface GigabitEthernet3/0/44
  spanning-tree bpduguard enable
 !
 interface GigabitEthernet3/0/45
- description LIBERA
- switchport access vlan 999
- switchport mode access
- shutdown
- spanning-tree portfast
- spanning-tree bpduguard enable
+ description SW-HQ-ACC3-Gi1/0/48
+ switchport trunk allowed vlan 10,20,60,70,99
+ switchport mode trunk
+ channel-group 12 mode active
 !
 interface GigabitEthernet3/0/46
- description LIBERA
- switchport access vlan 999
- switchport mode access
- shutdown
- spanning-tree portfast
- spanning-tree bpduguard enable
+ description SW-HQ-ACC3-Gi2/0/48
+ switchport trunk allowed vlan 10,20,60,70,99
+ switchport mode trunk
+ channel-group 12 mode active
 !
 interface GigabitEthernet3/0/47
  description SW-HQ-ACC2-Gi1/1/1

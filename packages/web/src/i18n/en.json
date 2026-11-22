@@ -394,7 +394,8 @@
       "aclOut": "Outbound ACL",
       "helper": "DHCP relay",
       "pbr": "Policy route",
-      "secondary": "{{ip}} (secondary)"
+      "secondary": "{{ip}} (secondary)",
+      "peer": "Connected to"
     },
     "live": {
       "title": "Real state (from the shows)",
@@ -557,7 +558,8 @@
       "established_one": "established, {{count}} prefix",
       "established_other": "established, {{count}} prefixes",
       "sessions": "BGP sessions in the shows",
-      "upDown": "Up/down for"
+      "upDown": "Up/down for",
+      "peer": "Other side"
     },
     "routeMaps": "Route maps",
     "prefixLists": "Prefix lists",
@@ -712,7 +714,8 @@
     "instance": "Instance",
     "selectorsUp": "Selectors up",
     "ikeUp": "established (IKEv{{version}})",
-    "ikeDown": "not established"
+    "ikeDown": "not established",
+    "peer": "Other side"
   },
   "sdwan": {
     "none": "SD-WAN is not configured in this VDOM.",
@@ -883,5 +886,177 @@
     "to": "to",
     "Control character": "Control character",
     "Selection deleted": "Selection deleted"
+  },
+  "map": {
+    "nav": "Infrastructure map",
+    "navDescription": "{{devices}}, {{links}}",
+    "title": "Infrastructure map",
+    "summary": "{{devices}} in {{sites}}, {{links}}",
+    "devices_one": "{{count}} device",
+    "devices_other": "{{count}} devices",
+    "sites_one": "{{count}} site",
+    "sites_other": "{{count}} sites",
+    "links_one": "{{count}} link",
+    "links_other": "{{count}} links",
+    "vdoms_one": "{{count}} VDOM",
+    "vdoms_other": "{{count}} VDOMs",
+    "empty": "No device read by a driver: load the configs of FortiGate and Cisco switches to see the map.",
+    "noSite": "No site",
+    "exportName": "map",
+    "listTitle": "List of the links",
+    "parameter": "Parameter",
+    "sources": "Where it comes from",
+    "verified": "verified",
+    "inferred": "inferred",
+    "dialup": "dial-up",
+    "openViews": "Open the views",
+    "via": "Open the tunnel that carries the session",
+    "layer": {
+      "cables": "Cables and LAGs",
+      "vpn": "VPN and SD-WAN overlay",
+      "shortcuts": "ADVPN shortcuts",
+      "routing": "BGP and OSPF sessions",
+      "subnets": "Shared subnets"
+    },
+    "kind": {
+      "cable": "Cable",
+      "lag": "LAG",
+      "subnet": "Shared subnet",
+      "internet": "Internet exit",
+      "ipsec": "IPsec tunnel",
+      "bgp": "BGP session",
+      "ospf": "OSPF adjacency",
+      "shortcut": "ADVPN shortcut"
+    },
+    "type": {
+      "firewall": "FW",
+      "switch": "SW"
+    },
+    "typeName": {
+      "firewall": "Firewall",
+      "switch": "Switch"
+    },
+    "external": {
+      "internet": "Internet",
+      "provider": "provider",
+      "peer": "peer outside the client",
+      "neighbor": "neighbour not loaded",
+      "segment": "shared subnet"
+    },
+    "state": {
+      "up": "up",
+      "down": "down",
+      "partial": "partly down"
+    },
+    "edge": {
+      "lag_one": "{{count}} cable",
+      "lag_other": "{{count}} cables"
+    },
+    "col": {
+      "kind": "Type",
+      "a": "Side A",
+      "b": "Side B",
+      "source": "Source",
+      "state": "Real state (A / B)"
+    },
+    "evidence": {
+      "config": "config of {{device}}, line {{line}}",
+      "show": "shows of {{device}}, line {{line}}"
+    },
+    "source": {
+      "lldp": "Verified by LLDP on {{device}}: {{text}}",
+      "cdp": "Verified by CDP on {{device}}: {{text}}",
+      "description": "Inferred from the port description on {{device}}: “{{text}}”",
+      "subnet": "Inferred from the address {{text}} of {{device}}",
+      "wan": "WAN interface of {{device}}",
+      "remote-gw": "Remote gateway {{text}} in the config of {{device}}",
+      "ddns": "DDNS name {{text}} in the config of {{device}}",
+      "bgp-neighbor": "BGP neighbour {{text}} in the config of {{device}}",
+      "ospf": "OSPF on {{device}} ({{text}})",
+      "tunnel-state": "Tunnel up in the shows of {{device}}",
+      "bgp-state": "Session established in the shows of {{device}}"
+    },
+    "sourceKind": {
+      "lldp": "LLDP",
+      "cdp": "CDP",
+      "description": "description",
+      "subnet": "subnet",
+      "wan": "WAN",
+      "remote-gw": "remote gateway",
+      "ddns": "DDNS",
+      "bgp-neighbor": "BGP neighbour",
+      "ospf": "OSPF",
+      "tunnel-state": "tunnel in the shows",
+      "bgp-state": "BGP in the shows"
+    },
+    "row": {
+      "vdom": "VDOM",
+      "interface": "Interface",
+      "description": "Description",
+      "mode": "Mode",
+      "vlans": "VLANs",
+      "members": "Members",
+      "lacp": "LAG protocol",
+      "cables": "Cables",
+      "mtu": "MTU",
+      "subnet": "Subnet",
+      "address": "Address",
+      "vlan": "VLAN",
+      "gateway": "Gateway",
+      "provider": "Provider (from the description)",
+      "sdwan": "SD-WAN",
+      "tunnel": "Tunnel",
+      "type": "Type",
+      "ike": "IKE",
+      "proposals": "Phase 1 proposals",
+      "dhgrp": "DH groups",
+      "phase2": "Phase 2s",
+      "advpn": "ADVPN",
+      "tunnelIp": "Tunnel IP",
+      "as": "AS",
+      "session": "Session",
+      "peer": "Neighbour",
+      "localIp": "Local address",
+      "rrClient": "Route reflector client",
+      "nextHopSelf": "next-hop-self",
+      "routeMaps": "Route-maps",
+      "networks": "Announced networks",
+      "transport": "Tunnel that carries it",
+      "area": "Area",
+      "passive": "Passive",
+      "cost": "Cost",
+      "routerId": "Router ID",
+      "publicIp": "Public address",
+      "state": "Real state",
+      "model": "Model",
+      "os": "System",
+      "site": "Site",
+      "location": "SNMP location",
+      "management": "Management IP",
+      "ha": "HA",
+      "detail": "Detail"
+    },
+    "value": {
+      "yes": "yes",
+      "no": "no",
+      "dhcp": "DHCP",
+      "notInConfig": "not in the config",
+      "unknownPort": "unknown port",
+      "vlanInterfaces": "VLAN interfaces {{vlans}}",
+      "prefixes_one": "{{count}} prefix",
+      "prefixes_other": "{{count}} prefixes",
+      "range": "range {{prefix}} ({{group}})",
+      "staticTo": "static → {{peer}}",
+      "ddnsTo": "DDNS → {{peer}}",
+      "slaMissed": "SLA missed"
+    },
+    "legend": {
+      "title": "How to read the map",
+      "intro": "Every box is a device read from its config; the sites group the devices.",
+      "verified": "the shows confirm it (LLDP, CDP, tunnels, BGP)",
+      "inferred": "the config says it (descriptions, addresses, peers)",
+      "state": "In red the links down in the shows, in orange those partly down.",
+      "click": "Click a link to see its two sides together, a device to open its views."
+    }
   }
 }

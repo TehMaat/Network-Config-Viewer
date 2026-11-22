@@ -600,6 +600,10 @@ export interface DeviceModel {
   vlans: Vlan[];
   contexts: LogicalContext[];
   management?: { ip: string; interface?: string };
+  /** SNMP location ("Sede - CED piano terra"): the first hint of the site of the device. */
+  location?: Element & { text: string };
+  /** FortiOS dynamic DNS names: IPsec peers may point to them instead of an address. */
+  ddns?: (Element & { domain: string; interface?: string })[];
   vtpMode?: string;
   features: FeatureCode[];
   references: Reference[];

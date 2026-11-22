@@ -94,6 +94,7 @@ class CiscoReader {
   private readonly sections = new Map<number, { key: string; parent?: number }>();
   private readonly ospfNetworks: { ospf: Ospf; ip: string; wildcard: string; area: string }[] = [];
   private hostname?: string;
+  private location?: DeviceModel['location'];
   private vtpMode?: string;
   private vtpLine?: number;
   private voiceVlanGlobal?: number;
@@ -143,6 +144,7 @@ class CiscoReader {
       vlans,
       contexts: [this.context],
       ...this.management(),
+      ...(this.location ? { location: this.location } : {}),
       ...(this.vtpMode ? { vtpMode: this.vtpMode } : {}),
       features: [...this.features].sort(),
       references: this.ctx.references(),
@@ -261,6 +263,16 @@ class CiscoReader {
       this.readPrefixList(node, m[1]!, m[2]!);
     } else if ((m = /^line\s+(vty|con|console|aux)\s*(.*)$/.exec(t))) {
       this.readLine(node, `${m[1]} ${m[2]}`.trim());
+    } else if ((m = /^snmp-server location\s+(.+)$/.exec(t))) {
+      // The first hint of the site of the device (#15); Small Business writes it in quotes.
+      const text = m[1]!
+        .trim()
+        .replace(/^"(.*)"$/, '$1')
+        .trim();
+      if (text) {
+        this.location = { text, src: nodeSrc(node) };
+        this.ctx.understood(node);
+      }
     } else if ((m = /^snmp-server community\s+\S+\s+(.+)$/.exec(t))) {
       const last = m[1]!.split(/\s+/).at(-1)!;
       if (!/^(RO|RW|ro|rw)$/.test(last)) this.snmpAcls.push({ acl: last, line: node.line });

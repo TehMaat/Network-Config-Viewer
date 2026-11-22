@@ -1,9 +1,18 @@
-import { AppShell, Button, Center, Group, Modal, Stack, Text } from '@mantine/core';
+import { AppShell, Button, Center, Group, Loader, Modal, Stack, Text } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import { useDisclosure } from '@mantine/hooks';
 import { IconUpload } from '@tabler/icons-react';
 import { DEFAULT_LIMITS, type ModelHints } from '@ncv/core';
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { useArchive } from './archive/useArchive';
 import { AppHeader } from './components/AppHeader';
@@ -23,10 +32,14 @@ import {
   type TextEntry,
 } from './state/files';
 import { deviceGroups } from './state/groups';
+import { buildInfrastructure, MAP_ID } from './state/infra';
 import { AnalyzerClient } from './worker/client';
 import type { WorkerMessage } from './worker/protocol';
 
 let localIssueCounter = 0;
+
+/** The map of the client, with React Flow and dagre: loaded only when it is opened (#15). */
+const MapView = lazy(() => import('./map/MapView'));
 
 export function App() {
   const { t } = useTranslation();
@@ -237,6 +250,7 @@ export function App() {
     archive.saveOverrides(entry, overrides);
   };
 
+  const mapOpen = state.selectedId === MAP_ID;
   const selected = state.files.find((f) => f.id === state.selectedId) ?? null;
   const hasFiles = state.files.length > 0 || state.pendingBatches.length > 0;
   const clientOpen = archive.state.current !== null;
@@ -248,6 +262,15 @@ export function App() {
   const currentIds = useMemo(() => new Set(groups.map((g) => g.current.id)), [groups]);
   // Files of shows go with the device they describe: its views show the real state.
   const links = useMemo(() => linkShows(state.files, currentIds), [state.files, currentIds]);
+  // The devices of the client put together: sites, links and nodes outside the client (#15).
+  const infra = useMemo(() => buildInfrastructure(groups, links), [groups, links]);
+  const modelOf = useCallback(
+    (key: string) => {
+      const file = infra.devices.find((d) => d.key === key)?.file;
+      return (file && contentStore.get(file)?.model) || null;
+    },
+    [infra],
+  );
   const { linkedShows, selectedState } = useMemo(() => {
     const shows = state.selectedId ? links.showsOf.get(state.selectedId) : undefined;
     return { linkedShows: shows, selectedState: deviceState(shows) };
@@ -318,6 +341,9 @@ export function App() {
               <FileList
                 files={state.files}
                 groups={groups}
+                infra={infra}
+                mapOpen={mapOpen}
+                onOpenMap={() => select(MAP_ID)}
                 deviceOf={links.deviceOf}
                 selectedId={state.selectedId}
                 processing={state.pendingBatches.length > 0}
@@ -331,10 +357,26 @@ export function App() {
           </AppShell.Navbar>
         )}
         <AppShell.Main>
-          {selected ? (
+          {mapOpen ? (
+            <Suspense
+              fallback={
+                <Center h={200}>
+                  <Loader />
+                </Center>
+              }
+            >
+              <MapView
+                infra={infra}
+                modelOf={modelOf}
+                onOpenFile={openFile}
+                exportName={archive.state.current?.name ?? t('map.exportName')}
+              />
+            </Suspense>
+          ) : selected ? (
             <FileView
               key={selected.id}
               entry={selected}
+              infra={infra}
               onOverride={override}
               shows={linkedShows ?? []}
               state={selectedState}

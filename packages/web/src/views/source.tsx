@@ -3,6 +3,7 @@ import { IconCode, IconTerminal2 } from '@tabler/icons-react';
 import type { DeviceState, Element, Src, StateItem } from '@ncv/core';
 import { createContext, useContext, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { Peer } from '../state/infra';
 
 /** What every view can ask the device page: show some lines of the original config. */
 export interface DeviceViewApi {
@@ -14,6 +15,8 @@ export interface DeviceViewApi {
   fileName(id: string): string;
   /** Base of the names of the files exported from the views: the hostname of the device. */
   exportName: string;
+  /** The other side of the links of the device, from the map of the client (#15). */
+  peers: Peer[];
 }
 
 export const DeviceViewContext = createContext<DeviceViewApi>({
@@ -22,6 +25,7 @@ export const DeviceViewContext = createContext<DeviceViewApi>({
   openFile: () => undefined,
   fileName: (id) => id,
   exportName: 'export',
+  peers: [],
 });
 
 export const useDeviceView = () => useContext(DeviceViewContext);

@@ -52,6 +52,7 @@ FGT-HQ (OFFICE) # get vpn ipsec tunnel summary
 'ADVPN-WAN1_2' 192.0.2.42:0  selectors(total,up): 1/1  rx(pkt,err): 455920/0  tx(pkt,err): 431877/0
 'ADVPN-WAN2_0' 198.51.100.66:0  selectors(total,up): 1/1  rx(pkt,err): 120044/0  tx(pkt,err): 118230/0
 'ADVPN-WAN2_1' 198.51.100.70:0  selectors(total,up): 1/0  rx(pkt,err): 0/0  tx(pkt,err): 12/12
+'VPN-DC' 203.0.113.130:0  selectors(total,up): 1/1  rx(pkt,err): 845120/0  tx(pkt,err): 901233/0
 
 FGT-HQ (OFFICE) # diagnose vpn ike gateway list
 

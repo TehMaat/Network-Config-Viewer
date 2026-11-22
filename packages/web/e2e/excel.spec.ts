@@ -63,8 +63,8 @@ test('exports a switch to Excel, a sheet for every view with the real state', as
     'Stato reale',
     'MAC',
   ]);
-  // The same interfaces as the table of the view.
-  expect(ports).toHaveLength(182);
+  // The same interfaces as the table of the view, Port-channel12 to SW-HQ-ACC3 included (#15).
+  expect(ports).toHaveLength(183);
   const gi25 = ports.find((r) => r[0] === 'Gi1/0/25')!;
   expect(gi25).toMatchObject({ 1: 'PDL-025', 2: 'attiva', 10: 'connected', 11: 2 });
 

@@ -318,7 +318,7 @@ interface GigabitEthernet1/0/47
  shutdown
 !
 interface GigabitEthernet1/0/48
- description UPLINK-1
+ description UPLINK-SW-HQ-CORE-Gi3/0/45
  channel-group 1 mode auto
 !
 interface TenGigabitEthernet1/0/1
@@ -568,7 +568,7 @@ interface GigabitEthernet2/0/47
  shutdown
 !
 interface GigabitEthernet2/0/48
- description UPLINK-2
+ description UPLINK-SW-HQ-CORE-Gi3/0/46
  channel-group 1 mode auto
 !
 interface TenGigabitEthernet2/0/1
@@ -584,7 +584,7 @@ interface TenGigabitEthernet2/0/4
  shutdown
 !
 interface Port-channel1
- description UPLINK-SEDE
+ description UPLINK-SW-HQ-CORE-Po12
  switchport mode trunk
  switchport trunk allowed vlan add 10,20,60,70,99
 !

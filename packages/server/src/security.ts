@@ -61,7 +61,7 @@ export function refusal(method: string, headers: Headers): Refusal | null {
 }
 
 export const REFUSAL_MESSAGES: Record<Refusal, string> = {
-  host: 'This server answers only to localhost and 127.0.0.1.',
+  host: 'This server answers only to localhost, 127.0.0.1 and [::1].',
   header: 'Changes are accepted only from the app.',
   origin: 'Requests from other sites are not accepted.',
   site: 'Requests from other sites are not accepted.',

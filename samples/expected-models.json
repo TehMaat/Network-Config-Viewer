@@ -78,9 +78,9 @@
     "references": 6,
     "coverage": {
       "total": 914,
-      "understood": 703,
+      "understood": 704,
       "ignored": 160,
-      "unknown": 51
+      "unknown": 50
     }
   },
   "cisco-ios/sw-hq-acc1-c3850-iosxe-16.12-stack.txt": {
@@ -174,9 +174,9 @@
     "references": 187,
     "coverage": {
       "total": 991,
-      "understood": 749,
+      "understood": 750,
       "ignored": 178,
-      "unknown": 64
+      "unknown": 63
     }
   },
   "cisco-ios/sw-hq-acc2-c9200-iosxe-17.9.txt": {
@@ -262,9 +262,9 @@
     "references": 51,
     "coverage": {
       "total": 475,
-      "understood": 317,
+      "understood": 318,
       "ignored": 81,
-      "unknown": 77
+      "unknown": 76
     }
   },
   "cisco-ios/sw-hq-core-c9300-iosxe-17.12-stack.txt": {
@@ -291,7 +291,7 @@
     "warnings": [],
     "interfaces": {
       "kinds": {
-        "lag": 3,
+        "lag": 4,
         "loopback": 1,
         "management": 1,
         "physical": 168,
@@ -299,11 +299,11 @@
         "virtual": 3
       },
       "modes": {
-        "access": 142,
+        "access": 140,
         "dynamic-auto": 20,
-        "trunk": 9
+        "trunk": 12
       },
-      "shutdown": 24,
+      "shutdown": 22,
       "uplinks": [
         "TenGigabitEthernet1/1/1",
         "TenGigabitEthernet1/1/2",
@@ -333,7 +333,8 @@
       "lags": [
         "Port-channel1: TenGigabitEthernet1/1/1 TenGigabitEthernet2/1/1",
         "Port-channel10: TenGigabitEthernet1/1/2 TenGigabitEthernet2/1/2",
-        "Port-channel11: GigabitEthernet3/0/47 GigabitEthernet3/0/48"
+        "Port-channel11: GigabitEthernet3/0/47 GigabitEthernet3/0/48",
+        "Port-channel12: GigabitEthernet3/0/45 GigabitEthernet3/0/46"
       ],
       "layer3": [
         "Loopback0 10.10.255.2/32",
@@ -351,9 +352,9 @@
       "trunks": {
         "trunk 10,20,50,60,70,99": 3,
         "trunk 10,20,50,60,99-100,900": 3,
-        "trunk 10,20,60,70,99": 3
+        "trunk 10,20,60,70,99": 6
       },
-      "withDefaults": 171,
+      "withDefaults": 172,
       "unverified": {}
     },
     "vlans": [
@@ -401,10 +402,10 @@
     },
     "references": 167,
     "coverage": {
-      "total": 1306,
-      "understood": 974,
-      "ignored": 265,
-      "unknown": 67
+      "total": 1307,
+      "understood": 975,
+      "ignored": 266,
+      "unknown": 66
     }
   },
   "cisco-sb/sw-br2-acc-sg350-28p-2.5.txt": {
@@ -479,9 +480,9 @@
     "references": 22,
     "coverage": {
       "total": 225,
-      "understood": 142,
+      "understood": 143,
       "ignored": 56,
-      "unknown": 27
+      "unknown": 26
     }
   },
   "cisco-sb/sw-br3-acc-cbs350-48p-3.4-stack.txt": {
@@ -570,9 +571,9 @@
     "references": 88,
     "coverage": {
       "total": 592,
-      "understood": 431,
+      "understood": 432,
       "ignored": 134,
-      "unknown": 27
+      "unknown": 26
     }
   },
   "cisco-sb/sw-hq-acc3-c1300-48p-4.1-stack.txt": {
@@ -661,9 +662,9 @@
     "references": 88,
     "coverage": {
       "total": 592,
-      "understood": 431,
+      "understood": 432,
       "ignored": 134,
-      "unknown": 27
+      "unknown": 26
     }
   },
   "fortigate/fgt-br1-60f-fortios-7.0.conf": {
@@ -768,9 +769,9 @@
     "references": 46,
     "coverage": {
       "total": 448,
-      "understood": 321,
+      "understood": 325,
       "ignored": 26,
-      "unknown": 101
+      "unknown": 97
     }
   },
   "fortigate/fgt-br2-60f-fortios-7.4.conf": {
@@ -875,9 +876,9 @@
     "references": 46,
     "coverage": {
       "total": 448,
-      "understood": 321,
+      "understood": 325,
       "ignored": 26,
-      "unknown": 101
+      "unknown": 97
     }
   },
   "fortigate/fgt-campus-200f-fortios-7.6.conf": {
@@ -887,6 +888,7 @@
     "management": "10.30.99.1 VL99-MGMT",
     "features": [
       "advpn",
+      "bgp",
       "ipsec",
       "lag",
       "nat",
@@ -951,7 +953,7 @@
           ],
           "policyRoutes": [],
           "ospf": [],
-          "bgp": null,
+          "bgp": "65000 neighbors 1 groups 0 ranges 0 networks 1",
           "routeMaps": [],
           "prefixLists": []
         },
@@ -963,10 +965,10 @@
     ],
     "references": 31,
     "coverage": {
-      "total": 935,
-      "understood": 201,
+      "total": 952,
+      "understood": 221,
       "ignored": 64,
-      "unknown": 670
+      "unknown": 667
     }
   },
   "fortigate/fgt-dc-120g-fortios-8.0-vdom.conf": {
@@ -976,6 +978,7 @@
     "management": "10.40.99.250 mgmt",
     "features": [
       "bgp",
+      "ipsec",
       "nat",
       "static-routes",
       "vdom"
@@ -985,11 +988,12 @@
       "kinds": {
         "management": 1,
         "physical": 3,
+        "tunnel": 1,
         "vdom-link": 2
       },
       "byContext": {
         "CORE": 2,
-        "EXTRANET": 3,
+        "EXTRANET": 4,
         "root": 1
       },
       "shutdown": 0,
@@ -1082,16 +1086,18 @@
           "routeMaps": [],
           "prefixLists": []
         },
-        "ipsec": [],
+        "ipsec": [
+          "VPN-HQ static ike2 port1 203.0.113.2 phase2 1"
+        ],
         "sdwan": null
       }
     ],
-    "references": 30,
+    "references": 33,
     "coverage": {
-      "total": 336,
-      "understood": 244,
-      "ignored": 35,
-      "unknown": 57
+      "total": 363,
+      "understood": 273,
+      "ignored": 37,
+      "unknown": 53
     }
   },
   "fortigate/fgt-hq-100f-fortios-7.2-vdom.conf": {
@@ -1113,10 +1119,10 @@
       "vip"
     ],
     "warnings": [
-      "policy-disabled OFFICE 510",
-      "policy-any-any OFFICE 510",
-      "policy-no-log OFFICE 524",
-      "policy-all-management OFFICE 524"
+      "policy-disabled OFFICE 533",
+      "policy-any-any OFFICE 533",
+      "policy-no-log OFFICE 547",
+      "policy-all-management OFFICE 547"
     ],
     "interfaces": {
       "kinds": {
@@ -1124,12 +1130,12 @@
         "management": 1,
         "physical": 7,
         "subinterface": 6,
-        "tunnel": 2,
+        "tunnel": 3,
         "vdom-link": 2
       },
       "byContext": {
         "DMZ": 2,
-        "OFFICE": 14,
+        "OFFICE": 15,
         "root": 3
       },
       "shutdown": 0,
@@ -1222,7 +1228,8 @@
           "statics": [
             "0.0.0.0/0 wan1 203.0.113.1 ad 10",
             "0.0.0.0/0 wan2 198.51.100.9 ad 20",
-            "172.16.10.0/24 vlod0 10.254.0.2 ad 10"
+            "172.16.10.0/24 vlod0 10.254.0.2 ad 10",
+            "10.40.0.0/16 VPN-DC ad 10"
           ],
           "policyRoutes": [
             "VL50-GUEST 10.10.50.0/24 -> 0.0.0.0/0 via 198.51.100.9 wan2"
@@ -1240,7 +1247,8 @@
         },
         "ipsec": [
           "ADVPN-WAN1 dynamic ike2 wan1 sender phase2 1",
-          "ADVPN-WAN2 dynamic ike2 wan2 sender phase2 1"
+          "ADVPN-WAN2 dynamic ike2 wan2 sender phase2 1",
+          "VPN-DC static ike2 wan1 203.0.113.130 phase2 1"
         ],
         "sdwan": null
       },
@@ -1270,12 +1278,12 @@
         "sdwan": null
       }
     ],
-    "references": 93,
+    "references": 97,
     "coverage": {
-      "total": 701,
-      "understood": 596,
-      "ignored": 43,
-      "unknown": 62
+      "total": 728,
+      "understood": 625,
+      "ignored": 45,
+      "unknown": 58
     }
   },
   "versioni/fgt-br1-60f-fortios-7.0_2025-05-12.conf": {
@@ -1380,9 +1388,9 @@
     "references": 46,
     "coverage": {
       "total": 443,
-      "understood": 316,
+      "understood": 320,
       "ignored": 26,
-      "unknown": 101
+      "unknown": 97
     }
   },
   "versioni/sw-hq-core-c9300-iosxe-17.12-stack_2025-06-30.txt": {
@@ -1520,9 +1528,9 @@
     "references": 167,
     "coverage": {
       "total": 1306,
-      "understood": 974,
+      "understood": 975,
       "ignored": 265,
-      "unknown": 67
+      "unknown": 66
     }
   }
 }

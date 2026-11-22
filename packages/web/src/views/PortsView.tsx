@@ -25,6 +25,8 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { vlanColors } from './colors';
 import { DataTable } from './DataTable';
+import type { Peer } from '../state/infra';
+import { PeerLinks } from './peers';
 import { PortPanel } from './PortPanel';
 import { ShowSourceButton, SourceButton, useDeviceView, Value } from './source';
 import { formatVlans, FULL_LABEL, shortInterfaceName, vlanText } from './values';
@@ -352,13 +354,18 @@ const LIVE_MARKS: [string, string][] = [
 
 function PortDetail({ port }: { port: Interface }) {
   const { t } = useTranslation();
-  const { state } = useDeviceView();
+  const { state, peers } = useDeviceView();
   const sp = port.switchport;
   const rows: [string, ReactNode][] = [];
   const add = (label: string, value: ReactNode) => {
     if (value !== undefined && value !== null && value !== '') rows.push([label, value]);
   };
   add(t('ports.col.description'), port.description);
+  // The device at the other end of the cable, from the map of the client (#15).
+  const cabled = (p: Peer) =>
+    (p.link.kind === 'cable' || p.link.kind === 'lag') &&
+    (p.here.interface === port.name || (!!port.lag && p.here.interface === port.lag.group));
+  if (peers.some(cabled)) add(t('ports.detail.peer'), <PeerLinks match={cabled} />);
   add(t('ports.col.state'), port.shutdown ? t('ports.state.down') : t('ports.state.up'));
   if (sp) {
     add(
