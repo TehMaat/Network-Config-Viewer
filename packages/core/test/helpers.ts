@@ -10,6 +10,7 @@ import {
   readShowFile,
   splitLines,
   type CorrelationInput,
+  type DeviceModel,
   type DeviceState,
 } from '../src';
 
@@ -163,4 +164,11 @@ export function sampleClient(): CorrelationInput[] {
       .map((s) => ({ file: s.id, state: s.state }));
     return { ...c.input, state: parts.length > 0 ? mergeStates(parts) : null };
   });
+}
+
+/** The model of a sample configuration, read as the app reads it. */
+export function sampleModel(rel: string): DeviceModel {
+  const text = readSampleText(rel);
+  const analysis = analyzeText(text);
+  return buildModel(splitLines(text), analysis.tree, modelHints(analysis.detection))!;
 }

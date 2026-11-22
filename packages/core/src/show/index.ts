@@ -107,6 +107,10 @@ export function mergeStates(parts: { file: string; state: DeviceState }[]): Devi
     add(out.bgp, tag(state.bgp), (b) => [ctx(b), b.neighbor].join('|'));
     add(out.sla, tag(state.sla), (x) => [ctx(x), x.healthCheck, x.seq].join('|'));
     add(out.sdwanServices, tag(state.sdwanServices), (x) => [ctx(x), x.id].join('|'));
+    add(out.managedSwitches, tag(state.managedSwitches), (x) => x.serial);
+    add(out.switchMacs, tag(state.switchMacs), (m) =>
+      [m.switch, m.mac, m.vlan ?? '', m.port].join('|'),
+    );
     out.commands.push(...tag(state.commands));
   }
   out.units.sort((a, b) => a.member - b.member);

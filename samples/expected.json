@@ -189,6 +189,20 @@
       "get router info bgp summary"
     ]
   },
+  "show/fgt-campus_sessione.txt": {
+    "kind": "show",
+    "vendor": "fortinet",
+    "os": "fortios",
+    "version": "7.6.3",
+    "build": "3510",
+    "model": "FortiGate-200F",
+    "hostname": "FGT-CAMPUS",
+    "commands": [
+      "get system status",
+      "execute switch-controller get-conn-status",
+      "diagnose switch-controller switch-info mac-table"
+    ]
+  },
   "show/sw-br1-acc_sessione.txt": {
     "kind": "show",
     "vendor": "cisco",

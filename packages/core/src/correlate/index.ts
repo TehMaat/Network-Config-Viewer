@@ -1,12 +1,14 @@
 // Correlation (#15, chapter 3 of the study, principle 2): the devices of a client put together.
 // It finds the links between them, the sites they are in and the nodes outside the client.
 
+import { hostKey } from '../show/assign';
 import { findCables } from './cables';
 import { findProblems } from './checks';
 import { AddressIndex, DeviceInfo } from './devices';
 import { editLinks, editSites, type MapEdits } from './edits';
 import { findInternet, findOspf, findSubnets } from './l3';
 import { LinkSet } from './links';
+import { findManaged, withManagedSwitches } from './managed';
 import { assignSites } from './sites';
 import {
   INTERNET,
@@ -33,7 +35,8 @@ export function correlate(
   edits?: MapEdits | null,
 ): Infrastructure {
   const byKey = new Map<string, DeviceInfo>();
-  for (const input of inputs) {
+  // The FortiSwitches managed by a FortiGate are devices too (#15, part 4).
+  for (const input of withManagedSwitches(inputs)) {
     const d = new DeviceInfo(input);
     if (!byKey.has(d.key)) byKey.set(d.key, d);
   }
@@ -42,6 +45,10 @@ export function correlate(
   const set = new LinkSet();
   const externals = new Map<string, ExternalNode>();
 
+  // The links of the managed devices first: an inferred link with the same id adds its sources.
+  const managed = findManaged(devices, byKey);
+  for (const link of managed.links) set.add(link);
+  for (const e of managed.externals) externals.set(e.id, e);
   const cables = findCables(devices, byKey, index);
   for (const link of cables.links) set.add(link);
   for (const e of cables.externals) externals.set(e.id, e);
@@ -58,7 +65,7 @@ export function correlate(
   // in one site.
   const { sites, siteOf } = editSites(
     siteNodes,
-    assignSites(siteNodes, cables.pairs),
+    assignSites(siteNodes, [...cables.pairs, ...managed.pairs]),
     edits ?? undefined,
   );
 
@@ -89,6 +96,13 @@ export function correlate(
     const site = siteOf.get(e.id);
     if (site && usedIds.has(site)) e.site = site;
   }
+  // The FortiAPs are a group in the site of their FortiGate.
+  for (const link of managed.links) {
+    if (link.kind !== 'capwap') continue;
+    const group = externals.get(link.b.node);
+    const site = siteOf.get(link.a.node);
+    if (group && site && usedIds.has(site)) group.site = site;
+  }
 
   const infraDevices: InfraDevice[] = devices.map((d) => {
     const m = d.model;
@@ -96,7 +110,7 @@ export function correlate(
       key: d.key,
       hostname: d.input.hostname,
       file: d.input.file,
-      type: m.vendor === 'fortinet' ? 'firewall' : 'switch',
+      type: m.vendor === 'fortinet' && m.os !== 'fortiswitchos' ? 'firewall' : 'switch',
       vendor: m.vendor,
       os: m.os,
       ...(m.version ? { version: m.version } : {}),
@@ -106,6 +120,12 @@ export function correlate(
       contexts: m.contexts.length > 1 ? m.contexts.map((c) => c.name) : [],
       ...(m.management ? { managementIp: m.management.ip } : {}),
       ...(m.location ? { location: m.location.text } : {}),
+      ...(d.input.managedBy
+        ? {
+            managedBy: hostKey(d.input.managedBy),
+            ...(d.input.serial ? { serial: d.input.serial } : {}),
+          }
+        : {}),
     };
   });
 

@@ -1,11 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   addressesMatchIp,
-  analyzeText,
   buildFortiosModel,
-  buildModel,
   ipToInt,
-  modelHints,
   objectUsage,
   parsePortRanges,
   parseSyntax,
@@ -17,18 +14,12 @@ import {
   tokenize,
   type DeviceModel,
 } from '../src';
-import { readSampleText } from './helpers';
+import { sampleModel } from './helpers';
 
 function model(text: string, version = '7.4.4'): { lines: string[]; model: DeviceModel } {
   const lines = splitLines(text);
   const tree = parseSyntax(lines, 'fortios');
   return { lines, model: buildFortiosModel({ lines, tree, os: 'fortios', version }) };
-}
-
-function sampleModel(rel: string): DeviceModel {
-  const text = readSampleText(rel);
-  const analysis = analyzeText(text);
-  return buildModel(splitLines(text), analysis.tree, modelHints(analysis.detection))!;
 }
 
 const references = (lines: string[], m: DeviceModel) =>
@@ -333,8 +324,10 @@ describe('FortiOS samples', () => {
     expect(campus.coverage.sections.some((s) => /certificate|replacemsg/.test(s.section))).toBe(
       false,
     );
-    expect(campus.coverage.sections[0]!.section).toBe(
-      'config switch-controller managed-switch › config ports',
-    );
+    // The managed FortiSwitches and FortiAPs are read now (#15, part 4).
+    expect(
+      campus.coverage.sections.some((s) => /switch-controller|wireless-controller/.test(s.section)),
+    ).toBe(false);
+    expect(campus.coverage.sections[0]!.section).toBe('config system admin');
   });
 });

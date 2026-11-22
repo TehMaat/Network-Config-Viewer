@@ -1,0 +1,40 @@
+FGT-CAMPUS # get system status
+Version: FortiGate-200F v7.6.3,build3510,250408 (GA.F)
+Serial-Number: FG200FTK20000030
+Hostname: FGT-CAMPUS
+Operation Mode: NAT
+Current virtual domain: root
+Virtual domain configuration: disable
+Current HA mode: standalone
+Branch point: 3510
+System time: Fri Nov 21 09:41:12 2026
+
+FGT-CAMPUS # execute switch-controller get-conn-status
+Managed-devices in current vdom root:
+
+FortiLink interface : fortilink
+SWITCH-ID           VERSION           STATUS         FLAG   ADDRESS              JOIN-TIME                   NAME
+S248EPTF20000001    v7.4.4 (867)      Authorized/Up   2M    10.255.250.2         Mon Nov 17 08:12:34 2026    FSW-CAMPUS-01
+S248EPTF20000002    v7.4.4 (867)      Authorized/Up   2M    10.255.250.3         Mon Nov 17 08:12:41 2026    FSW-CAMPUS-02
+
+	 Flags: C=config sync, U=upgrading, S=staged, D=delayed reboot pending, E=config sync error, 3=L3, H=HA-Enabled, M=MCLAG
+	 Managed-Switches: 2 (UP: 2 DOWN: 0)
+
+FGT-CAMPUS # diagnose switch-controller switch-info mac-table
+S248EPTF20000001 :
+MAC                 INTERFACE         VLAN   TYPE
+00:00:5e:00:53:31   port1             10     dynamic
+00:00:5e:00:53:32   port2             10     dynamic
+00:00:5e:00:53:33   port5             20     dynamic
+00:00:5e:00:53:34   port12            60     dynamic
+00:00:5e:00:53:35   port24            60     dynamic
+00:00:5e:00:53:36   TRUNK-AULE        10     dynamic
+00:00:5e:00:53:37   TRUNK-AULE        20     dynamic
+
+S248EPTF20000002 :
+MAC                 INTERFACE         VLAN   TYPE
+00:00:5e:00:53:41   port1             10     dynamic
+00:00:5e:00:53:42   port10            20     dynamic
+00:00:5e:00:53:43   port12            60     dynamic
+00:00:5e:00:53:44   port24            60     dynamic
+

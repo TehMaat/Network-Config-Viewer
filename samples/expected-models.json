@@ -890,9 +890,13 @@
     "features": [
       "advpn",
       "bgp",
+      "fortiap",
+      "fortiswitch",
       "ipsec",
       "lag",
+      "mclag",
       "nat",
+      "poe",
       "static-routes"
     ],
     "warnings": [],
@@ -964,12 +968,12 @@
         "sdwan": null
       }
     ],
-    "references": 32,
+    "references": 238,
     "coverage": {
-      "total": 952,
-      "understood": 223,
-      "ignored": 64,
-      "unknown": 665
+      "total": 982,
+      "understood": 855,
+      "ignored": 65,
+      "unknown": 62
     }
   },
   "fortigate/fgt-dc-120g-fortios-8.0-vdom.conf": {

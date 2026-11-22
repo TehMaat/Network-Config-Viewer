@@ -2,12 +2,13 @@
   "sites": {
     "Filiale 1": "snmp: fgt-br1 sw-br1-acc",
     "Filiale 2": "snmp: fgt-br2 sw-br2-acc",
-    "Campus": "snmp: fgt-campus",
+    "Campus": "snmp: fgt-campus fsw-campus-01 fsw-campus-02",
     "Datacenter": "snmp: fgt-dc",
     "Sede": "snmp: fgt-hq sw-hq-acc1 sw-hq-acc2 sw-hq-acc3 sw-hq-core",
     "Filiale 3": "snmp: sw-br3-acc"
   },
   "externals": [
+    "aps:fgt-campus ap-group FortiAP (4) (AP-CAMPUS-01, AP-CAMPUS-02, AP-CAMPUS-03, AP-CAMPUS-04) @campus",
     "as:64496 provider AS 64496 (Provider A)",
     "as:64497 provider AS 64497 (Provider B)",
     "host:fgt-br3 neighbor FGT-BR3 @filiale-3",
@@ -24,6 +25,9 @@
     "bgp | fgt-campus neighbor 10.255.1.254 10.255.1.30 | fgt-hq (OFFICE) range 10.255.1.0/24 SPOKES-WAN1 10.255.1.254 | bgp-neighbor,bgp-state | verified | via ipsec:fgt-campus/root/wan1|fgt-hq/office/wan1 | state -/up",
     "cable | fgt-br1 internal1 | sw-br1-acc GigabitEthernet1/0/48 | description,lldp | verified | state -/up",
     "cable | fgt-br2 | sw-br2-acc GigabitEthernet1/0/28 | description",
+    "capwap | fgt-campus | aps:fgt-campus | capwap",
+    "fortilink | fgt-campus fortilink | fsw-campus-01 FL-FGT-CAMPUS | fortilink,fortilink-state | verified | state -/up",
+    "fortilink | fgt-campus fortilink | fsw-campus-02 FL-FGT-CAMPUS | fortilink,fortilink-state | verified | state -/up",
     "internet | fgt-br1 wan1 192.0.2.34 | internet | wan | gateway 192.0.2.33",
     "internet | fgt-br1 wan2 | internet | wan",
     "internet | fgt-br2 wan1 192.0.2.38 | internet | wan | gateway 192.0.2.37",
@@ -41,6 +45,7 @@
     "ipsec | fgt-campus wan1 tunnel HUB-WAN1 192.0.2.42 | fgt-hq (OFFICE) wan1 tunnel ADVPN-WAN1 203.0.113.2 | remote-gw,tunnel-state | verified | dial-up | state -/up | compared 9, issues 0",
     "ipsec | fgt-dc (EXTRANET) port1 tunnel VPN-HQ 203.0.113.130 | fgt-hq (OFFICE) wan1 tunnel VPN-DC 203.0.113.2 | remote-gw,tunnel-state | verified | state -/up | compared 8, issues 0",
     "lag | fgt-hq (OFFICE) LAG-CORE | sw-hq-core Port-channel1 | description,lldp | verified | cables x1-TenGigabitEthernet1/1/1 x2-TenGigabitEthernet2/1/1 | state up/up",
+    "lag | fsw-campus-01 ICL-CAMPUS | fsw-campus-02 ICL-CAMPUS | description,mclag | cables port47-port47 port48-port48",
     "lag | host:fgt-br3 internal5? | sw-br3-acc Port-channel1 | lldp | verified | cables internal5-GigabitEthernet1/0/48 | state -/up",
     "lag | sw-hq-acc1 Port-channel1 | sw-hq-core Port-channel10 | cdp,description | verified | cables TenGigabitEthernet1/1/1-TenGigabitEthernet1/1/2 TenGigabitEthernet2/1/1-TenGigabitEthernet2/1/2 | state -/up",
     "lag | sw-hq-acc2 Port-channel1 | sw-hq-core Port-channel11 | cdp,description | verified | cables GigabitEthernet1/1/1-GigabitEthernet3/0/47 GigabitEthernet1/1/2-GigabitEthernet3/0/48 | state -/up",

@@ -41,6 +41,8 @@ function portOf(model: DeviceModel, name: string): Interface | undefined {
 
 /** The port carries the VLAN: in its switchport, or as a VLAN interface of a FortiGate on it. */
 function carries(model: DeviceModel, port: Interface, vlan: number): boolean {
+  // FortiLink and the inter-chassis trunk of a managed FortiSwitch carry every VLAN.
+  if (port.trunkRole === 'fortilink' || port.trunkRole === 'icl') return true;
   if (port.switchport) return portVlanRole(port, vlan) !== null;
   const base = vlanBase(model, port);
   return model.interfaces.some((i) => i.parent === base && i.vlanId === vlan);
@@ -73,7 +75,7 @@ export function vlanGateways(
     const model = modelOf(device);
     if (!model) continue;
     for (const link of infra.links) {
-      if (link.kind !== 'cable' && link.kind !== 'lag') continue;
+      if (link.kind !== 'cable' && link.kind !== 'lag' && link.kind !== 'fortilink') continue;
       for (const [here, there] of [
         [link.a, link.b],
         [link.b, link.a],

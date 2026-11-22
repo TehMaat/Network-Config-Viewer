@@ -43,6 +43,15 @@ const COMMANDS: { id: ShowCommandId; words: string[][] }[] = [
       ['diagnose', 'sys', 'sdwan', 'service4'],
     ],
   },
+  // FortiSwitches managed by the FortiGate (#15, part 4).
+  {
+    id: 'execute switch-controller get-conn-status',
+    words: [['execute', 'switch-controller', 'get-conn-status']],
+  },
+  {
+    id: 'diagnose switch-controller switch-info mac-table',
+    words: [['diagnose', 'switch-controller', 'switch-info', 'mac-table']],
+  },
 ];
 
 /** The canonical command for a command as typed, or undefined when no reader knows it. */
